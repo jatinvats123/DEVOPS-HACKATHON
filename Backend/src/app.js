@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-import express from 'express';
-
-const app = express();
-
-
-
-
-
-
-
-export default app;
-=======
 import express from "express";
 import HealthRouter from "./routes/health.route.js";
 import UserRouter from "./routes/user.routes.js";
@@ -24,5 +11,4 @@ Middleware(app)
 app.use("/api/health", HealthRouter);
 app.use("/api/auth", UserRouter);
 
-export { app }
->>>>>>> 5981f9081e6317169dcbc8e91c5ba62a74254063
+export default app;
