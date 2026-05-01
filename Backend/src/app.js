@@ -11,4 +11,4 @@ Middleware(app)
 app.use("/api/health", HealthRouter);
 app.use("/api/auth", UserRouter);
 
-export { app }
+export default app;
