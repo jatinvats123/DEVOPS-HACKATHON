@@ -23,7 +23,7 @@ monitorRouter.post('/', verifyJWT, createMonitorController);
 monitorRouter.get('/', verifyJWT, getAllMonitorsController);
 
 /*
-@route DELETE /api/monitor/:monitorId
+@route DELETE /api/monitor
 @desc Delete a monitor
 @access Private
 */
