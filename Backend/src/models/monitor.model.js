@@ -6,6 +6,7 @@ const monitorSchema = new mongoose.Schema(
       type: String,
       enum: ['website', 'api'],
       required: true,
+      default: 'website',
     },
     url: {
       type: String,
@@ -13,14 +14,16 @@ const monitorSchema = new mongoose.Schema(
     },
     interval: {
       type: Number, //How ofter to check the monitor
+      default: 60, //default to check every 60 seconds
     },
     timeout: {
       type: Number, //request timeout in duration
+      default: 5000, //default timeout of 5 seconds
     },
   },
   { timestamps: true }
 );
 
-const Monitor = mongoose.model('Monitor', monitorSchema);
+const monitorModel = mongoose.model('Monitor', monitorSchema);
 
-export default Monitor;
+export default monitorModel;
