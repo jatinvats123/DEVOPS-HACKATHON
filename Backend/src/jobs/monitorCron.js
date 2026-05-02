@@ -2,7 +2,6 @@ import cron from 'node-cron';
 import monitorModel from '../models/monitor.model.js';
 import logModel from '../models/logs.model.js';
 import { checkMonitor } from '../services/monitor.service.js';
-import { use } from 'react';
 
 async function isReallyDown(url, timeout) {
   // Perform multiple checks to confirm the monitor is really down
