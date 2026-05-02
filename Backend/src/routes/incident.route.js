@@ -1,5 +1,5 @@
 import express from 'express';
-import { getIncidentsByMonitorIdController } from '../controllers/incident.controller';
+import { getIncidentsByMonitorIdController } from '../controllers/incident.controller.js';
 const IncidentRouter = express.Router();
 
 /*
