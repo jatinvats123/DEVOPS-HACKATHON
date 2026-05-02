@@ -13,6 +13,9 @@ const LOGIN_API = import.meta.env.VITE_LOGIN_API;
 const GET_USER_API = import.meta.env.VITE_GET_USER_API;
 
 
+const FORGOT_PASSWORD_API = import.meta.env.VITE_FORGOT_PASSWORD_API;
+
+
 // Validate environment variables
 if(!BACKEND_URL) {
     throw new Error("BACKEND_URL is not defined in the environment variables");
@@ -33,10 +36,15 @@ if(!GET_USER_API) {
     throw new Error("GET_USER_API is not defined in the environment variables");
 }
 
+if(!FORGOT_PASSWORD_API) {
+    throw new Error("FORGOT_PASSWORD_API is not defined in the environment variables");
+}
+
 // Export the environment variables as a config object
 export const env = {
     BACKEND_URL,
     REGISTER_API,
     LOGIN_API,
-    GET_USER_API
+    GET_USER_API,
+  FORGOT_PASSWORD_API
 }

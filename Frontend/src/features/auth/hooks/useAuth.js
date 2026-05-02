@@ -1,4 +1,4 @@
-import { register ,login,getUserProfile} from "../services/auth.api";
+import { register ,login,getUserProfile,forgotPassword , changePassword} from "../services/auth.api";
 import { verifyOtp } from "../services/asyncThunk.api";
 import { useDispatch } from "react-redux";
 import { setLoading, setError, setUserId, setOtpSent ,setUser ,setAuthenticated} from "../state/authSlice";
@@ -68,5 +68,32 @@ export const useAuth = () => {
     }
     }
 
-    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile };
+
+    // Forgot password handler
+    const handleForgotPassword = async (email) => {
+        try {
+            dispatch(setLoading(true));
+            const response = await forgotPassword(email);
+            return response;
+        } catch (error) {
+            dispatch(setError(error.message || "Failed to initiate forgot password process"));
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
+
+    const handleChangePassword = async (passwordData) => {
+        try {
+            dispatch(setLoading(true));
+            const response = await changePassword(passwordData);
+            return response;
+        } catch (error) {
+            dispatch(setError(error.message || "Failed to change password"));
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
+    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword };
 }
