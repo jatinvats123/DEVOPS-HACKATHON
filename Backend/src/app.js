@@ -3,6 +3,7 @@ import HealthRouter from './routes/health.route.js';
 import UserRouter from './routes/user.routes.js';
 import MonitorRouter from './routes/monitor.route.js';
 import Middleware from './app.middleware.js';
+import LogsRouter from './routes/logs.route.js';
 // import { analyzeIncident } from './services/ai.services.js';
 
 const app = express();
@@ -12,7 +13,7 @@ Middleware(app);
 app.use('/api/health', HealthRouter);
 app.use('/api/auth', UserRouter);
 app.use('/api/monitor', MonitorRouter);
-
+app.use('/api/logs', LogsRouter);
 
 /**
  * Example of using Mistral API to analyze an incident log

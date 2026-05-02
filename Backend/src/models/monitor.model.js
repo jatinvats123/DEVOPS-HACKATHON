@@ -19,7 +19,7 @@ const monitorSchema = new mongoose.Schema({
     type: Number, //request timeout in duration
     default: 5000, //default timeout of 5 seconds
   },
-  timestampt: {
+  timestamp: {
     type: Date,
     default: Date.now,
   },

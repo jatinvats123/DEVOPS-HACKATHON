@@ -1,14 +1,14 @@
-import app from "./src/app.js";
-import { config } from "./src/config/config.js";
-import ConnectDB from "./src/config/database.js";
+import app from './src/app.js';
+import { config } from './src/config/config.js';
+import ConnectDB from './src/config/database.js';
+import { startMonitorCron } from './src/jobs/monitorCron.js';
 
-const PORT = process.env.PORT || 8080;
-
+const PORT = config.PORT || 8080;
 
 // Connect to the database and start the server
-ConnectDB()
-
+ConnectDB();
+startMonitorCron(); // Start the cron job to check monitors
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-})
+  console.log(`Server is running on port ${PORT}`);
+});
