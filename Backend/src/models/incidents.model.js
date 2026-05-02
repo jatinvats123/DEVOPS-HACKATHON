@@ -5,6 +5,8 @@ const incidentSchema = new mongoose.Schema(
     monitorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Monitor',
+      required: true,
+      index: true, // Index for faster queries by monitorId
     },
     status: {
       type: String,
@@ -18,7 +20,7 @@ const incidentSchema = new mongoose.Schema(
     },
     endTime: {
       type: Date,
-      required: true,
+      default: null,
     },
     duration: {
       type: Number, // Duration in seconds
@@ -34,7 +36,16 @@ const incidentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//Compound index to optimize queries for ongoing incidents of a monitor
 incidentSchema.index({ monitorId: 1, status: 1 }); // Index to optimize queries by monitor and time
+
+//Auto duration calculation when resolving an incident
+incidentSchema.pre('save', function (next) {
+  if (this.startTime && this.endTime) {
+    this.duration = Math.floor((this.endTime - this.startTime) / 1000); // Duration in seconds
+  }
+  next();
+});
 
 const incidentModel = mongoose.model('Incident', incidentSchema);
 
