@@ -21,8 +21,13 @@ async function isReallyDown(url, timeout) {
 export async function startMonitorCron() {
   console.log('Starting monitor cron job...');
 
+  let isRunning = false;
+
   // Schedule the cron job to run every minute
   cron.schedule('* * * * *', async () => {
+    if (isRunning) return;
+    isRunning = true;
+
     console.log('Running monitor checks at', new Date().toISOString());
 
     const monitors = await monitorModel.find();
@@ -34,7 +39,7 @@ export async function startMonitorCron() {
     await Promise.all(
       monitors.map(async (monitor) => {
         try {
-          const now = new Date();
+          const now = new Date.now();
           const lastChecked = new Date(monitor.lastChecked || 0).getTime();
 
           const differenceInSeconds = (now - lastChecked) / 1000;
@@ -52,7 +57,7 @@ export async function startMonitorCron() {
               monitor.url,
               monitor.timeout
             );
-            if (!isReallyDownResult) currentStatus = 'UP'; // If it's not really down, set status to UP
+            if (!isReallyDownResult) currentStatus = prevStatus; // If it's not really down, set status to previous status
 
             if (isReallyDownResult) {
               console.error(
@@ -79,7 +84,7 @@ export async function startMonitorCron() {
           await monitor.save();
 
           // Save the result to the logs collection
-          const logEntry = new logModel({
+          await logModel.create({
             monitorId: monitor._id,
             status: currentStatus,
             latency: result.responseTime || null,
@@ -87,7 +92,6 @@ export async function startMonitorCron() {
             error: result.error || null,
             timestamp: new Date(),
           });
-          await logEntry.save();
         } catch (error) {
           console.error(`Error checking monitor ${monitor.url}:`, error);
         }
