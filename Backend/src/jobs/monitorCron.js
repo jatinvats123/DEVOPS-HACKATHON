@@ -53,8 +53,14 @@ export async function startMonitorCron() {
           }
 
           const prevStatus = monitor.status; // Assuming you have a status field in your monitor model
+
+          console.log('previous status', monitor.status);
+
           const result = await checkMonitor(monitor.url, monitor.timeout);
+
           let currentStatus = result.status;
+
+          console.log("current status", currentStatus)
 
           //Retry Logic
           if (result.status === 'DOWN') {
@@ -72,7 +78,10 @@ export async function startMonitorCron() {
           }
 
           // Incident management logic
-          if (prevStatus === 'UP' && currentStatus === 'DOWN') {
+          if (
+            (prevStatus === 'UP' && currentStatus === 'DOWN') ||
+            (prevStatus === 'DOWN' && currentStatus === 'DOWN')
+          ) {
             await createIncident(
               monitor._id,
               result.error || `Monitor ${monitor.url} is down`
@@ -87,7 +96,6 @@ export async function startMonitorCron() {
           monitor.status = currentStatus;
           monitor.lastChecked = new Date();
           await monitor.save();
-          console.log(result.error);
 
           // Save the result to the logs collection
           await logModel.create({

@@ -44,7 +44,6 @@ incidentSchema.pre('save', function (next) {
   if (this.startTime && this.endTime) {
     this.duration = Math.floor((this.endTime - this.startTime) / 1000); // Duration in seconds
   }
-  next();
 });
 
 const incidentModel = mongoose.model('Incident', incidentSchema);
