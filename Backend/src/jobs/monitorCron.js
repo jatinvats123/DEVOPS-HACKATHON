@@ -34,6 +34,14 @@ export async function startMonitorCron() {
     await Promise.all(
       monitors.map(async (monitor) => {
         try {
+          const now = new Date();
+          const lastChecked = new Date(monitor.lastChecked || 0).getTime();
+
+          const differenceInSeconds = (now - lastChecked) / 1000;
+          if (differenceInSeconds < monitor.interval) {
+            return; // Skip this monitor if it's not time to check yet
+          }
+
           const prevStatus = monitor.status; // Assuming you have a status field in your monitor model
           const result = await checkMonitor(monitor.url, monitor.timeout);
           let currentStatus = result.status;
