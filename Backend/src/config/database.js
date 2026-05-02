@@ -1,11 +1,13 @@
 import { config } from "./config.js";
 import mongoose from "mongoose";
+import logger from "./logger.js";
 
 const ConnectDB = () => {
     mongoose.connect(config.MONGO_URL).then(() => {
-        console.log("MongoDB connected");
+        logger.info("MongoDB connected");
     }).catch((err) => {
-        console.log(err);
+        logger.error("MongoDB connection failed", err);
+        process.exit(1);
     });
 };
 
