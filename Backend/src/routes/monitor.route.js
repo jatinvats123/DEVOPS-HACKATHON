@@ -2,7 +2,7 @@ import {
   createMonitorController,
   deleteMonitorController,
   getAllMonitorsController,
-} from '../controllers/monitor.controller';
+} from '../controllers/monitor.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 import express from 'express';
