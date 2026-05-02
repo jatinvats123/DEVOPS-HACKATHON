@@ -5,10 +5,11 @@ import logger from "./src/config/logger.js";
 
 const PORT = config.PORT;
 
+const PORT = config.PORT || 8080;
 
 // Connect to the database and start the server
-ConnectDB()
-
+ConnectDB();
+startMonitorCron(); // Start the cron job to check monitors
 
 app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
