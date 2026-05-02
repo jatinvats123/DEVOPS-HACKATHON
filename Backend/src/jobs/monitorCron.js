@@ -29,7 +29,7 @@ export async function startMonitorCron() {
     if (isRunning) return;
     isRunning = true;
 
-    console.log('Running monitor checks at', new Date().toISOString());
+    logger.info('Running monitor checks at', new Date().toISOString());
 
     const monitors = await monitorModel.find();
 
