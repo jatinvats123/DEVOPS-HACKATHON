@@ -18,7 +18,7 @@ export const createMonitorController = async (req, res) => {
     }
 
     //Monitor creation logic
-    const monitor = new monitorModel({
+    const monitor = await monitorModel.create({
       userId: req.user?.id, // Assuming user ID is available in req.user after authentication
       type,
       url: normalizedUrl,

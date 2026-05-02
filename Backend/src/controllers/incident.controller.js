@@ -1,4 +1,4 @@
-import incidentModel from '../models/incidents.model';
+import incidentModel from '../models/incidents.model.js';
 
 export const getIncidentsByMonitorIdController = async (req, res) => {
   const monitorId = req.params.monitorId;
@@ -14,7 +14,7 @@ export const getIncidentsByMonitorIdController = async (req, res) => {
       data: incidents,
     });
   } catch (error) {
-    console.error(`Error fetching incidents for monitor ${monitorId}:`, error);
+    logger.error(`Error fetching incidents for monitor ${monitorId}:`, error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
