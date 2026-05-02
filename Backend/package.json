@@ -29,6 +29,7 @@
     "morgan": "^1.10.1",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "winston": "^3.19.0"
   }
 }
