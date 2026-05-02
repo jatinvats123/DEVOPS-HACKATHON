@@ -1,4 +1,4 @@
-import logModel from '../models/logs.model';
+import logModel from '../models/logs.model.js';
 
 export const monitorLogsByIdController = async (req, res) => {
   //   const userId = req.user?.id;

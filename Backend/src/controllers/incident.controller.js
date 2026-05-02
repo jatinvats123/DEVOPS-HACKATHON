@@ -1,4 +1,4 @@
-import incidentModel from '../models/incidents.model';
+import incidentModel from '../models/incidents.model.js';
 
 export const getIncidentsByMonitorIdController = async (req, res) => {
   const monitorId = req.params.monitorId;

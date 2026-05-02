@@ -1,4 +1,4 @@
-import incidentModel from '../models/incidents.model';
+import incidentModel from '../models/incidents.model.js';
 
 export async function createIncident(monitorId, reason) {
   const existingIncident = await incidentModel.findOne({
