@@ -44,4 +44,5 @@ export const config = {
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRY: process.env.JWT_EXPIRY,
   FRONTEND_URL: process.env.FRONTEND_URL,
+  MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
 };

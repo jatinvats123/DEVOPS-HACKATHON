@@ -4,7 +4,6 @@ import ConnectDB from "./src/config/database.js";
 import logger from "./src/config/logger.js";
 import { startMonitorCron } from "./src/jobs/monitorCron.js";
 
-
 const PORT = config.PORT || 8080;
 
 // Connect to the database and start the server

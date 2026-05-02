@@ -6,6 +6,7 @@ import {
   createIncident,
   resolveIncident,
 } from '../services/incident.service.js';
+import logger from '../config/logger.js';
 
 async function isReallyDown(url, timeout) {
   // Perform multiple checks to confirm the monitor is really down
@@ -19,7 +20,7 @@ async function isReallyDown(url, timeout) {
 }
 
 export async function startMonitorCron() {
-  console.log('Starting monitor cron job...');
+  logger.info('Starting monitor cron job...');
 
   let isRunning = false;
 
@@ -28,12 +29,12 @@ export async function startMonitorCron() {
     if (isRunning) return;
     isRunning = true;
 
-    console.log('Running monitor checks at', new Date().toISOString());
+    logger.info('Running monitor checks at', new Date().toISOString());
 
     const monitors = await monitorModel.find();
 
     if (monitors.length === 0) {
-      console.log('No monitors found to check.');
+      logger.warn('No monitors found to check.');
       return;
     }
     await Promise.all(
@@ -60,7 +61,7 @@ export async function startMonitorCron() {
             if (!isReallyDownResult) currentStatus = prevStatus; // If it's not really down, set status to previous status
 
             if (isReallyDownResult) {
-              console.error(
+              logger.error(
                 `Monitor ${monitor.url} is DOWN (Response Time: ${result.responseTime}ms)`
               );
             }
@@ -93,7 +94,7 @@ export async function startMonitorCron() {
             timestamp: new Date(),
           });
         } catch (error) {
-          console.error(`Error checking monitor ${monitor.url}:`, error);
+          logger.error(`Error checking monitor ${monitor.url}:`, error);
         }
       })
     );

@@ -1,5 +1,4 @@
 import express from 'express';
-// import { verifyJWT } from '../middlewares/auth.middleware';
 import { monitorLogsByIdController } from '../controllers/logs.controller.js';
 const LogsRouter = express.Router();
 
