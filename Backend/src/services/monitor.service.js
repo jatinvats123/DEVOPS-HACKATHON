@@ -7,6 +7,7 @@ export async function checkMonitor(url, timeout) {
     const responseTime = Date.now() - start;
     return {
       status: 'UP',
+      error: null,
       responseTime,
       statusCode: response.status,
     };
@@ -14,6 +15,7 @@ export async function checkMonitor(url, timeout) {
     const responseTime = Date.now() - start;
     return {
       status: 'DOWN',
+      error: error.message,
       statusCode: error.response?.status || 500,
       responseTime,
     };

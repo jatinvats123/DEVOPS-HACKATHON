@@ -24,8 +24,8 @@ export async function startMonitorCron() {
 
   let isRunning = false;
 
-  // Schedule the cron job to run every minute
-  cron.schedule('* * * * *', async () => {
+  // Schedule the cron job to run every second (for testing purposes, you can change this to every minute in production)
+  cron.schedule('*/10 * * * * *', async () => {
     if (isRunning) return;
     isRunning = true;
 
@@ -48,6 +48,7 @@ export async function startMonitorCron() {
 
           const differenceInSeconds = (now - lastChecked) / 1000;
           if (differenceInSeconds < monitor.interval - 2) {
+            // Adding a small buffer of 2 seconds to account for any delays in cron execution
             return; // Skip this monitor if it's not time to check yet
           }
 
@@ -86,6 +87,7 @@ export async function startMonitorCron() {
           monitor.status = currentStatus;
           monitor.lastChecked = new Date();
           await monitor.save();
+          console.log(result.error);
 
           // Save the result to the logs collection
           await logModel.create({
