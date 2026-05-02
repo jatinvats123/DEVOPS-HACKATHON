@@ -8,6 +8,7 @@ import {
   deleteMonitorValidator,
 } from '../validators/monitor.validator.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { validate } from '../middlewares/monitor.middleware.js';
 
 import express from 'express';
 const MonitorRouter = express.Router();
@@ -20,7 +21,7 @@ const MonitorRouter = express.Router();
 MonitorRouter.post(
   '/',
   verifyJWT,
-  createMonitorValidator,
+  validate(createMonitorValidator),
   createMonitorController
 );
 
@@ -32,14 +33,14 @@ MonitorRouter.post(
 MonitorRouter.get('/', verifyJWT, getAllMonitorsController);
 
 /*
-@route DELETE /api/monitor
-@desc Delete a monitor
+@route DELETE /api/monitor/:monitorId
+@desc Delete a monitor 
 @access Private
 */
 MonitorRouter.delete(
   '/:monitorId',
   verifyJWT,
-  deleteMonitorValidator,
+  validate(deleteMonitorValidator),
   deleteMonitorController
 );
 
