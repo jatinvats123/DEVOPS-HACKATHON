@@ -1,26 +1,30 @@
 import mongoose from 'mongoose';
 
-const monitorSchema = new mongoose.Schema(
-  {
-    type: {
-      type: String,
-      enum: ['website', 'api'],
-      required: true,
-    },
-    url: {
-      type: String,
-      required: true,
-    },
-    interval: {
-      type: Number, //How ofter to check the monitor
-    },
-    timeout: {
-      type: Number, //request timeout in duration
-    },
+const monitorSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['website', 'api'],
+    required: true,
+    default: 'website',
   },
-  { timestamps: true }
-);
+  url: {
+    type: String,
+    required: true,
+  },
+  interval: {
+    type: Number, //How ofter to check the monitor
+    default: 60, //default to check every 60 seconds
+  },
+  timeout: {
+    type: Number, //request timeout in duration
+    default: 5000, //default timeout of 5 seconds
+  },
+  timestampt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const Monitor = mongoose.model('Monitor', monitorSchema);
+const monitorModel = mongoose.model('Monitor', monitorSchema);
 
-export default Monitor;
+export default monitorModel;

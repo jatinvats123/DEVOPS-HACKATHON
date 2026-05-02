@@ -3,6 +3,10 @@ import {
   deleteMonitorController,
   getAllMonitorsController,
 } from '../controllers/monitor.controller.js';
+import {
+  createMonitorValidator,
+  deleteMonitorValidator,
+} from '../validators/monitor.validator.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 import express from 'express';
@@ -13,7 +17,12 @@ const MonitorRouter = express.Router();
 @desc Create a new monitor
 @access Private
 */
-MonitorRouter.post('/', verifyJWT, createMonitorController);
+MonitorRouter.post(
+  '/',
+  verifyJWT,
+  createMonitorValidator,
+  createMonitorController
+);
 
 /*
 @route GET /api/monitor
@@ -27,6 +36,11 @@ MonitorRouter.get('/', verifyJWT, getAllMonitorsController);
 @desc Delete a monitor
 @access Private
 */
-MonitorRouter.delete('/:monitorId', verifyJWT, deleteMonitorController);
+MonitorRouter.delete(
+  '/:monitorId',
+  verifyJWT,
+  deleteMonitorValidator,
+  deleteMonitorController
+);
 
 export default MonitorRouter;
