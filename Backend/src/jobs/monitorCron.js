@@ -29,7 +29,9 @@ export async function startMonitorCron() {
     if (isRunning) return;
     isRunning = true;
 
-    logger.info('Running monitor checks at', new Date().toISOString());
+    logger.info(
+      `Running monitor checks at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+    );
 
     const monitors = await monitorModel.find();
 
@@ -54,13 +56,13 @@ export async function startMonitorCron() {
 
           const prevStatus = monitor.status; // Assuming you have a status field in your monitor model
 
-          console.log('previous status', monitor.status);
+          logger.info(`previous status: ${monitor.status}`);
 
           const result = await checkMonitor(monitor.url, monitor.timeout);
 
           let currentStatus = result.status;
 
-          console.log("current status", currentStatus)
+          logger.info(`current status: ${currentStatus}`);
 
           //Retry Logic
           if (result.status === 'DOWN') {

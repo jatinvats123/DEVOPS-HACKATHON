@@ -5,10 +5,8 @@
  * This service uses a Mistral AI model to process incident logs and provide
  */
 
-
-import { mistralAiModel } from "../ai/model.ai.js";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-
+import { mistralAiModel } from '../ai/model.ai.js';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 
 // Define the system prompt for the AI model to ensure it provides structured and relevant analysis
 const systemPrompt = `You are a senior DevOps and Site Reliability Engineer (SRE).
@@ -41,34 +39,30 @@ Rules:
   "solution": ["step1", "step2"]
 }`;
 
-
-
 /**
  * Analyzes an incident based on provided logs
  * @param {string} logs - The incident logs to analyze
  * @returns {Promise<Object>} - The analysis results
  */
 
-
-export const analyzeIncident = async (logs) => {
+export const analyzeIncident = async (reason) => {
   try {
     const response = await mistralAiModel.invoke([
       new SystemMessage(systemPrompt),
-      new HumanMessage(`Analyze the following incident logs:\n${logs}`)
+      new HumanMessage(`Analyze the following incident reason:\n${reason}`),
     ]);
 
     let content = response.content;
 
     content = content
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
       .trim();
 
     return content;
-
   } catch (err) {
-    console.error("AI Error:", err);
+    console.error('AI Error:', err);
 
-    return "AI analysis failed. Please try again.";
+    return 'AI analysis failed. Please try again.';
   }
 };

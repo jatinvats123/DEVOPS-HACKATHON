@@ -11,6 +11,18 @@ export const createMonitorController = async (req, res) => {
         .json({ message: 'URL is required', success: false });
     }
 
+    const isAlreadyMonitored = await monitorModel.findOne({
+      userId: req.user.id,
+      url,
+    });
+
+    if (isAlreadyMonitored) {
+      return res.status(400).json({
+        message: 'Monitor for this URL already exists',
+        success: false,
+      });
+    }
+
     //Normalize URL (ensure it starts with http:// or https://)
     let normalizedUrl = url;
     if (!/^https?:\/\//i.test(url)) {
@@ -19,7 +31,7 @@ export const createMonitorController = async (req, res) => {
 
     //Monitor creation logic
     const monitor = await monitorModel.create({
-      userId: req.user?.id, // Assuming user ID is available in req.user after authentication
+      userId: req.user.id, // Assuming user ID is available in req.user after authentication
       type,
       url: normalizedUrl,
       interval,

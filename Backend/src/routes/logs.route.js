@@ -1,5 +1,6 @@
 import express from 'express';
 import { monitorLogsByIdController } from '../controllers/logs.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 const LogsRouter = express.Router();
 
 /*
@@ -7,6 +8,6 @@ const LogsRouter = express.Router();
 @desc Get logs for a specific monitor
 @access Private
 */
-LogsRouter.get('/:monitorId', monitorLogsByIdController);
+LogsRouter.get('/:monitorId', verifyJWT, monitorLogsByIdController);
 
 export default LogsRouter;
