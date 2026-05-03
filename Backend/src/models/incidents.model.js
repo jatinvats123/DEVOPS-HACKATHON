@@ -8,6 +8,10 @@ const incidentSchema = new mongoose.Schema(
       required: true,
       index: true, // Index for faster queries by monitorId
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     status: {
       type: String,
       enum: ['ONGOING', 'RESOLVED'],

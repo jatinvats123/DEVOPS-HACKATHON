@@ -1,5 +1,8 @@
 import incidentModel from '../models/incidents.model.js';
+import { UserService } from './user.service.js';
 import { analyzeIncident } from './ai.services.js';
+import { sendEmail } from './sendEmail.js';
+import logger from '../config/logger.js';
 
 export async function createIncident(monitorId, reason) {
   const existingIncident = await incidentModel.findOne({
@@ -17,6 +20,43 @@ export async function createIncident(monitorId, reason) {
     aiSummary,
     reason,
   });
+
+  // Send email notification to the user associated with the monitor
+  try {
+    // populate only what you need
+    await newIncident.populate({
+      path: 'monitorId',
+      select: 'userId',
+    });
+
+    const userId = newIncident?.monitorId?.userId;
+
+    if (!userId) {
+      logger.warn('UserId not found for monitor:', monitorId);
+      return;
+    }
+
+    const user = await UserService.findUserByIdWithoutPassword(userId);
+
+    if (!user || !user.email) {
+      logger.warn('User or email not found for userId:', userId);
+      return;
+    }
+
+    await sendEmail({
+      email: user.email,
+      subject: 'New Incident Detected',
+      message: `An incident has been detected for monitor ${monitorId}.
+
+Reason: ${reason}.
+
+AI Analysis: ${aiSummary}`,
+    });
+
+    logger.info(`Email sent successfully to user: ${user.email}`);
+  } catch (error) {
+    logger.error('Error sending incident email:', error);
+  }
 
   return newIncident;
 }
