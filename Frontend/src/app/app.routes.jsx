@@ -6,19 +6,15 @@ import Dashboard from "../features/monitoring/pages/Dashboard";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <div>Home</div>,
+    path: "/register",
+    element: <Register />,
   },
   {
     path: "/login",
     element: <Login />,
   },
   {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/dashboard",
+    path: "/",
     element: <Dashboard />,
   },
   //   {

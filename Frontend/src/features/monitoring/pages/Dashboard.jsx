@@ -12,6 +12,24 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import {
+  RiPulseLine,
+  RiDashboardLine,
+  RiMacbookLine,
+  RiAlertLine,
+  RiNotification3Line,
+  RiHeartPulseLine,
+  RiTeamLine,
+  RiSettings4Line,
+  RiBankCardLine,
+  RiStarLine,
+  RiArrowDownSLine,
+  RiAddLine,
+  RiCheckboxCircleLine,
+  RiCloseCircleLine,
+  RiMoreFill,
+  RiComputerLine,
+} from "@remixicon/react";
 
 // ─── DUMMY DATA & ICONS ─────────────────────────────────────────────────────
 
@@ -53,288 +71,24 @@ const mockIncidents = [
 ];
 
 const Icons = {
-  Logo: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="w-5 h-5 text-indigo-600"
-    >
-      <path d="M19.5 3h-15C3.12 3 2 4.12 2 5.5v13C2 19.88 3.12 21 4.5 21h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 4.12 20.88 3 19.5 3zM13 18v-4h-2v4H8l4-5 4 5h-3zm3-7l-4-5-4 5h3v4h2v-4h3z" />
-    </svg>
-  ),
-  Dashboard: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-      />
-    </svg>
-  ),
-  Monitors: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  ),
-  Incidents: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    </svg>
-  ),
-  Alerts: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-  ),
-  Status: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V15a2 2 0 01-2 2z"
-      />
-    </svg>
-  ),
-  Team: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-      />
-    </svg>
-  ),
-  Settings: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
-  ),
-  Billing: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-      />
-    </svg>
-  ),
-  Star: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-    </svg>
-  ),
-  ChevronDown: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 9l-7 7-7-7"
-      />
-    </svg>
-  ),
-  Plus: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 4v16m8-8H4"
-      />
-    </svg>
-  ),
-  Bell: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-  ),
-  CheckCircle: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  ),
-  XCircle: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  ),
-  Activity: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M13 10V3L4 14h7v7l9-11h-7z"
-      />
-    </svg>
-  ),
-  Dots: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-      />
-    </svg>
-  ),
-  MonitorCard: () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-      />
-    </svg>
-  ),
+  Logo: () => <RiPulseLine className="w-5 h-5 text-indigo-600" />,
+  Dashboard: () => <RiDashboardLine className="w-5 h-5" />,
+  Monitors: () => <RiMacbookLine className="w-5 h-5" />,
+  Incidents: () => <RiAlertLine className="w-5 h-5" />,
+  Alerts: () => <RiNotification3Line className="w-5 h-5" />,
+  Status: () => <RiHeartPulseLine className="w-5 h-5" />,
+  Team: () => <RiTeamLine className="w-5 h-5" />,
+  Settings: () => <RiSettings4Line className="w-5 h-5" />,
+  Billing: () => <RiBankCardLine className="w-5 h-5" />,
+  Star: () => <RiStarLine className="w-5 h-5" />,
+  ChevronDown: () => <RiArrowDownSLine className="w-4 h-4" />,
+  Plus: () => <RiAddLine className="w-4 h-4" />,
+  Bell: () => <RiNotification3Line className="w-5 h-5" />,
+  CheckCircle: () => <RiCheckboxCircleLine className="w-6 h-6" />,
+  XCircle: () => <RiCloseCircleLine className="w-6 h-6" />,
+  Activity: () => <RiPulseLine className="w-6 h-6" />,
+  Dots: () => <RiMoreFill className="w-5 h-5" />,
+  MonitorCard: () => <RiComputerLine className="w-6 h-6" />,
 };
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
@@ -636,6 +390,23 @@ const AllMonitors = ({ monitors }) => {
     startIndex + itemsPerPage,
   );
 
+  const timeAgo = (dateString) => {
+    if (!dateString) return "Just now";
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    if (seconds < 60) return `${Math.max(0, seconds)} sec ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hrs ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} days ago`;
+  };
+
   const getBadgeStyle = (status) => {
     if (status === "UP") return "bg-emerald-100 text-emerald-700";
     if (status === "DOWN") return "bg-red-100 text-red-700";
@@ -643,7 +414,7 @@ const AllMonitors = ({ monitors }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[512px]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           All Monitors
@@ -692,7 +463,7 @@ const AllMonitors = ({ monitors }) => {
                   {m.type || "Website"}
                 </td>
                 <td className="px-6 py-4 text-[13px] text-gray-500">
-                  {m.lastChecked || "Just now"}
+                  {timeAgo(m.lastChecked)}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button className="text-gray-400 hover:text-gray-700 transition-colors">
@@ -734,7 +505,7 @@ const AllMonitors = ({ monitors }) => {
 
 const RecentIncidents = () => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[500px]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           Recent Incidents
@@ -773,11 +544,12 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
-  const { fetchMonitors, monitors } = useMonitors();
+  const { fetchMonitors, fetchIncidents, incidents, monitors } = useMonitors();
 
   useEffect(() => {
     fetchMonitors();
-  }, [fetchMonitors]);
+    fetchIncidents();
+  }, [fetchMonitors, fetchIncidents]);
 
   const safeMonitors =
     Array.isArray(monitors) && monitors.length > 0

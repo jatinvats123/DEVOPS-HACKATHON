@@ -4,6 +4,7 @@ import {
   setLoading,
   setMonitors,
   addMonitor,
+  setIncidents,
   removeMonitor,
   setError,
 } from "../state/monitor.slice";
@@ -16,6 +17,7 @@ import {
 export const useMonitors = () => {
   const dispatch = useDispatch();
   const monitors = useSelector((state) => state.monitor.monitors);
+  const incidents = useSelector((state) => state.monitor.incidents);
   const loading = useSelector((state) => state.monitor.loading);
   const error = useSelector((state) => state.monitor.error);
 
@@ -29,10 +31,10 @@ export const useMonitors = () => {
       const data = Array.isArray(raw)
         ? raw
         : Array.isArray(raw?.monitors)
-        ? raw.monitors
-        : Array.isArray(raw?.data)
-        ? raw.data
-        : [];
+          ? raw.monitors
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
       dispatch(setMonitors(data));
     } catch (err) {
       dispatch(
@@ -97,10 +99,35 @@ export const useMonitors = () => {
     [dispatch],
   );
 
+  const fetchIncidents = useCallback(async () => {
+    try {
+      dispatch(setLoading(true));
+      const response = await getAllIncidentsApi();
+      // Adjust according to the actual response shape.
+      // Assuming response is the created monitor object or contains data
+      const data = response?.data || response;
+      dispatch(setIncidents(data));
+      return { success: true, data };
+    } catch (err) {
+      dispatch(
+        setError(
+          err?.response?.data?.message ||
+            err.message ||
+            "Failed to create monitor",
+        ),
+      );
+      return { success: false, error: err };
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
   return {
     monitors,
     loading,
     error,
+    incidents,
+    fetchIncidents,
     fetchMonitors,
     addMonitor: createMonitor,
     removeMonitor: removeMonitorById,

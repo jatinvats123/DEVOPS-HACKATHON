@@ -1,13 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   monitors: [],
+  incidents: [],
   loading: false,
   error: null,
 };
 
 const monitorSlice = createSlice({
-  name: 'monitor',
+  name: "monitor",
   initialState,
   reducers: {
     setLoading: (state, action) => {
@@ -23,10 +24,16 @@ const monitorSlice = createSlice({
       state.monitors.push(action.payload);
       state.error = null;
     },
+    setIncidents: (state, action) => {
+      state.incidents = action.payload;
+      state.error = null;
+    },
+
     removeMonitor: (state, action) => {
       // Assuming deleteMonitor returns confirmation and we remove by id or _id
       state.monitors = state.monitors.filter(
-        (monitor) => monitor._id !== action.payload && monitor.id !== action.payload
+        (monitor) =>
+          monitor._id !== action.payload && monitor.id !== action.payload,
       );
       state.error = null;
     },
@@ -37,6 +44,13 @@ const monitorSlice = createSlice({
   },
 });
 
-export const { setLoading, setMonitors, addMonitor, removeMonitor, setError } = monitorSlice.actions;
+export const {
+  setLoading,
+  setMonitors,
+  addMonitor,
+  removeMonitor,
+  setError,
+  setIncidents,
+} = monitorSlice.actions;
 
 export default monitorSlice.reducer;
