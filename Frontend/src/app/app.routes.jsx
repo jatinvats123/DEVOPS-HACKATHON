@@ -9,6 +9,22 @@ export const router = createBrowserRouter([
         element: <div>Home</div>,
     },
     {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
+        path: "/register",
+        element: <RegisterPage />,
+    },
+    {
+        path: "/dashboard",
+        element: <DashboardPage />,
+    },
+    {
+        path: "/add-monitor",
+        element: <AddMonitorPage />,
+    },
+    {
         path: "*",
         element: <NotFound />
     },

@@ -2,7 +2,7 @@ import monitorModel from '../models/monitor.model.js';
 
 export const createMonitorController = async (req, res) => {
   try {
-    const { type, url, interval, timeout, title } = req.body;
+    const { type, url, interval, timeout, title, name, description } = req.body;
 
     //Basic validation
     if (!url) {
@@ -33,10 +33,11 @@ export const createMonitorController = async (req, res) => {
     const monitor = await monitorModel.create({
       userId: req.user.id, // Assuming user ID is available in req.user after authentication
       type,
-      title,
+      title: title || name, // Support both title and name from frontend
       url: normalizedUrl,
       interval,
       timeout,
+      description,
     });
 
     return res.status(201).json({
@@ -45,9 +46,10 @@ export const createMonitorController = async (req, res) => {
       data: monitor,
     });
   } catch (error) {
+    console.error('Error creating monitor:', error);
     return res
       .status(500)
-      .json({ message: 'Internal server error', success: false });
+      .json({ message: 'Internal server error', success: false, error: error.message });
   }
 };
 
