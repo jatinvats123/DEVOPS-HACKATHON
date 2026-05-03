@@ -26,6 +26,18 @@ export async function getLatencyMetrics(req, res) {
       success: true,
       data,
     });
+        /*
+    example response:
+    {
+      "message": "Latency metrics fetched successfully",
+      "success": true,
+      "data": [
+        { "time": "10:00 AM", "latency": 120 },
+        { "time": "10:01 AM", "latency": 110 },
+        ...
+      ]
+    }
+    */
   } catch (error) {
     res.status(500).json({
       message: 'Latency fetch failed',
@@ -67,6 +79,18 @@ export async function getUptimeMetrics(req, res) {
         upChecks: up,
       },
     });
+       /*
+    example response:
+    {
+      "message": "Uptime metrics fetched successfully",
+      "success": true,
+      "data": {
+        "uptime": 95.5,
+        "totalChecks": 100,
+        "upChecks": 95
+      }
+    }
+    */
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -100,6 +124,18 @@ export async function getStatusTimeline(req, res) {
       success: true,
       data,
     });
+       /*
+    example response:
+    {
+      "message": "Status timeline fetched successfully",
+      "success": true,
+      "data": [
+        { "time": "10:00 AM", "status": 1 },
+        { "time": "10:01 AM", "status": 0 },
+        ...
+      ]
+    }
+    */
   } catch (error) {
     res.status(500).json({
       success: false,
