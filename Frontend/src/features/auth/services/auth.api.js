@@ -8,7 +8,7 @@ import { apiRequest } from "../../../lib/api/apiRequest";
  */
 
 export const register = async (userData) => {
-return apiRequest("post", env.REGISTER_API, userData)
+return apiRequest({method: "post", url: env.REGISTER_API, data: userData})
 }
 
 
@@ -19,7 +19,7 @@ return apiRequest("post", env.REGISTER_API, userData)
  */
 
 export const login  = async (userData) =>{
-    return apiRequest("post", env.LOGIN_API, userData)
+    return apiRequest({method: "post", url: env.LOGIN_API, data: userData})
 }
 
 
@@ -28,7 +28,7 @@ export const login  = async (userData) =>{
 */
 
 export const getUserProfile = async () => {
-    return apiRequest("get", env.GET_USER_API);
+    return apiRequest({method: "get", url: env.GET_USER_API});
 }
  
 
@@ -39,7 +39,7 @@ export const getUserProfile = async () => {
 
 
 export const forgotPassword = async (email) => {
-    return apiRequest("post", env.FORGOT_PASSWORD_API, { email });
+    return apiRequest({method: "post", url: env.FORGOT_PASSWORD_API, data: { email }});
 }
 
 
@@ -50,5 +50,5 @@ export const forgotPassword = async (email) => {
  */
 
 export const changePassword = async (passwordData) => {
-return apiRequest("post", env.CHANGE_PASSWORD_API, passwordData)
+return apiRequest({method: "post", url: env.CHANGE_PASSWORD_API, data: passwordData})
 }
