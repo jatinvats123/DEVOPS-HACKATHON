@@ -12,9 +12,19 @@ const LOGIN_API = import.meta.env.VITE_LOGIN_API;
 //get user profile API endpoint
 const GET_USER_API = import.meta.env.VITE_GET_USER_API;
 
-
+// forgot password API endpoint
 const FORGOT_PASSWORD_API = import.meta.env.VITE_FORGOT_PASSWORD_API;
 
+
+// change password API endpoint
+const CHANGE_PASSWORD_API = import.meta.env.VITE_CHANGE_PASSWORD_API;
+
+// incidents API endpoint
+const INCIDENTS_API = import.meta.env.VITE_INCIDENTS_API;
+
+
+// create monitoring API endpoint
+const CREATE_MONITORING_API = import.meta.env.VITE_CREATE_MONITORING_API;
 
 // Validate environment variables
 if(!BACKEND_URL) {
@@ -40,11 +50,27 @@ if(!FORGOT_PASSWORD_API) {
     throw new Error("FORGOT_PASSWORD_API is not defined in the environment variables");
 }
 
+if(!CHANGE_PASSWORD_API) {
+    throw new Error("CHANGE_PASSWORD_API is not defined in the environment variables");
+}
+
+if(!INCIDENTS_API) {
+    throw new Error("INCIDENTS_API is not defined in the environment variables");
+}
+
+
+
+if(!CREATE_MONITORING_API) {
+    throw new Error("CREATE_MONITORING_API is not defined in the environment variables");
+}
 // Export the environment variables as a config object
 export const env = {
     BACKEND_URL,
     REGISTER_API,
     LOGIN_API,
     GET_USER_API,
-  FORGOT_PASSWORD_API
+  FORGOT_PASSWORD_API,
+  CHANGE_PASSWORD_API,
+  INCIDENTS_API ,
+    CREATE_MONITORING_API
 }
