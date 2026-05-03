@@ -8,10 +8,4 @@ export const API = axios.create({
     headers: { "Content-Type": "application/json" },
 });
 
-API.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        throw error;
-    }
-);
 
