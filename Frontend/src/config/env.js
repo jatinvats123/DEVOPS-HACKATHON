@@ -28,6 +28,13 @@ const LOGS_API = import.meta.env.VITE_LOGS_API;
 // create monitoring API endpoint
 const CREATE_MONITORING_API = import.meta.env.VITE_CREATE_MONITORING_API;
 
+// get logs API endpoint
+const GET_LOGS_API = import.meta.env.VITE_GET_LOGS_API;
+
+
+// health API endpoint
+const HEALTH_API = import.meta.env.VITE_HEALTH_API;
+
 // Validate environment variables
 if(!BACKEND_URL) {
     throw new Error("BACKEND_URL is not defined in the environment variables");
@@ -67,15 +74,24 @@ if(!LOGS_API) {
 if(!CREATE_MONITORING_API) {
     throw new Error("CREATE_MONITORING_API is not defined in the environment variables");
 }
+
+if(!GET_LOGS_API) {
+    throw new Error("GET_LOGS_API is not defined in the environment variables");
+}
+
+if(!HEALTH_API) {
+    throw new Error("HEALTH_API is not defined in the environment variables");
+}
 // Export the environment variables as a config object
 export const env = {
     BACKEND_URL,
     REGISTER_API,
     LOGIN_API,
     GET_USER_API,
-  FORGOT_PASSWORD_API,
-  CHANGE_PASSWORD_API,
-  INCIDENTS_API,
-  LOGS_API,
-    CREATE_MONITORING_API
+    FORGOT_PASSWORD_API,
+    CHANGE_PASSWORD_API,
+    INCIDENTS_API ,
+    CREATE_MONITORING_API,
+    GET_LOGS_API,
+    HEALTH_API
 }
