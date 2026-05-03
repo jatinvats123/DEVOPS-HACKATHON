@@ -8,21 +8,28 @@ import { apiRequest } from "../../../lib/api/apiRequest.js";
 */
 
 export const createMonitoring = async (monitorData) => {
-  return apiRequest("post", env.CREATE_MONITORING_API, monitorData);
-};
 
-/*
- *@getMonitors - Fetches all monitors for the authenticated user.
- */
+  return apiRequest("post", env.CREATE_MONITORING_API, monitorData)
+}
+
+
+
+
+/* 
+*@getMonitors - Fetches all monitors for the authenticated user.
+*/
 export const getMonitors = async () => {
-  return apiRequest("get", env.CREATE_MONITORING_API);
-};
+    return apiRequest("get", env.CREATE_MONITORING_API);
+}
+
+
 
 /*
- *@deleteMonitor - Deletes a monitor by its ID.
- *@param {string} monitorId - The ID of the monitor to delete.
- */
+*@deleteMonitor - Deletes a monitor by its ID.
+*@param {string} monitorId - The ID of the monitor to delete.   
+*/
 
 export const deleteMonitor = async (monitorId) => {
-  return apiRequest("delete", `${env.CREATE_MONITORING_API}/${monitorId}`);
-};
+    return apiRequest("delete", `${env.CREATE_MONITORING_API}/${monitorId}`);
+}
+    

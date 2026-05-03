@@ -1,17 +1,23 @@
-import { API } from "../../../lib/api/axios";
-import { env } from "../../../config/env";
+import { apiRequest } from '../../../lib/api/apiRequest.js';
+import { env } from '../../../config/env.js';
 
-/*
-    * @getIncidentsByMonitorId - Fetches incidents for a specific monitor by its ID.
-    * @param {string} monitorId - The ID of the monitor for which to fetch incidents.
-*/
+/**
+ * @getAllIncidents - Fetches all incidents
+ */
+export const getAllIncidents = async () => {
+  return apiRequest({
+    method: 'get',
+    url: env.INCIDENTS_API
+  });
+};
 
+/**
+ * @getIncidentsByMonitorId - Fetches incidents for a specific monitor by its ID
+ * @param {string} monitorId - The ID of the monitor for which to fetch incidents
+ */
 export const getIncidentsByMonitorId = async (monitorId) => {
-  try {
-      const response = await API.get(`${env.INCIDENTS_API}/${monitorId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching incidents:", error);
-    throw error;
-  }
-}
+  return apiRequest({
+    method: 'get',
+    url: `${env.INCIDENTS_API}/${monitorId}`
+  });
+};

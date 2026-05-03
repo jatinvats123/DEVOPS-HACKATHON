@@ -12,9 +12,14 @@ const monitorSchema = new mongoose.Schema({
     default: 'Untitled monitor',
     set: (value) => value?.trim() || 'Untitled monitor',
   },
+  description: {
+    type: String,
+    trim: true,
+    default: '',
+  },
   type: {
     type: String,
-    enum: ['website', 'api'],
+    enum: ['website', 'api', 'HTTP/HTTPS', 'Ping', 'TCP', 'DNS', 'http', 'ping', 'tcp', 'dns'],
     required: true,
     default: 'website',
   },

@@ -23,19 +23,20 @@ export const registerUser = asyncHandler(async (req, res) => {
         username: username.toLowerCase()
     });
 
+    // Auto-verify user for development (remove in production)
+    user.isVerified = true;
+    await user.save();
+
     const createdUser = await UserService.findUserByIdWithoutPassword(user._id);
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
-    await user.generateOTP();
 
-    await sendEmail({
-        email: user.email,
-        subject: "OTP Verification",
-        message: `Your OTP is: ${user.otp}`
-    })
+    // Skip OTP and email for development
+    const accessToken = user.generateAccessToken();
+    
     return res.status(201).json(
-        new ApiResponse(201, createdUser, "User registered successfully. Please verify your email with the OTP.")
+        new ApiResponse(201, { user: createdUser, token: accessToken }, "User registered successfully")
     );
 });
 
