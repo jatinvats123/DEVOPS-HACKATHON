@@ -60,7 +60,7 @@ export async function startMonitorCron() {
 
           let currentStatus = result.status;
 
-          console.log("current status", currentStatus)
+          console.log('current status', currentStatus);
 
           //Retry Logic
           if (result.status === 'DOWN') {
