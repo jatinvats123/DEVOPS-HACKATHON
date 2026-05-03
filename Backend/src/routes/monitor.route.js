@@ -21,7 +21,7 @@ const MonitorRouter = express.Router();
 MonitorRouter.post(
   '/',
   verifyJWT,
-  validate(createMonitorValidator),
+  // validate(createMonitorValidator),
   createMonitorController
 );
 

@@ -6,10 +6,9 @@ import { startMonitorCron } from "./src/jobs/monitorCron.js";
 
 const PORT = config.PORT || 8080;
 
-// Connect to the database and start the server
-ConnectDB();
+ConnectDB(); // Connect to the database and start the server
 startMonitorCron(); // Start the cron job to check monitors
 
 app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
-})
+  logger.info(`Server is running on port ${PORT}`);
+});

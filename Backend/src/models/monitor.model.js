@@ -19,6 +19,11 @@ const monitorSchema = new mongoose.Schema({
     type: Number, //request timeout in duration
     default: 5000, //default timeout of 5 seconds
   },
+  status: {
+    type: String,
+    enum: ['UP', 'DOWN'],
+    default: 'UP',
+  },
   lastChecked: {
     type: Date,
   },

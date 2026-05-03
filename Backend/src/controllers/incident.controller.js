@@ -14,7 +14,7 @@ export const getIncidentsByMonitorIdController = async (req, res) => {
       data: incidents,
     });
   } catch (error) {
-    console.error(`Error fetching incidents for monitor ${monitorId}:`, error);
+    logger.error(`Error fetching incidents for monitor ${monitorId}:`, error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };

@@ -24,8 +24,8 @@ export async function startMonitorCron() {
 
   let isRunning = false;
 
-  // Schedule the cron job to run every minute
-  cron.schedule('* * * * *', async () => {
+  // Schedule the cron job to run every second (for testing purposes, you can change this to every minute in production)
+  cron.schedule('*/10 * * * * *', async () => {
     if (isRunning) return;
     isRunning = true;
 
@@ -34,23 +34,33 @@ export async function startMonitorCron() {
     const monitors = await monitorModel.find();
 
     if (monitors.length === 0) {
-      logger.warn('No monitors found to check.');
+      logger.info(
+        'No monitors found to check. please add some monitors to start monitoring.'
+      );
+      isRunning = false;
       return;
     }
     await Promise.all(
       monitors.map(async (monitor) => {
         try {
-          const now = new Date.now();
+          const now = Date.now();
           const lastChecked = new Date(monitor.lastChecked || 0).getTime();
 
           const differenceInSeconds = (now - lastChecked) / 1000;
-          if (differenceInSeconds < monitor.interval) {
+          if (differenceInSeconds < monitor.interval - 2) {
+            // Adding a small buffer of 2 seconds to account for any delays in cron execution
             return; // Skip this monitor if it's not time to check yet
           }
 
           const prevStatus = monitor.status; // Assuming you have a status field in your monitor model
+
+          console.log('previous status', monitor.status);
+
           const result = await checkMonitor(monitor.url, monitor.timeout);
+
           let currentStatus = result.status;
+
+          console.log("current status", currentStatus)
 
           //Retry Logic
           if (result.status === 'DOWN') {
@@ -68,7 +78,10 @@ export async function startMonitorCron() {
           }
 
           // Incident management logic
-          if (prevStatus === 'UP' && currentStatus === 'DOWN') {
+          if (
+            (prevStatus === 'UP' && currentStatus === 'DOWN') ||
+            (prevStatus === 'DOWN' && currentStatus === 'DOWN')
+          ) {
             await createIncident(
               monitor._id,
               result.error || `Monitor ${monitor.url} is down`
@@ -95,6 +108,8 @@ export async function startMonitorCron() {
           });
         } catch (error) {
           logger.error(`Error checking monitor ${monitor.url}:`, error);
+        } finally {
+          isRunning = false;
         }
       })
     );
