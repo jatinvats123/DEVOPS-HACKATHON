@@ -2,7 +2,7 @@ import monitorModel from '../models/monitor.model.js';
 
 export const createMonitorController = async (req, res) => {
   try {
-    const { type, url, interval, timeout } = req.body;
+    const { type, url, interval, timeout, title } = req.body;
 
     //Basic validation
     if (!url) {
@@ -33,6 +33,7 @@ export const createMonitorController = async (req, res) => {
     const monitor = await monitorModel.create({
       userId: req.user.id, // Assuming user ID is available in req.user after authentication
       type,
+      title,
       url: normalizedUrl,
       interval,
       timeout,
