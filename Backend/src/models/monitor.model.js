@@ -6,6 +6,12 @@ const monitorSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  title: {
+    type: String,
+    trim: true,
+    default: 'Untitled monitor',
+    set: (value) => value?.trim() || 'Untitled monitor',
+  },
   type: {
     type: String,
     enum: ['website', 'api'],
