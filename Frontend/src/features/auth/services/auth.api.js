@@ -1,5 +1,5 @@
-import { API } from "../../../lib/api/axios";
 import { env } from "../../../config/env";
+import { apiRequest } from "../../../lib/api/apiRequest";
 
 /*
  * Registers a new user with the provided user data.
@@ -8,13 +8,7 @@ import { env } from "../../../config/env";
  */
 
 export const register = async (userData) => {
-    try {
-        const response = await API.post(env.REGISTER_API, userData);
-        return response.data;
-    } catch (error) {
-        console.error("Registration error:", error);
-        throw error;
-    }
+return apiRequest("post", env.REGISTER_API, userData)
 }
 
 
@@ -25,13 +19,7 @@ export const register = async (userData) => {
  */
 
 export const login  = async (userData) =>{
-    try {
-        const response = await API.post(env.LOGIN_API, userData);
-        return response.data;
-    } catch (error) {
-        console.error("Login error:", error);
-        throw error;
-    }
+    return apiRequest("post", env.LOGIN_API, userData)
 }
 
 
@@ -40,15 +28,9 @@ export const login  = async (userData) =>{
 */
 
 export const getUserProfile = async () => {
-    try {
-        const response = await API.get(env.GET_USER_API);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        throw error;
-    }
+    return apiRequest("get", env.GET_USER_API);
 }
-
+ 
 
 /*
  * @forgotPassword - Initiates the forgot password process for a user by sending their email to the backend.
@@ -57,13 +39,7 @@ export const getUserProfile = async () => {
 
 
 export const forgotPassword = async (email) => {
-    try {
-        const response = await API.post(env.FORGOT_PASSWORD_API, { email });
-        return response.data;
-    } catch (error) {
-        console.error("Error initiating forgot password process:", error);
-        throw error;
-    }
+    return apiRequest("post", env.FORGOT_PASSWORD_API, { email });
 }
 
 
@@ -74,11 +50,5 @@ export const forgotPassword = async (email) => {
  */
 
 export const changePassword = async (passwordData) => {
-    try {
-        const response = await API.post(env.CHANGE_PASSWORD_API, passwordData);
-        return response.data;
-    } catch (error) {
-        console.error("Error changing password:", error);
-        throw error;
-    }
+return apiRequest("post", env.CHANGE_PASSWORD_API, passwordData)
 }
