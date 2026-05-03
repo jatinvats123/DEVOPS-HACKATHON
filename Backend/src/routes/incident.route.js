@@ -1,6 +1,6 @@
 import express from 'express';
 import { getIncidentsByMonitorIdController } from '../controllers/incident.controller.js';
-import { verifyJWT } from '../middleware/auth.middleware.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 const IncidentRouter = express.Router();
 
 /*
