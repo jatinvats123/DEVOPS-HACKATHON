@@ -1,14 +1,16 @@
 import monitorModel from '../models/monitor.model.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
+import logger from '../config/logger.js';
 
-export const createMonitorController = async (req, res) => {
+export const createMonitorController = asyncHandler(async (req, res) => {
   try {
     const { type, url, interval, timeout, title, name, description } = req.body;
 
     //Basic validation
     if (!url) {
-      return res
-        .status(400)
-        .json({ message: 'URL is required', success: false });
+      throw new ApiError(400, 'URL is required');
     }
 
     const isAlreadyMonitored = await monitorModel.findOne({
@@ -17,10 +19,7 @@ export const createMonitorController = async (req, res) => {
     });
 
     if (isAlreadyMonitored) {
-      return res.status(400).json({
-        message: 'Monitor for this URL already exists',
-        success: false,
-      });
+      throw new ApiError(409, 'This URL is already being monitored');
     }
 
     //Normalize URL (ensure it starts with http:// or https://)
@@ -40,62 +39,93 @@ export const createMonitorController = async (req, res) => {
       description,
     });
 
-    return res.status(201).json({
-      message: 'Monitor created successfully',
-      success: true,
-      data: monitor,
-    });
-  } catch (error) {
-    console.error('Error creating monitor:', error);
     return res
-      .status(500)
-      .json({ message: 'Internal server error', success: false, error: error.message });
+      .status(201)
+      .json(new ApiResponse(201, monitor, 'Monitor created successfully'));
+  } catch (error) {
+    logger.error('Error creating monitor:', error);
+    throw new ApiError(500, 'Internal server error');
   }
-};
+});
 
-export const getAllMonitorsController = async (req, res) => {
+export const getAllMonitorsController = asyncHandler(async (req, res) => {
   const userId = req.user?.id; // Assuming user ID is available in req.user after authentication
   try {
     const monitors = await monitorModel.find({ userId }); // Fetch monitors for the authenticated user
-    return res.status(200).json({
-      message: 'Monitors retrieved successfully',
-      success: true,
-      data: monitors,
-    });
-  } catch (error) {
     return res
-      .status(500)
-      .json({ message: 'Internal server error', success: false });
+      .status(200)
+      .json(new ApiResponse(200, monitors, 'Monitors retrieved successfully'));
+  } catch (error) {
+    throw new ApiError(500, 'Internal server error');
   }
-};
+});
 
-export const deleteMonitorController = async (req, res) => {
+export const deleteMonitorController = asyncHandler(async (req, res) => {
   const userId = req.user?.id; // Assuming user ID is available in req.user after authentication
   const monitorId = req.params.monitorId;
 
   try {
-    console.log(`Attempting to delete monitor: ${monitorId} for user: ${userId}`);
+    logger.info(
+      `Attempting to delete monitor: ${monitorId} for user: ${userId}`
+    );
     const monitor = await monitorModel.findOneAndDelete({
       _id: monitorId,
       userId,
     });
 
     if (!monitor) {
-      console.log(`Monitor ${monitorId} not found or not owned by user ${userId}`);
-      return res.status(404).json({
-        message: 'Monitor not found or you do not have permission to delete it',
-        success: false,
-      });
+      logger.info(
+        `Monitor ${monitorId} not found or not owned by user ${userId}`
+      );
+      throw new ApiError(404, 'Monitor not found or not owned by user');
     }
 
-    return res.status(200).json({
-      message: 'Monitor deleted successfully',
-      success: true,
-      data: monitor,
-    });
-  } catch (error) {
     return res
-      .status(500)
-      .json({ message: 'Internal server error', success: false });
+      .status(200)
+      .json(new ApiResponse(200, null, 'Monitor deleted successfully'));
+  } catch (error) {
+    return res.status(500).json(new ApiError(500, 'Internal server error'));
   }
-};
+});
+
+export const updateMonitorController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const monitorId = req.params.monitorId;
+  const { type, url, interval, timeout, title, description } = req.body;
+  try {
+    const monitor = await monitorModel.findOne({ _id: monitorId, userId });
+
+    if (!monitor) {
+      throw new ApiError(404, 'Monitor not found or not owned by user');
+    }
+
+    // Normalize URL if provided
+    let normalizedUrl = url;
+    if (url && !/^https?:\/\//i.test(url)) {
+      normalizedUrl = 'https://' + url;
+    }
+
+    // Update the monitor
+    const updatedMonitor = await monitorModel.findByIdAndUpdate(
+      monitorId,
+      {
+        type,
+        url: normalizedUrl,
+        interval,
+        timeout,
+        title,
+        description,
+      },
+      { new: true }
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, updatedMonitor, 'Monitor updated successfully')
+      );
+  } catch (error) {
+    logger.error('Error updating monitor:', error);
+    throw new ApiError(500, 'Internal server error');
+  }
+});
