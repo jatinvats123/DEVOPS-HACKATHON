@@ -28,7 +28,7 @@ const Icons = {
 
 const Sidebar = () => {
   const menuItems = [
-    { name: "Dashboard", icon: Icons.Dashboard, path: "/" },
+    { name: "Dashboard", icon: Icons.Dashboard, path: "/dashboard" },
     { name: "Monitors", icon: Icons.Monitors, path: "/monitors" },
     { name: "Incidents", icon: Icons.Incidents, path: "/incidents" },
     { name: "Alerts", icon: Icons.Alerts, path: "/alerts" },
@@ -62,15 +62,24 @@ const Sidebar = () => {
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
+              `group flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 relative overflow-hidden ${
                 isActive
                   ? "bg-white/10 text-white shadow-sm"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
               }`
             }
           >
-            <item.icon />
-            {item.name}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400 rounded-r-md"></div>
+                )}
+                <div className="relative z-10 flex items-center gap-3">
+                  <item.icon />
+                  {item.name}
+                </div>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

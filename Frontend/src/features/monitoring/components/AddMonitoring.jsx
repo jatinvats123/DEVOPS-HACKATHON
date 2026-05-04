@@ -1,26 +1,40 @@
 import { useForm } from 'react-hook-form';
 import { RiCloseLine } from '@remixicon/react';
 import { useMonitors } from '../hooks/useMonitor';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 const AddMonitoring = ({ isOpen, onClose }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
-
-const { handleCreateMonitor } = useMonitors();
-
+  const { handleCreateMonitor } = useMonitors();
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const monitors = useSelector(state => state.monitors);
+  const [submitError, setSubmitError] = useState(null);
 
   if (!isOpen) return null;
 
   const onSubmit = async(data) => {
+    setSubmitError(null);
    
-   try {
-    const response = await handleCreateMonitor(data);
-    console.log("Monitor created:", response);
-   } catch (error) {
-    console.error("Error creating monitor:", error);
-   }
-    reset();
-    onClose();
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token || !isAuthenticated) {
+      setSubmitError('You must be logged in to create a monitor');
+      return;
+    }
+
+    try {
+      const response = await handleCreateMonitor(data);
+      console.log("Monitor created:", response);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Error creating monitor:", error);
+      setSubmitError(error.response?.data?.message || error.message || 'Failed to create monitor');
+    }
   };
+
+  console.log("Monitors in state:", monitors);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -33,6 +47,11 @@ const { handleCreateMonitor } = useMonitors();
         </div>
         
         <div className="p-6 overflow-y-auto">
+          {submitError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
           <form id="add-monitor-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
