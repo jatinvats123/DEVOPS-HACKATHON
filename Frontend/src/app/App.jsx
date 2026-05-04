@@ -4,26 +4,37 @@ import { RouterProvider } from 'react-router'
 import { store } from './app.store'
 import { router } from './app.routes'
 import { setUser, setAuthenticated } from '../features/auth/state/authSlice'
+import { useAuth } from '../features/auth/hooks/useAuth';
+import { useState } from 'react';
 
 function AppContent() {
   const dispatch = useDispatch();
+  const { handleGetUserProfile } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Initialize auth state from localStorage on app load
+  // Initialize auth state from cookie on app load
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
+    const initAuth = async () => {
       try {
-        dispatch(setUser(JSON.parse(user)));
-        dispatch(setAuthenticated(true));
+        const response = await handleGetUserProfile();
+        if (response) {
+          dispatch(setAuthenticated(true));
+        }
       } catch (err) {
-        console.error('Failed to restore auth state:', err);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        console.log('Not authenticated');
+      } finally {
+        setIsInitializing(false);
       }
-    }
-  }, [dispatch]);
+    };
+
+    initAuth();
+  }, [dispatch, handleGetUserProfile]);
+
+  if (isInitializing) {
+    return <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+    </div>;
+  }
 
   return <RouterProvider router={router} />
 }

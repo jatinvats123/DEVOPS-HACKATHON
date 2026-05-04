@@ -13,10 +13,18 @@ import Team from "../features/monitoring/pages/Team";
 import Settings from "../features/monitoring/pages/Settings";
 import Billing from "../features/monitoring/pages/Billing";
 
+import { Navigate } from "react-router";
+import { useSelector } from "react-redux";
+
+const Home = () => {
+    const { isAuthenticated } = useSelector(state => state.auth);
+    return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />;
+};
+
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <Login />,
+        element: <Home />,
     },
     {
         path: "/login",

@@ -1,17 +1,14 @@
 import { apiRequest } from "../../../lib/api/apiRequest.js";
 import { env } from "../../../config/env.js";
 
-export const axiosRequest = axios.create({
-  baseURL: "http://localhost:5000/api/incidents",
-  withCredentials: true,
-});
-
 /**
  * @getAllIncidents - Fetches all incidents
  */
 export const getAllIncidents = async () => {
-  const data = axiosRequest.get("/");
-  return data;
+  return apiRequest({
+    method: "get",
+    url: env.INCIDENTS_API,
+  });
 };
 
 /**

@@ -22,8 +22,7 @@ function Login() {
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -73,15 +72,7 @@ function Login() {
         password: formData.password
       });
       
-      if (response && response.data) {
-        // Save token and user data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Update Redux state
-        dispatch(setUser(response.data.user));
-        dispatch(setAuthenticated(true));
-        
+      if (response) {
         // Redirect to dashboard
         navigate('/dashboard', { replace: true });
       }

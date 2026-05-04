@@ -52,3 +52,7 @@ export const forgotPassword = async (email) => {
 export const changePassword = async (passwordData) => {
 return apiRequest({method: "post", url: env.CHANGE_PASSWORD_API, data: passwordData})
 }
+
+export const logout = async () => {
+    return apiRequest({method: "post", url: env.LOGOUT_API});
+}

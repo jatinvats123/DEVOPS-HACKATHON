@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
 import { selectMonitors, selectLoading } from "../state/monitor.slice";
+import { getAllIncidents } from "../services/incident.api";
 import {
   AreaChart,
   Area,
@@ -33,8 +35,7 @@ import {
   RiComputerLine,
 } from "@remixicon/react";
 
-// ─── DUMMY DATA & ICONS ─────────────────────────────────────────────────────
-
+// ─── SAMPLE DATA & ICONS ───────────────────────────────────────────────────
 const uptimeData = [
   { time: "May 12", val: 99.5 },
   { time: "May 13", val: 99.2 },
@@ -43,33 +44,6 @@ const uptimeData = [
   { time: "May 16", val: 99.3 },
   { time: "May 17", val: 99.5 },
   { time: "May 18", val: 99.7 },
-];
-
-const pieData = [
-  { name: "Up", value: 9, fill: "#22c55e" },
-  { name: "Down", value: 2, fill: "#ef4444" },
-  { name: "Paused", value: 1, fill: "#9ca3af" },
-];
-
-const mockIncidents = [
-  {
-    id: 1,
-    name: "api.payment-gateway.com",
-    date: "May 18, 2024 10:24 AM",
-    status: "ONGOING",
-  },
-  {
-    id: 2,
-    name: "store.example.com",
-    date: "May 17, 2024 08:15 PM",
-    status: "RESOLVED",
-  },
-  {
-    id: 3,
-    name: "api.user-service.com",
-    date: "May 16, 2024 11:02 AM",
-    status: "RESOLVED",
-  },
 ];
 
 const Icons = {
@@ -124,28 +98,28 @@ const StatsCards = ({ stats }) => {
       <Card
         title="Total Monitors"
         value={stats.total}
-        sub="▲ 2 this month"
+        sub={`Total managed assets`}
         colorClass="text-indigo-600"
         icon={Icons.MonitorCard}
       />
       <Card
         title="Up Monitors"
         value={stats.up}
-        sub="75%"
+        sub={`${stats.total > 0 ? ((stats.up / stats.total) * 100).toFixed(1) : 0}% of total`}
         colorClass="text-emerald-500"
         icon={Icons.CheckCircle}
       />
       <Card
         title="Down Monitors"
         value={stats.down}
-        sub="16.7%"
+        sub={`${stats.total > 0 ? ((stats.down / stats.total) * 100).toFixed(1) : 0}% requiring attention`}
         colorClass="text-red-500"
         icon={Icons.XCircle}
       />
       <Card
         title="Avg. Uptime"
         value={stats.uptime}
-        sub="▲ 1.2% this month"
+        sub="Overall health score"
         colorClass="text-emerald-500"
         icon={Icons.Activity}
       />
@@ -220,7 +194,19 @@ const UptimeOverview = () => {
   );
 };
 
-const StatusDistribution = () => {
+const StatusDistribution = ({ monitors = [] }) => {
+  const up = monitors.filter(m => (m.status || "").toUpperCase() === "UP").length;
+  const down = monitors.filter(m => (m.status || "").toUpperCase() === "DOWN").length;
+  const paused = monitors.filter(m => (m.status || "").toUpperCase() === "PAUSED").length;
+  const total = monitors.length || 1;
+  const uptimePct = ((up / total) * 100).toFixed(0);
+
+  const dynamicPieData = [
+    { name: "Up", value: up, fill: "#22c55e" },
+    { name: "Down", value: down, fill: "#ef4444" },
+    { name: "Paused", value: paused, fill: "#9ca3af" },
+  ];
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col min-h-[350px]">
       <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-2">
@@ -230,7 +216,7 @@ const StatusDistribution = () => {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={pieData}
+              data={dynamicPieData}
               cx="50%"
               cy="50%"
               innerRadius={70}
@@ -239,7 +225,7 @@ const StatusDistribution = () => {
               dataKey="value"
               stroke="none"
             >
-              {pieData.map((entry, index) => (
+              {dynamicPieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
@@ -247,7 +233,7 @@ const StatusDistribution = () => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold text-gray-900">75%</span>
+          <span className="text-2xl font-bold text-gray-900">{uptimePct}%</span>
           <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
             Uptime
           </span>
@@ -256,15 +242,15 @@ const StatusDistribution = () => {
       <div className="flex justify-center gap-5 mt-4">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span className="text-xs text-gray-500">Up (9)</span>
+          <span className="text-xs text-gray-500">Up ({up})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span className="text-xs text-gray-500">Down (2)</span>
+          <span className="text-xs text-gray-500">Down ({down})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-          <span className="text-xs text-gray-500">Paused (1)</span>
+          <span className="text-xs text-gray-500">Paused ({paused})</span>
         </div>
       </div>
     </div>
@@ -396,37 +382,57 @@ const AllMonitors = ({ monitors = [] }) => {
   );
 };
 
-const RecentIncidents = () => {
+const RecentIncidents = ({ incidents = [] }) => {
+  if (incidents.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-4">
+          Recent Incidents
+        </h2>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Icons.CheckCircle className="w-8 h-8 text-emerald-500 mb-2 opacity-20" />
+          <p className="text-sm text-gray-500">No recent incidents</p>
+          <p className="text-[11px] text-gray-400">Your systems are running smoothly</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           Recent Incidents
         </h2>
-        <button className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700">
+        <Link to="/incidents" className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700">
           View All
-        </button>
+        </Link>
       </div>
-      <div className="flex flex-col gap-4 ">
-        {mockIncidents.map((inc) => (
+      <div className="flex flex-col gap-4">
+        {incidents.slice(0, 3).map((inc) => (
           <div
-            key={inc.id}
-            className="border h-35 border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
+            key={inc._id || inc.id}
+            className="border border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
           >
             <div className="flex items-start justify-between mb-2">
               <h4 className="text-[13px] font-semibold text-gray-900 truncate">
-                {inc.name}
+                {inc.monitorTitle || inc.name || "Unknown Monitor"}
               </h4>
               <span
-                className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
+                className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" || inc.status === "OPEN" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
               >
                 {inc.status}
               </span>
             </div>
-            <p className="text-[12px] text-gray-500 mb-3">{inc.date}</p>
-            <button className="w-full py-1.5 border border-gray-200 rounded text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <p className="text-[12px] text-gray-500 mb-3">
+              {new Date(inc.createdAt || inc.date).toLocaleString()}
+            </p>
+            <Link
+              to={`/incidents/${inc._id}`}
+              className="block w-full py-1.5 border border-gray-200 rounded text-[12px] text-center font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
               View Incident
-            </button>
+            </Link>
           </div>
         ))}
       </div>
@@ -437,6 +443,7 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
+  const [incidents, setIncidents] = useState([]);
   const monitorsData = useSelector(selectMonitors);
   const monitors = monitorsData || [];
   const loading = useSelector(selectLoading);
@@ -444,20 +451,37 @@ const Dashboard = () => {
 
   useEffect(() => {
     handleGetMonitors();
+
+    const fetchIncidents = async () => {
+      try {
+        const res = await getAllIncidents();
+        if (res && res.data) {
+          setIncidents(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch incidents:", err);
+      }
+    };
+
+    fetchIncidents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const up = monitors.filter((m) => {
+    const s = (m.status || "").toUpperCase();
+    return s === "UP" || s === "HEALTHY";
+  }).length;
+
+  const down = monitors.filter((m) => {
+    const s = (m.status || "").toUpperCase();
+    return s === "DOWN" || s === "FAILING";
+  }).length;
+
   const stats = {
     total: monitors.length,
-    up: monitors.filter((m) => {
-      const s = (m.status || "").toUpperCase();
-      return s === "UP" || s === "HEALTHY";
-    }).length,
-    down: monitors.filter((m) => {
-      const s = (m.status || "").toUpperCase();
-      return s === "DOWN" || s === "FAILING";
-    }).length,
-    uptime: "99.42%",
+    up,
+    down,
+    uptime: monitors.length > 0 ? `${((up / monitors.length) * 100).toFixed(2)}%` : "100%",
   };
 
   return (
@@ -471,7 +495,7 @@ const Dashboard = () => {
           <div className="relative">
             {loading && monitors.length === 0 && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
               </div>
             )}
             <AllMonitors monitors={monitors} />
@@ -480,8 +504,41 @@ const Dashboard = () => {
 
         {/* RIGHT SIDE (4 columns) */}
         <div className="xl:col-span-4 flex flex-col gap-6">
-          <StatusDistribution />
-          <RecentIncidents />
+          {/* Quick Navigation Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-4">
+              Quick Navigation
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/monitors" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Monitors />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Monitors</span>
+              </Link>
+              <Link to="/incidents" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Incidents />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Incidents</span>
+              </Link>
+              <Link to="/alerts" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Alerts />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Alerts</span>
+              </Link>
+              <Link to="/status-pages" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Status />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Status</span>
+              </Link>
+              <Link to="/team" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Team />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Team</span>
+              </Link>
+              <Link to="/settings" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+                <Icons.Settings />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Settings</span>
+              </Link>
+            </div>
+          </div>
+
+          <StatusDistribution monitors={monitors} />
+          <RecentIncidents incidents={incidents} />
         </div>
       </div>
     </main>

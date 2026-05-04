@@ -40,7 +40,7 @@ const Middleware = (app) => {
         origin: config.CORS_ORIGIN,
         credentials: true,
     }));
-    app.use(express.static("public"));
+    app.use(express.static("public/dist"));
 };
 
 export default Middleware;

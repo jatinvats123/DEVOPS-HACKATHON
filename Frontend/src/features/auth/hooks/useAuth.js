@@ -1,4 +1,4 @@
-import { register ,login,getUserProfile,forgotPassword , changePassword} from "../services/auth.api";
+import { register ,login,getUserProfile,forgotPassword , changePassword, logout} from "../services/auth.api";
 import { verifyOtp } from "../services/asyncThunk.api";
 import { useDispatch } from "react-redux";
 import { setLoading, setError, setUserId, setOtpSent ,setUser ,setAuthenticated} from "../state/authSlice";
@@ -12,12 +12,19 @@ export const useAuth = () => {
         try{
             dispatch(setLoading(true));
             const response = await register(userData);
-            dispatch(setUserId(response.userId));
+            // Backend returns { data: { user, token }, ... }
+            if (response.data?.token) {
+                dispatch(setUser(response.data.user));
+                dispatch(setAuthenticated(true));
+            }
+            dispatch(setUserId(response.data?.user?._id));
             dispatch(setOtpSent(true));
             return response;
         }
         catch(err){
-            dispatch(setError(err.message || "Registration failed"));
+            const message = err.response?.data?.message || err.message || "Registration failed";
+            dispatch(setError(message));
+            throw err;
         }
         finally{
             dispatch(setLoading(false));
@@ -42,11 +49,16 @@ export const useAuth = () => {
         try {
         dispatch(setLoading(true));
         const response = await login(userData);
-        dispatch(setUser(response.user));
-        dispatch(setAuthenticated(true));
+        // Backend returns { data: { user, token }, ... }
+        if (response.data?.token) {
+            dispatch(setUser(response.data?.user));
+            dispatch(setAuthenticated(true));
+        }
         return response;
         } catch (error) {
-            dispatch(setError(error.message || "Login failed"));
+            const message = error.response?.data?.message || error.message || "Login failed";
+            dispatch(setError(message));
+            throw error;
         }finally{
             dispatch(setLoading(false));
         }
@@ -58,10 +70,13 @@ export const useAuth = () => {
     try {
         dispatch(setLoading(true));
         const response = await getUserProfile();
-        dispatch(setUser(response.user));
+        // Backend returns { data: user, ... } for profile
+        dispatch(setUser(response.data));
         return response;
     } catch (error) {
-        dispatch(setError(error.message || "Failed to fetch user profile"));
+        const message = error.response?.data?.message || error.message || "Failed to fetch user profile";
+        dispatch(setError(message));
+        throw error;
     }
     finally {
         dispatch(setLoading(false));
@@ -76,7 +91,9 @@ export const useAuth = () => {
             const response = await forgotPassword(email);
             return response;
         } catch (error) {
-            dispatch(setError(error.message || "Failed to initiate forgot password process"));
+            const message = error.response?.data?.message || error.message || "Failed to initiate forgot password process";
+            dispatch(setError(message));
+            throw error;
         } finally {
             dispatch(setLoading(false));
         }
@@ -89,11 +106,24 @@ export const useAuth = () => {
             const response = await changePassword(passwordData);
             return response;
         } catch (error) {
-            dispatch(setError(error.message || "Failed to change password"));
+            const message = error.response?.data?.message || error.message || "Failed to change password";
+            dispatch(setError(message));
+            throw error;
         } finally {
             dispatch(setLoading(false));
         }
     };
 
-    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword };
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error("Logout failed", error);
+        } finally {
+            dispatch(setUser(null));
+            dispatch(setAuthenticated(false));
+        }
+    };
+
+    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword, handleLogout };
 }

@@ -17,8 +17,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
     setSubmitError(null);
    
     // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token || !isAuthenticated) {
+    if (!isAuthenticated) {
       setSubmitError('You must be logged in to create a monitor');
       return;
     }
