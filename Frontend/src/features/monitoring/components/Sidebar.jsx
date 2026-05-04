@@ -51,9 +51,7 @@ const Sidebar = () => {
     { name: "Incidents", icon: Icons.Incidents, path: "/incidents" },
     { name: "Alerts", icon: Icons.Alerts, path: "/alerts" },
     { name: "Status Pages", icon: Icons.Status, path: "/status-pages" },
-    { name: "Team", icon: Icons.Team, path: "/team" },
     { name: "Settings", icon: Icons.Settings, path: "/settings" },
-    { name: "Billing", icon: Icons.Billing, path: "/billing" },
   ];
 
   return (
