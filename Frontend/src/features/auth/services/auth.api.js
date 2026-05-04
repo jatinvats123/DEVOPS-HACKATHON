@@ -8,7 +8,7 @@ import { apiRequest } from "../../../lib/api/apiRequest";
  */
 
 export const register = async (userData) => {
-return apiRequest({method: "post", url: env.REGISTER_API, data: userData})
+    return apiRequest({ method: "post", url: env.REGISTER_API, data: userData })
 }
 
 
@@ -18,8 +18,8 @@ return apiRequest({method: "post", url: env.REGISTER_API, data: userData})
  * (e.g.,  email, username, password ).
  */
 
-export const login  = async (userData) =>{
-    return apiRequest({method: "post", url: env.LOGIN_API, data: userData})
+export const login = async (userData) => {
+    return apiRequest({ method: "post", url: env.LOGIN_API, data: userData })
 }
 
 
@@ -28,9 +28,9 @@ export const login  = async (userData) =>{
 */
 
 export const getUserProfile = async () => {
-    return apiRequest({method: "get", url: env.GET_USER_API});
+    return apiRequest({ method: "get", url: env.GET_USER_API });
 }
- 
+
 
 /*
  * @forgotPassword - Initiates the forgot password process for a user by sending their email to the backend.
@@ -39,7 +39,7 @@ export const getUserProfile = async () => {
 
 
 export const forgotPassword = async (email) => {
-    return apiRequest({method: "post", url: env.FORGOT_PASSWORD_API, data: { email }});
+    return apiRequest({ method: "post", url: env.FORGOT_PASSWORD_API, data: { email } });
 }
 
 
@@ -50,9 +50,9 @@ export const forgotPassword = async (email) => {
  */
 
 export const changePassword = async (passwordData) => {
-return apiRequest({method: "post", url: env.CHANGE_PASSWORD_API, data: passwordData})
+    return apiRequest({ method: "post", url: env.CHANGE_PASSWORD_API, data: passwordData })
 }
 
 export const logout = async () => {
-    return apiRequest({method: "post", url: env.LOGOUT_API});
+    return apiRequest({ method: "post", url: env.LOGOUT_API });
 }

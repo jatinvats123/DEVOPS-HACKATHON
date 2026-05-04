@@ -70,18 +70,18 @@ const Icons = {
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
-  <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
+  <div className="bg-white border border-gray-100 p-6 lg:p-8 transition-all duration-300 hover:border-black group h-full">
     <div className="flex justify-between items-start">
       <div>
         <h3 className="luxury-label mb-4">{title}</h3>
-        <span className="text-4xl luxury-heading">
+        <span className="text-3xl lg:text-4xl luxury-heading">
           {value}
         </span>
         {sub && (
           <p className="luxury-subtext mt-4">{sub}</p>
         )}
       </div>
-      <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
+      <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors shrink-0">
         <Icon />
       </div>
     </div>
@@ -90,7 +90,7 @@ const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
 
 const StatsCards = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-8 lg:mb-12">
       <div className="border-r border-b border-gray-100">
         <Card
           title="Total Assets"
@@ -129,8 +129,8 @@ const StatsCards = ({ stats }) => {
 
 const UptimeOverview = () => {
   return (
-    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm">
-      <div className="flex items-center justify-between mb-10">
+    <div className="bg-white border border-[#e6dfd8] p-6 lg:p-8 rounded-xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 lg:mb-10 gap-4">
         <h2 className="luxury-heading text-xl">
           Performance History
         </h2>
@@ -211,7 +211,7 @@ const StatusDistribution = ({ monitors = [] }) => {
   ];
 
   return (
-    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
+    <div className="bg-white border border-[#e6dfd8] p-6 lg:p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
       <h2 className="luxury-heading text-xl mb-10">
         Asset Distribution
       </h2>
@@ -297,54 +297,56 @@ const AllMonitors = ({ monitors = [] }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 p-8">
+    <div className="bg-white border border-gray-100 p-6 lg:p-8">
       <div className="flex items-center justify-between mb-8">
         <h2 className="luxury-heading text-base">
           System Registry
         </h2>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="luxury-table">
-          <thead>
-            <tr>
-              <th>Asset Name</th>
-              <th>Status</th>
-              <th>Type</th>
-              <th>Last Checked</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedMonitors.map((m, i) => (
-              <tr key={m._id || i}>
-                <td>
-                  <p className="font-medium text-black">{m.title}</p>
-                  <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">{m.url}</p>
-                </td>
-                <td>
-                  <span className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}>
-                    {m.status}
-                  </span>
-                </td>
-                <td className="text-[12px] font-light uppercase tracking-tight">
-                  {m.type || "Website"}
-                </td>
-                <td className="text-[12px] text-gray-400">
-                  {timeAgo(m.lastChecked)}
-                </td>
-                <td className="text-right">
-                  <button className="text-gray-300 hover:text-black transition-colors">
-                    <Icons.Dots />
-                  </button>
-                </td>
+      <div className="overflow-x-auto -mx-6 lg:mx-0">
+        <div className="inline-block min-w-full align-middle px-6 lg:px-0">
+          <table className="luxury-table">
+            <thead>
+              <tr>
+                <th>Asset Name</th>
+                <th>Status</th>
+                <th className="hidden md:table-cell">Type</th>
+                <th className="hidden lg:table-cell">Last Checked</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedMonitors.map((m, i) => (
+                <tr key={m._id || i}>
+                  <td>
+                    <p className="font-medium text-black truncate max-w-[150px] sm:max-w-xs">{m.title}</p>
+                    <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider truncate max-w-[150px] sm:max-w-xs">{m.url}</p>
+                  </td>
+                  <td>
+                    <span className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}>
+                      {m.status}
+                    </span>
+                  </td>
+                  <td className="text-[12px] font-light uppercase tracking-tight hidden md:table-cell">
+                    {m.type || "Website"}
+                  </td>
+                  <td className="text-[12px] text-gray-400 hidden lg:table-cell">
+                    {timeAgo(m.lastChecked)}
+                  </td>
+                  <td className="text-right">
+                    <button className="text-gray-300 hover:text-black transition-colors">
+                      <Icons.Dots />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6">
         <span className="luxury-label">
           {startIndex + 1} — {Math.min(startIndex + itemsPerPage, validMonitors.length)} / {validMonitors.length}
         </span>
@@ -372,7 +374,7 @@ const AllMonitors = ({ monitors = [] }) => {
 const RecentIncidents = ({ incidents = [] }) => {
   if (incidents.length === 0) {
     return (
-      <div className="bg-white border border-gray-100 p-8">
+      <div className="bg-white border border-gray-100 p-6 lg:p-8">
         <h2 className="luxury-heading text-base mb-8">
           Incident Journal
         </h2>
@@ -384,7 +386,7 @@ const RecentIncidents = ({ incidents = [] }) => {
   }
 
   return (
-    <div className="bg-white border border-gray-100 p-8">
+    <div className="bg-white border border-gray-100 p-6 lg:p-8">
       <div className="flex items-center justify-between mb-8">
         <h2 className="luxury-heading text-base">
           Incident Journal
@@ -414,7 +416,7 @@ const RecentIncidents = ({ incidents = [] }) => {
             </p>
             <Link
               to={`/incidents/${inc._id}`}
-              className="luxury-button-outline w-full py-2 text-[10px] text-center"
+              className="luxury-button-outline w-full py-2 text-[10px] text-center block"
             >
               Details
             </Link>
@@ -473,12 +475,12 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-12 luxury-container">
+    <main className="flex-1 overflow-y-auto p-6 lg:p-12 luxury-container">
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 lg:gap-12">
         {/* LEFT SIDE (8 columns) */}
-        <div className="xl:col-span-8 flex flex-col gap-12">
+        <div className="xl:col-span-8 flex flex-col gap-8 lg:gap-12">
           <UptimeOverview />
           <div className="relative">
             {loading && monitors.length === 0 && (
@@ -491,30 +493,30 @@ const Dashboard = () => {
         </div>
 
         {/* RIGHT SIDE (4 columns) */}
-        <div className="xl:col-span-4 flex flex-col gap-12">
+        <div className="xl:col-span-4 flex flex-col gap-8 lg:gap-12">
           {/* Quick Navigation Section */}
-          <div className="bg-white border border-gray-100 p-8">
+          <div className="bg-white border border-gray-100 p-6 lg:p-8">
             <h2 className="luxury-heading text-base mb-8">
               Quick Links
             </h2>
             <div className="grid grid-cols-1 gap-2">
-              <Link to="/monitors" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link to="/monitors" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all !m-0">
                 <Icons.Monitors />
                 <span>Monitors</span>
               </Link>
-              <Link to="/incidents" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link to="/incidents" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all !m-0">
                 <Icons.Incidents />
                 <span>Incidents</span>
               </Link>
-              <Link to="/alerts" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link to="/alerts" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all !m-0">
                 <Icons.Alerts />
                 <span>Alerts</span>
               </Link>
-              <Link to="/status-pages" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link to="/status-pages" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all !m-0">
                 <Icons.Status />
                 <span>Status</span>
               </Link>
-              <Link to="/settings" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link to="/settings" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all !m-0">
                 <Icons.Settings />
                 <span>Settings</span>
               </Link>

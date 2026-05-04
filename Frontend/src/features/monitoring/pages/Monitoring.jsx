@@ -3,15 +3,15 @@ import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
 import { selectMonitors, selectLoading, selectError } from "../state/monitor.slice";
 import AddMonitoring from "../components/AddMonitoring";
-import { RiAddLine, RiDeleteBinLine, RiRefreshLine, RiMacbookLine } from "@remixicon/react";
+import { RiAddLine, RiDeleteBinLine, RiRefreshLine } from "@remixicon/react";
 
 const ConfirmDeleteModal = ({ isOpen, monitorName, onConfirm, onCancel, isDeleting }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#141413]/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-[#faf9f5] border border-[#e6dfd8] max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="p-10">
+    <div className="fixed inset-0 bg-[#141413]/40 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+      <div className="bg-[#faf9f5] border border-[#e6dfd8] max-w-sm w-full rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="p-8 lg:p-10">
           <h2 className="luxury-heading text-2xl mb-4">Are you sure?</h2>
           <p className="text-[#6c6a64] text-sm mb-10 leading-relaxed">
             Removing <span className="text-[#141413] font-medium">"{monitorName}"</span> from the registry will permanently delete its history.
@@ -45,7 +45,7 @@ const SuccessNotification = ({ message, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-8 right-8 bg-[#141413] text-white rounded-xl px-8 py-4 text-sm font-medium shadow-2xl animate-in slide-in-from-bottom duration-300 z-40 flex items-center gap-3">
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 bg-[#141413] text-white rounded-xl px-8 py-4 text-sm font-medium shadow-2xl animate-in slide-in-from-bottom duration-300 z-40 flex items-center gap-3">
       <div className="w-2 h-2 rounded-full bg-[#cc785c]"></div>
       {message}
     </div>
@@ -104,10 +104,10 @@ const Monitoring = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-12 luxury-container">
-      <div className="flex items-center justify-between mb-16">
+    <div className="flex-1 overflow-y-auto p-6 lg:p-12 luxury-container">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 lg:mb-16 gap-6">
         <div>
-          <h1 className="luxury-heading text-4xl">
+          <h1 className="luxury-heading text-3xl lg:text-4xl">
             Registry
           </h1>
           <p className="luxury-subtext mt-3 max-w-md">
@@ -116,7 +116,7 @@ const Monitoring = () => {
         </div>
         <button
           onClick={() => setIsAddOpen(true)}
-          className="luxury-button-primary flex items-center gap-3 px-8"
+          className="luxury-button-primary flex items-center gap-3 px-8 w-full sm:w-auto justify-center"
         >
           <RiAddLine className="w-5 h-5" /> Add Asset
         </button>
@@ -128,9 +128,9 @@ const Monitoring = () => {
         </div>
       )}
 
-      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-10 overflow-hidden">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="luxury-heading text-2xl">
+      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-6 lg:p-10 overflow-hidden">
+        <div className="flex items-center justify-between mb-8 lg:mb-12">
+          <h2 className="luxury-heading text-xl lg:text-2xl">
             Current Assets
           </h2>
           <button
@@ -142,64 +142,66 @@ const Monitoring = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto min-h-[400px] relative">
-          {loading && (!monitors || monitors.length === 0) ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#faf9f5]/60 z-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
-            </div>
-          ) : !monitors || monitors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[300px] text-center">
-              <p className="luxury-subtext mb-10 text-lg">Registry is currently empty</p>
-              <button
-                onClick={() => setIsAddOpen(true)}
-                className="luxury-button-outline px-10"
-              >
-                Create First Entry
-              </button>
-            </div>
-          ) : (
-            <table className="luxury-table">
-              <thead>
-                <tr>
-                  <th>Asset / Endpoint</th>
-                  <th>Status</th>
-                  <th>Last Check</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monitors.map((m) => (
-                  <tr key={m._id || m.id} className="group hover:bg-[#faf9f5] transition-colors">
-                    <td>
-                      <p className="font-semibold text-[#141413]">
-                        {m.title || m.name}
-                      </p>
-                      <p className="text-xs text-[#6c6a64] mt-1 font-mono">
-                        {m.url}
-                      </p>
-                    </td>
-                    <td>
-                      <span className={`luxury-badge ${m.status === 'UP' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#3d3d3a]/10 text-[#3d3d3a]'}`}>
-                        {m.status || "PENDING"}
-                      </span>
-                    </td>
-                    <td className="text-sm text-[#6c6a64]">
-                      {timeAgo(m.lastChecked)}
-                    </td>
-                    <td className="text-right">
-                      <button
-                        onClick={() => handleDeleteClick(m._id || m.id, m.title || m.name)}
-                        className="text-[#e6dfd8] group-hover:text-[#cc785c] transition-colors p-2"
-                        disabled={isDeleting}
-                      >
-                        <RiDeleteBinLine className="w-5 h-5" />
-                      </button>
-                    </td>
+        <div className="overflow-x-auto -mx-6 lg:mx-0 min-h-[300px] relative">
+          <div className="inline-block min-w-full align-middle px-6 lg:px-0">
+            {loading && (!monitors || monitors.length === 0) ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-[#faf9f5]/60 z-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
+              </div>
+            ) : !monitors || monitors.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[300px] text-center">
+                <p className="luxury-subtext mb-10 text-lg">Registry is currently empty</p>
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="luxury-button-outline px-10"
+                >
+                  Create First Entry
+                </button>
+              </div>
+            ) : (
+              <table className="luxury-table">
+                <thead>
+                  <tr>
+                    <th>Asset / Endpoint</th>
+                    <th>Status</th>
+                    <th className="hidden md:table-cell">Last Check</th>
+                    <th className="text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {monitors.map((m) => (
+                    <tr key={m._id || m.id} className="group hover:bg-[#faf9f5] transition-colors">
+                      <td>
+                        <p className="font-semibold text-[#141413] truncate max-w-[150px] sm:max-w-xs lg:max-w-md">
+                          {m.title || m.name}
+                        </p>
+                        <p className="text-xs text-[#6c6a64] mt-1 font-mono truncate max-w-[150px] sm:max-w-xs lg:max-w-md">
+                          {m.url}
+                        </p>
+                      </td>
+                      <td>
+                        <span className={`luxury-badge ${m.status === 'UP' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#3d3d3a]/10 text-[#3d3d3a]'}`}>
+                          {m.status || "PENDING"}
+                        </span>
+                      </td>
+                      <td className="text-sm text-[#6c6a64] hidden md:table-cell">
+                        {timeAgo(m.lastChecked)}
+                      </td>
+                      <td className="text-right">
+                        <button
+                          onClick={() => handleDeleteClick(m._id || m.id, m.title || m.name)}
+                          className="text-[#e6dfd8] group-hover:text-[#cc785c] transition-colors p-2"
+                          disabled={isDeleting}
+                        >
+                          <RiDeleteBinLine className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
 

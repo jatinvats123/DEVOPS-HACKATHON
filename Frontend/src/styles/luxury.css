@@ -9,7 +9,7 @@
   --claude-accent: #cc785c;
   --claude-border: #e6dfd8;
   --claude-input-bg: transparent;
-  
+
   --font-serif: 'Fraunces', serif;
   --font-sans: 'Inter', sans-serif;
 }
@@ -27,7 +27,7 @@
   border: 1px solid var(--claude-border);
   padding: 32px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
 .luxury-heading {
@@ -132,6 +132,9 @@
   background: #f5f0e8;
   border-right: 1px solid var(--claude-border);
   width: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 .luxury-sidebar-item {
@@ -175,6 +178,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
