@@ -69,8 +69,6 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-
-
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-transform hover:-translate-y-0.5 duration-200">
     <div className="flex justify-between items-start">
@@ -195,9 +193,15 @@ const UptimeOverview = () => {
 };
 
 const StatusDistribution = ({ monitors = [] }) => {
-  const up = monitors.filter(m => (m.status || "").toUpperCase() === "UP").length;
-  const down = monitors.filter(m => (m.status || "").toUpperCase() === "DOWN").length;
-  const paused = monitors.filter(m => (m.status || "").toUpperCase() === "PAUSED").length;
+  const up = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "UP",
+  ).length;
+  const down = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "DOWN",
+  ).length;
+  const paused = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "PAUSED",
+  ).length;
   const total = monitors.length || 1;
   const uptimePct = ((up / total) * 100).toFixed(0);
 
@@ -392,7 +396,9 @@ const RecentIncidents = ({ incidents = [] }) => {
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <Icons.CheckCircle className="w-8 h-8 text-emerald-500 mb-2 opacity-20" />
           <p className="text-sm text-gray-500">No recent incidents</p>
-          <p className="text-[11px] text-gray-400">Your systems are running smoothly</p>
+          <p className="text-[11px] text-gray-400">
+            Your systems are running smoothly
+          </p>
         </div>
       </div>
     );
@@ -404,7 +410,10 @@ const RecentIncidents = ({ incidents = [] }) => {
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           Recent Incidents
         </h2>
-        <Link to="/incidents" className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700">
+        <Link
+          to="/incidents"
+          className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700"
+        >
           View All
         </Link>
       </div>
@@ -481,7 +490,10 @@ const Dashboard = () => {
     total: monitors.length,
     up,
     down,
-    uptime: monitors.length > 0 ? `${((up / monitors.length) * 100).toFixed(2)}%` : "100%",
+    uptime:
+      monitors.length > 0
+        ? `${((up / monitors.length) * 100).toFixed(2)}%`
+        : "100%",
   };
 
   return (
@@ -510,29 +522,59 @@ const Dashboard = () => {
               Quick Navigation
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <Link to="/monitors" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/monitors"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Monitors />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Monitors</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Monitors
+                </span>
               </Link>
-              <Link to="/incidents" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/incidents"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Incidents />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Incidents</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Incidents
+                </span>
               </Link>
-              <Link to="/alerts" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/alerts"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Alerts />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Alerts</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Alerts
+                </span>
               </Link>
-              <Link to="/status-pages" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/status-pages"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Status />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Status</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Status
+                </span>
               </Link>
-              <Link to="/team" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/team"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Team />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Team</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Team
+                </span>
               </Link>
-              <Link to="/settings" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link
+                to="/settings"
+                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+              >
                 <Icons.Settings />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Settings</span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
+                  Settings
+                </span>
               </Link>
             </div>
           </div>

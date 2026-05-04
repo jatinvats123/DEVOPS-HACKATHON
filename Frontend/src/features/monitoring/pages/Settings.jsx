@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { useAuth } from '../../auth/hooks/useAuth.js';
 import { RiUser3Line, RiShieldCheckLine, RiCloseCircleLine, RiLogoutBoxLine, RiMailLine, RiProfileLine, RiCalendarLine } from '@remixicon/react';
 
 const Settings = () => {
