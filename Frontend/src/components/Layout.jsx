@@ -4,12 +4,14 @@ import Sidebar from '../features/monitoring/components/Sidebar';
 import AddMonitoring from '../features/monitoring/components/AddMonitoring';
 import Navbar from '../features/monitoring/components/Navbar';
 
+import '../styles/luxury.css';
+
 const Layout = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden relative">
+    <div className="flex h-screen luxury-container font-sans overflow-hidden relative">
       <Sidebar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden w-full relative">
         <Navbar 

@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@200;300;400;500;600&display=swap');
+
+:root {
+  --claude-bg: #faf9f5;
+  --claude-white: #ffffff;
+  --claude-black: #141413;
+  --claude-text-secondary: #3d3d3a;
+  --claude-muted: #6c6a64;
+  --claude-accent: #cc785c;
+  --claude-border: #e6dfd8;
+  --claude-input-bg: transparent;
+  
+  --font-serif: 'Fraunces', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* Global Claude Styles */
+.luxury-container {
+  background-color: var(--claude-bg);
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--claude-black);
+}
+
+.luxury-card {
+  background: var(--claude-white);
+  border: 1px solid var(--claude-border);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.luxury-heading {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: var(--claude-black);
+  letter-spacing: -0.02em;
+}
+
+.luxury-subtext {
+  font-size: 14px;
+  color: var(--claude-text-secondary);
+  line-height: 1.6;
+}
+
+.luxury-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--claude-muted);
+  font-weight: 600;
+}
+
+.luxury-button-primary {
+  background: var(--claude-accent);
+  color: var(--claude-white);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  transition: background 0.2s ease;
+  cursor: pointer;
+  height: 44px;
+}
+
+.luxury-button-primary:hover {
+  background: #b56a51;
+}
+
+.luxury-button-outline {
+  background: transparent;
+  color: var(--claude-black);
+  border: 1px solid var(--claude-border);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.luxury-button-outline:hover {
+  background: #f5f0e8;
+  border-color: var(--claude-muted);
+}
+
+.luxury-input {
+  border: none;
+  border-bottom: 1px solid var(--claude-border);
+  background: var(--claude-input-bg);
+  padding: 12px 0;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--claude-black);
+  outline: none;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.luxury-input:focus {
+  border-bottom-color: var(--claude-black);
+}
+
+.luxury-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.luxury-table th {
+  text-align: left;
+  padding: 16px 8px;
+  border-bottom: 1px solid var(--claude-border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--claude-muted);
+  font-weight: 600;
+}
+
+.luxury-table td {
+  padding: 20px 8px;
+  border-bottom: 1px solid var(--claude-border);
+  font-size: 14px;
+  color: var(--claude-black);
+}
+
+/* Sidebar Specific */
+.luxury-sidebar {
+  background: #f5f0e8;
+  border-right: 1px solid var(--claude-border);
+  width: 280px;
+}
+
+.luxury-sidebar-item {
+  font-size: 14px;
+  color: var(--claude-text-secondary);
+  padding: 12px 24px;
+  margin: 4px 12px;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: auto;
+  text-align: left;
+}
+
+.luxury-sidebar-item:hover {
+  color: var(--claude-black);
+  background: rgba(204, 120, 92, 0.05);
+}
+
+.luxury-sidebar-item.active {
+  color: var(--claude-accent);
+  background: rgba(204, 120, 92, 0.08);
+  font-weight: 600;
+}
+
+.luxury-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  background: rgba(204, 120, 92, 0.1);
+  color: var(--claude-accent);
+}
+
+/* Animations */
+.luxury-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

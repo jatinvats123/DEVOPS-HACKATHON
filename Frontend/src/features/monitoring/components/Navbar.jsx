@@ -1,44 +1,36 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { RiAddLine, RiNotification3Line, RiMenuLine } from "@remixicon/react";
+import { RiNotification3Line, RiMenuLine } from "@remixicon/react";
 
-const Icons = {
-  Plus: () => <RiAddLine className="w-4 h-4 sm:w-5 sm:h-5" />,
-  Bell: () => <RiNotification3Line className="w-5 h-5" />,
-  Menu: () => <RiMenuLine className="w-6 h-6" />,
-};
-
-const Navbar = ({  onMobileMenuToggle }) => {
+const Navbar = ({ onMobileMenuToggle }) => {
   const { user } = useSelector(state => state.auth);
 
-  const getInitials = (fullname) => {
-    if (!fullname) return 'U';
-    return fullname.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
-    <header className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
-      <div className="flex items-center gap-3">
+    <header className="px-10 py-10 flex items-center justify-between bg-transparent z-10 shrink-0">
+      <div className="flex items-center gap-6">
         <button 
           onClick={onMobileMenuToggle}
-          className="p-1.5 -ml-1.5 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden transition-colors"
+          className="p-2 -ml-2 text-[#141413] hover:bg-[#f5f0e8] rounded-xl lg:hidden transition-colors"
         >
-          <Icons.Menu />
+          <RiMenuLine className="w-6 h-6" />
         </button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight capitalize leading-none">
+          <h1 className="luxury-heading text-3xl leading-none">
             Overview
           </h1>
-          <p className="text-[11px] sm:text-[13px] text-gray-500 mt-1 hidden sm:block">
-            Monitor your services and infrastructure.
-          </p>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 sm:gap-5">
-
-        <div className="hidden sm:flex w-9 h-9 rounded-full bg-indigo-500 border-2 border-white shadow-sm overflow-hidden items-center justify-center text-white text-sm font-bold" title={user?.fullname || 'User'}>
-          {getInitials(user?.fullname)}
+      <div className="flex items-center gap-6">
+        <div className="relative group">
+          <RiNotification3Line className="w-6 h-6 text-[#6c6a64] hover:text-[#cc785c] cursor-pointer transition-colors" />
+          <span className="absolute top-0 right-0 w-2 h-2 bg-[#cc785c] rounded-full"></span>
+        </div>
+        <div className="flex items-center gap-4 border border-[#e6dfd8] rounded-full pl-2 pr-4 py-1.5 hover:bg-white transition-all cursor-pointer">
+          <div className="w-8 h-8 rounded-full bg-[#cc785c] flex items-center justify-center text-white text-xs font-medium">
+            {user?.fullname?.[0] || 'U'}
+          </div>
+          <span className="text-sm font-medium text-[#141413] hidden sm:block">{user?.fullname || user?.username}</span>
         </div>
       </div>
     </header>

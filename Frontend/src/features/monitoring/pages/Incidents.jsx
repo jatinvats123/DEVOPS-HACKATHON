@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
-import { RiAlertLine, RiRefreshLine, RiHistoryLine } from '@remixicon/react';
+import { RiAlertLine, RiRefreshLine, RiHistoryLine, RiTimeLine, RiRobot2Line } from '@remixicon/react';
 
 const Incidents = () => {
   const [incidents, setIncidents] = useState([]);
@@ -25,86 +25,77 @@ const Incidents = () => {
     fetchIncidents();
   }, []);
 
-  const getStatusStyle = (status) => {
-    const s = (status || "").toUpperCase();
-    if (s === "ONGOING" || s === "OPEN" || s === "FAILING") return "bg-red-100 text-red-700";
-    if (s === "RESOLVED" || s === "CLOSED") return "bg-emerald-100 text-emerald-700";
-    return "bg-gray-100 text-gray-700";
-  };
-
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 overflow-y-auto p-12 luxury-container">
+      <div className="flex items-center justify-between mb-16">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <RiAlertLine className="w-7 h-7 text-red-500" />
-            Incidents
+          <h1 className="luxury-heading text-4xl">
+            Journal
           </h1>
-          <p className="text-[13px] text-gray-500 mt-1">
-            Track and manage service outages and performance issues.
+          <p className="luxury-subtext mt-3 max-w-md">
+            A chronological record of system events, outages, and resolutions.
           </p>
         </div>
         <button
           onClick={fetchIncidents}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+          className="luxury-button-outline flex items-center gap-3"
         >
-          <RiRefreshLine className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          <RiRefreshLine className={`w-5 h-5 ${loading ? 'animate-spin text-[#cc785c]' : ''}`} />
+          Refresh Journal
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mb-10 p-6 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto min-h-[400px]">
+      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-10 overflow-hidden mb-16">
+        <div className="flex items-center justify-between mb-12">
+          <h2 className="luxury-heading text-2xl">
+            System Events
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto min-h-[400px] relative">
           {loading && incidents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[400px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
-              <p className="text-sm text-gray-500">Loading incidents...</p>
+            <div className="absolute inset-0 flex items-center justify-center bg-[#faf9f5]/60 z-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
             </div>
           ) : incidents.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[400px] text-center p-8">
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-                <RiHistoryLine className="w-8 h-8 text-emerald-500 opacity-40" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900 mb-1">All Systems Operational</h3>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                No incidents recorded. We'll list any service disruptions or performance issues here.
-              </p>
+              <p className="luxury-subtext text-lg">No events recorded in the current period</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
+            <table className="luxury-table">
               <thead>
-                <tr className="bg-gray-50/50">
-                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Monitor / Service</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Status</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Started At</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Resolved At</th>
+                <tr>
+                  <th>Asset / Service</th>
+                  <th>Status</th>
+                  <th>Triggered</th>
+                  <th>Resolved</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {incidents.map((inc) => (
-                  <tr key={inc._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-[14px] font-semibold text-gray-900">{inc.monitorTitle || "Unknown Monitor"}</p>
-                      <p className="text-[12px] text-gray-500 mt-0.5">{inc.monitorUrl || inc.url || "N/A"}</p>
+                  <tr key={inc._id} className="group hover:bg-[#faf9f5] transition-colors">
+                    <td>
+                      <p className="font-semibold text-[#141413]">{inc.monitorTitle || "Unknown Asset"}</p>
+                      <p className="text-xs text-[#6c6a64] mt-1 font-mono uppercase tracking-widest">{inc.monitorUrl || inc.url || "N/A"}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${getStatusStyle(inc.status)}`}>
+                    <td>
+                      <span className={`luxury-badge ${inc.status === 'ONGOING' || inc.status === 'OPEN' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#e6dfd8]/30 text-[#6c6a64]'}`}>
                         {inc.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-[13px] text-gray-600">
+                    <td className="text-sm text-[#6c6a64]">
                       {new Date(inc.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-[13px] text-gray-500">
+                    <td className="text-sm text-[#6c6a64]">
                       {inc.resolvedAt ? new Date(inc.resolvedAt).toLocaleString() : (
-                        <span className="text-red-500 italic font-medium">Ongoing</span>
+                        <span className="text-[#cc785c] font-medium">Ongoing</span>
                       )}
                     </td>
                   </tr>
@@ -115,82 +106,47 @@ const Incidents = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 shadow-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Loading State */}
-      {loading && incidents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-sm text-gray-500 font-medium">Fetching global incidents...</p>
-        </div>
-      ) : incidents.length === 0 ? (
-        /* Empty State */
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-500">
-          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-            <RiAlertLine className="w-8 h-8 text-emerald-500" />
-          </div>
-          <p className="text-[15px] font-medium text-gray-900 mb-1">No incidents found</p>
-          <p className="text-sm">Your infrastructure has a clean record.</p>
-        </div>
-      ) : (
-        /* Incidents List */
-        <div className="space-y-4">
-          {incidents.map((incident) => (
-            <div key={incident._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:border-gray-200 transition-all duration-200">
-              
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50/30 gap-3">
-                <div className="flex items-center gap-3">
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${incident.status === 'ONGOING' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-                    {incident.status || 'UNKNOWN'}
-                  </span>
-                  <h3 className="text-[15px] font-semibold text-gray-900">
-                    {incident.reason || "Outage detected"}
-                  </h3>
-                </div>
-                
-                <div className="flex items-center gap-4 text-[12px] font-medium text-gray-500">
-                  <div className="flex items-center gap-1.5">
-                    <RiTimeLine className="w-4 h-4 text-gray-400" />
-                    <span>Duration: {incident.duration ? `${incident.duration}s` : 'Ongoing'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Start Time</p>
-                    <p className="text-[13px] text-gray-900 font-medium">{formatDate(incident.startTime)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">End Time</p>
-                    <p className="text-[13px] text-gray-900 font-medium">{incident.endTime ? formatDate(incident.endTime) : 'N/A'}</p>
-                  </div>
-                </div>
-
-                {/* AI Summary */}
-                {incident.aiSummary && (
-                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-4 flex gap-3">
-                    <RiRobot2Line className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[12px] font-semibold text-indigo-900 mb-1">AI Root Cause Analysis</p>
-                      <p className="text-[13px] text-indigo-800/80 leading-relaxed whitespace-pre-wrap">
-                        {incident.aiSummary}
-                      </p>
-                    </div>
-                  </div>
-                )}
+      {/* AI Analysis Cards */}
+      <div className="grid grid-cols-1 gap-12">
+        {incidents.filter(inc => inc.aiSummary).map((incident) => (
+          <div key={`ai-${incident._id}`} className="bg-white border border-[#cc785c]/20 p-12 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4">
+              <div className="bg-[#cc785c]/10 text-[#cc785c] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                AI Diagnosis
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            
+            <div className="flex items-center gap-6 mb-12 pb-6 border-b border-[#e6dfd8]">
+              <RiRobot2Line className="w-8 h-8 text-[#cc785c]" />
+              <h3 className="luxury-heading text-2xl">
+                Intelligence Summary
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+              <div>
+                <p className="luxury-label mb-3">Root Cause</p>
+                <p className="text-sm text-[#141413] font-medium leading-relaxed">{incident.reason || "Under analysis"}</p>
+              </div>
+              <div>
+                <p className="luxury-label mb-3">Down Duration</p>
+                <p className="text-sm text-[#141413] font-medium leading-relaxed">{incident.duration ? `${incident.duration}s` : 'Active incident'}</p>
+              </div>
+              <div>
+                <p className="luxury-label mb-3">Initial Event</p>
+                <p className="text-sm text-[#141413] font-medium leading-relaxed">{new Date(incident.startTime).toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="bg-[#faf9f5] p-10 rounded-xl border border-[#e6dfd8]">
+              <p className="luxury-label mb-6 text-[#cc785c]">Technical Analysis</p>
+              <p className="text-base text-[#3d3d3a] leading-relaxed whitespace-pre-wrap font-light">
+                {incident.aiSummary}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

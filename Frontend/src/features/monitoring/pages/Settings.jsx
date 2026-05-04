@@ -1,139 +1,167 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { 
-  RiSettings4Line, 
-  RiUserLine, 
-  RiNotification3Line, 
-  RiLockLine, 
-  RiShieldCheckLine,
+import { useForm } from 'react-hook-form';
+import {
+  RiUserLine,
+  RiLockLine,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiNotification3Line,
   RiMailLine
 } from '@remixicon/react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/hooks/useAuth.js';
-import { RiUser3Line, RiShieldCheckLine, RiCloseCircleLine, RiLogoutBoxLine, RiMailLine, RiProfileLine, RiCalendarLine } from '@remixicon/react';
+import { useAuth } from '../../auth/hooks/useAuth';
+import Notification from '../../../components/Notification';
 
 const Settings = () => {
   const { user } = useSelector(state => state.auth);
   const [activeTab, setActiveTab] = useState('profile');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [notification, setNotification] = useState(null);
+  
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    }
+  });
+  
+  const { handleChangePassword } = useAuth();
 
   const tabs = [
-    { id: 'profile', name: 'Profile', icon: RiUserLine },
-    { id: 'notifications', name: 'Notifications', icon: RiNotification3Line },
-    { id: 'security', name: 'Security', icon: RiLockLine },
+    { id: 'profile', name: 'Profile Account', icon: RiUserLine },
+    { id: 'notifications', name: 'Preferences', icon: RiNotification3Line },
+    { id: 'security', name: 'Security & Keys', icon: RiLockLine },
   ];
 
+  const onPasswordSubmit = async (data) => {
+    if (data.newPassword !== data.confirmPassword) {
+      setNotification({ message: 'Passwords do not match!', type: 'error' });
+      return;
+    }
+    try {
+      await handleChangePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      reset();
+      setNotification({ message: 'Password updated successfully!', type: 'success' });
+    } catch (error) {
+      console.error('Password change error:', error);
+      setNotification({
+        message: error.response?.data?.message || 'Failed to update password',
+        type: 'error'
+      });
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-          <RiSettings4Line className="w-7 h-7 text-gray-600" />
-          Settings
+    <div className="flex-1 overflow-y-auto p-12 luxury-container">
+      <div className="mb-16">
+        <h1 className="luxury-heading text-4xl">
+          Account Settings
         </h1>
-        <p className="text-[13px] text-gray-500 mt-1">
-          Manage your account preferences and notification settings.
+        <p className="luxury-subtext mt-3">
+          Manage your personal preferences, security settings, and notification delivery.
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-16">
         {/* Sidebar Tabs */}
-        <div className="w-full lg:w-64 flex-shrink-0">
-          <nav className="space-y-1">
+        <div className="w-full lg:w-72 flex-shrink-0">
+          <nav className="flex flex-col gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`luxury-sidebar-item ${
                   activeTab === tab.id
-                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                    : 'text-gray-500 hover:bg-white hover:text-gray-900'
+                    ? 'active'
+                    : ''
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                {tab.name}
+                <tab.icon className="w-5 h-5" />
+                <span className="font-medium tracking-tight">{tab.name}</span>
               </button>
             ))}
           </nav>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 max-w-3xl">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex-1 max-w-4xl">
+          <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-12 overflow-hidden">
             {activeTab === 'profile' && (
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Profile Settings</h3>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-6 pb-6 border-b border-gray-50">
-                    <div className="w-20 h-20 bg-indigo-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="luxury-fade-in">
+                <h3 className="luxury-heading text-2xl mb-12">Personal Details</h3>
+                <div className="space-y-12">
+                  <div className="flex items-center gap-12 pb-12 border-b border-[#e6dfd8]">
+                    <div className="w-24 h-24 bg-[#cc785c] rounded-full flex items-center justify-center text-white text-3xl font-medium">
                       {user?.fullname?.[0] || user?.username?.[0] || '?'}
                     </div>
                     <div>
-                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm mb-2">
-                        Change Photo
+                      <button className="luxury-button-outline py-2 px-6 text-xs mb-3">
+                        Upload New Avatar
                       </button>
-                      <p className="text-[11px] text-gray-400">JPG, GIF or PNG. Max size of 800K</p>
+                      <p className="text-xs text-[#6c6a64]">JPG or PNG. Max size 800KB.</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Full Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue={user?.fullname}
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="form-group">
+                      <label className="luxury-label">Full Name</label>
+                      <div className="p-4 bg-[#faf9f5] border border-[#e6dfd8] rounded-xl text-[#141413]">
+                        {user?.fullname || 'N/A'}
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
-                      <input 
-                        type="email" 
-                        defaultValue={user?.email}
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
-                      />
+                    <div className="form-group">
+                      <label className="luxury-label">Email Address</label>
+                      <div className="p-4 bg-[#faf9f5] border border-[#e6dfd8] rounded-xl text-[#141413]">
+                        {user?.email || 'N/A'}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Bio</label>
-                    <textarea 
-                      rows="3"
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none resize-none"
-                      placeholder="Tell us a bit about yourself..."
-                    ></textarea>
                   </div>
 
-                  <div className="pt-4">
-                    <button className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
-                      Save Changes
-                    </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="form-group">
+                      <label className="luxury-label">Username</label>
+                      <div className="p-4 bg-[#faf9f5] border border-[#e6dfd8] rounded-xl text-[#141413]">
+                        @{user?.username || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="luxury-label">Role</label>
+                      <div className="p-4 bg-[#faf9f5] border border-[#e6dfd8] rounded-xl text-[#141413] capitalize">
+                        {user?.role || 'N/A'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'notifications' && (
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Notification Preferences</h3>
+              <div className="luxury-fade-in">
+                <h3 className="luxury-heading text-2xl mb-12">Dispatch Preferences</h3>
                 <div className="space-y-4">
                   {[
-                    { title: 'Incident Alerts', desc: 'Get notified when a monitor goes down or up.', icon: RiAlertLine },
-                    { title: 'Weekly Reports', desc: 'Summary of your systems uptime and performance.', icon: RiHistoryLine },
-                    { title: 'Security Notifications', desc: 'Alerts for login attempts from new devices.', icon: RiShieldCheckLine },
+                    { title: 'Incident Alerts', desc: 'Real-time service outage notifications via email.' },
+                    { title: 'Weekly Digest', desc: 'A summary of your infrastructure performance.' },
+                    { title: 'Security Alerts', desc: 'Notifications about login attempts and API key usage.' },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-start justify-between p-4 rounded-xl border border-gray-50 hover:bg-gray-50 transition-colors">
-                      <div className="flex gap-3">
-                        <div className="mt-1">
-                          <RiMailLine className="w-5 h-5 text-gray-400" />
-                        </div>
+                    <div key={idx} className="flex items-center justify-between p-8 bg-[#faf9f5] border border-[#e6dfd8] rounded-2xl hover:border-[#cc785c]/30 transition-all">
+                      <div className="flex gap-8 items-center">
+                        <RiMailLine className="w-6 h-6 text-[#cc785c]" />
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                          <p className="text-xs text-gray-500">{item.desc}</p>
+                          <p className="text-base font-semibold text-[#141413]">{item.title}</p>
+                          <p className="text-sm text-[#6c6a64] mt-1">{item.desc}</p>
                         </div>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <div className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" defaultChecked={idx === 0} />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                      </label>
+                        <div className="w-12 h-6 bg-[#e6dfd8] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#cc785c]"></div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -141,52 +169,97 @@ const Settings = () => {
             )}
             
             {activeTab === 'security' && (
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Security Settings</h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Current Password</label>
-                    <input 
-                      type="password" 
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white outline-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">New Password</label>
+              <div className="luxury-fade-in">
+                <h3 className="luxury-heading text-2xl mb-12">Security Credentials</h3>
+                <form onSubmit={handleSubmit(onPasswordSubmit)} className="space-y-12">
+                  <div className="form-group">
+                    <label className="luxury-label">Current Password</label>
+                    <div className="relative">
                       <input 
-                        type="password" 
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white outline-none"
+                        type={showCurrentPassword ? 'text' : 'password'} 
+                        {...register('currentPassword', { required: 'Current password is required' })}
+                        className={`luxury-input ${errors.currentPassword ? 'border-red-400' : ''}`}
+                        placeholder="Enter current password"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#cc785c] transition-colors"
+                      >
+                        {showCurrentPassword ? <RiEyeOffLine className="w-5 h-5" /> : <RiEyeLine className="w-5 h-5" />}
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Confirm New Password</label>
-                      <input 
-                        type="password" 
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white outline-none"
-                      />
+                    {errors.currentPassword && <p className="text-xs text-red-400 mt-2">{errors.currentPassword.message}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="form-group">
+                      <label className="luxury-label">New Password</label>
+                      <div className="relative">
+                        <input 
+                          type={showNewPassword ? 'text' : 'password'} 
+                          {...register('newPassword', { 
+                            required: 'New password is required',
+                            minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                          })}
+                          className={`luxury-input ${errors.newPassword ? 'border-red-400' : ''}`}
+                          placeholder="Create new password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#cc785c] transition-colors"
+                        >
+                          {showNewPassword ? <RiEyeOffLine className="w-5 h-5" /> : <RiEyeLine className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.newPassword && <p className="text-xs text-red-400 mt-2">{errors.newPassword.message}</p>}
+                    </div>
+                    <div className="form-group">
+                      <label className="luxury-label">Confirm Password</label>
+                      <div className="relative">
+                        <input 
+                          type={showConfirmPassword ? 'text' : 'password'} 
+                          {...register('confirmPassword', { required: 'Please confirm your password' })}
+                          className={`luxury-input ${errors.confirmPassword ? 'border-red-400' : ''}`}
+                          placeholder="Repeat new password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#cc785c] transition-colors"
+                        >
+                          {showConfirmPassword ? <RiEyeOffLine className="w-5 h-5" /> : <RiEyeLine className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && <p className="text-xs text-red-400 mt-2">{errors.confirmPassword.message}</p>}
                     </div>
                   </div>
-                  <div className="pt-4 flex items-center justify-between">
-                    <button className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
+
+                  <div className="pt-8 flex items-center justify-between">
+                    <button type="submit" className="luxury-button-primary px-12">
                       Update Password
                     </button>
-                    <button className="text-sm font-medium text-red-600 hover:text-red-700">
-                      Enable Two-Factor Auth
+                    <button type="button" className="text-sm font-medium text-[#cc785c] hover:underline">
+                      Enable Multi-Factor Auth
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 };
-
-// Internal icon mappings for convenience
-const RiAlertLine = ({ className }) => <RiNotification3Line className={className} />;
-const RiHistoryLine = ({ className }) => <RiSettings4Line className={className} />;
 
 export default Settings;
