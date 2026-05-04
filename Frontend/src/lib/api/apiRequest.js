@@ -9,22 +9,17 @@
 
 
 import { API } from "./axios"
-export const apiRequest = async ({
-  method = "get",
-  url,
-  data,
-  params
-}) => {
-  try {
-    const response = await API({
-      method,
-      url,
-      data,
-      params
-    })
-    return response.data
-  } catch (error) {
-    console.error(`API Error [${method.toUpperCase()} ${url}]`, error)
-    throw error
-  }
+export const apiRequest = async (method, url, data = null, params = null) => {
+    try {
+
+      if(!url && !method) {
+        throw new Error("API Request Error: URL and method are required");
+      }
+        const config = params ? { params } : {};
+        const response = await API[method](url, data, config);
+        return response.data;
+    } catch (error) {
+        console.error(`API Request Error: ${method.toUpperCase()} ${url}`, error);
+        throw error;
+    } 
 }

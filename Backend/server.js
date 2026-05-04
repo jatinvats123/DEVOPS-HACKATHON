@@ -3,7 +3,6 @@ import { config } from './src/config/config.js';
 import ConnectDB from './src/config/database.js';
 import logger from './src/config/logger.js';
 import { startMonitorCron } from './src/jobs/monitorCron.js';
-import './dns.js';
 
 const PORT = config.PORT || 8080;
 

@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
+import { Outlet } from "react-router";
+import Sidebar from "../components/Sidebar";
+import AddMonitoring from "../components/AddMonitoring";
 import { useMonitors } from "../hooks/useMonitor";
 import {
   AreaChart,
@@ -93,90 +96,8 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-const Sidebar = () => {
-  const menuItems = [
-    { name: "Dashboard", icon: Icons.Dashboard, active: true },
-    { name: "Monitors", icon: Icons.Monitors },
-    { name: "Incidents", icon: Icons.Incidents },
-    { name: "Alerts", icon: Icons.Alerts },
-    { name: "Status Pages", icon: Icons.Status },
-    { name: "Team", icon: Icons.Team },
-    { name: "Settings", icon: Icons.Settings },
-    { name: "Billing", icon: Icons.Billing },
-  ];
 
-  return (
-    <aside className="w-[240px] bg-gradient-to-b from-blue-900 to-indigo-900 text-gray-300 flex-shrink-0 h-screen hidden lg:flex flex-col">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <Icons.Logo />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-tight leading-tight">
-              UptimeAI
-            </h1>
-            <p className="text-[10px] text-gray-300 font-medium tracking-wide">
-              Website Monitoring Platform
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
-          <a
-            key={item.name}
-            href="#"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
-              item.active
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <item.icon />
-            {item.name}
-          </a>
-        ))}
-      </nav>
-
-      <div className="px-4 pb-4">
-        <div className="bg-black/20 p-4 rounded-xl border border-white/10 shadow-inner">
-          <div className="flex items-center gap-2 text-white font-semibold text-sm mb-2">
-            <Icons.Star /> Upgrade to Pro
-          </div>
-          <p className="text-[11px] text-gray-300 mb-4 leading-relaxed">
-            Get advanced monitoring, multi-location checks, and more.
-          </p>
-          <button className="w-full bg-indigo-500 text-white text-[13px] font-medium py-2 rounded-lg hover:bg-indigo-600 transition-colors shadow-sm">
-            Upgrade Now
-          </button>
-        </div>
-      </div>
-
-      <div className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner">
-              AD
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white leading-tight truncate">
-                Arjun Dev
-              </p>
-              <p className="text-xs text-gray-300 truncate">
-                arjun@example.com
-              </p>
-            </div>
-          </div>
-          <Icons.ChevronDown />
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-const Navbar = () => {
+const Navbar = ({ onAddMonitorClick }) => {
   return (
     <header className="px-8 py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
       <div>
@@ -188,7 +109,7 @@ const Navbar = () => {
         </p>
       </div>
       <div className="flex items-center gap-5">
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
+        <button onClick={onAddMonitorClick} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
           <Icons.Plus /> Add Monitor
         </button>
         <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-gray-200">
@@ -544,17 +465,11 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
-  const { fetchMonitors, fetchIncidents, incidents, monitors } = useMonitors();
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
-  useEffect(() => {
-    fetchMonitors();
-    fetchIncidents();
-  }, [fetchMonitors, fetchIncidents]);
 
   const safeMonitors =
-    Array.isArray(monitors) && monitors.length > 0
-      ? monitors
-      : [
+  [
           {
             _id: "1",
             title: "Payment API",
@@ -616,8 +531,9 @@ const Dashboard = () => {
     <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
+        <Navbar onAddMonitorClick={() => setIsAddOpen(true)} />
         <main className="flex-1 overflow-y-auto p-8">
+          <Outlet />
           <StatsCards stats={stats} />
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -635,6 +551,7 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+      <AddMonitoring isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </div>
   );
 };
