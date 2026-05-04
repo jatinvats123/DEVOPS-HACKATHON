@@ -1,8 +1,12 @@
 import logModel from '../models/logs.model.js';
 import validateId from '../config/validateMongoId.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
+import logger from '../config/logger.js';
 import mongoose from 'mongoose';
 
-export async function getLatencyMetrics(req, res) {
+export const getLatencyMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
@@ -21,12 +25,10 @@ export async function getLatencyMetrics(req, res) {
       latency: l.latency ?? 0,
     }));
 
-    res.json({
-      message: 'Latency metrics fetched successfully',
-      success: true,
-      data,
-    });
-        /*
+    res
+      .status(200)
+      .json(new ApiResponse(200, data, 'Latency metrics fetched successfully'));
+    /*
     example response:
     {
       "message": "Latency metrics fetched successfully",
@@ -39,15 +41,11 @@ export async function getLatencyMetrics(req, res) {
     }
     */
   } catch (error) {
-    res.status(500).json({
-      message: 'Latency fetch failed',
-      success: false,
-      error: error.message,
-    });
+    throw new ApiError(500, 'Latency fetch failed');
   }
-}
+});
 
-export async function getUptimeMetrics(req, res) {
+export const getUptimeMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
@@ -70,16 +68,16 @@ export async function getUptimeMetrics(req, res) {
 
     const uptime = total ? (up / total) * 100 : 0;
 
-    res.json({
-      message: 'Uptime metrics fetched successfully',
-      success: true,
-      data: {
-        uptime: Number(uptime.toFixed(2)),
-        totalChecks: total,
-        upChecks: up,
-      },
-    });
-       /*
+    const data = {
+      uptime: Number(uptime.toFixed(2)),
+      totalChecks: total,
+      upChecks: up,
+    };
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, data, 'Uptime metrics fetched successfully'));
+    /*
     example response:
     {
       "message": "Uptime metrics fetched successfully",
@@ -92,15 +90,11 @@ export async function getUptimeMetrics(req, res) {
     }
     */
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Uptime fetch failed',
-      error: error.message,
-    });
+    throw new ApiError(500, 'Uptime fetch failed');
   }
-}
+});
 
-export async function getStatusTimeline(req, res) {
+export const getStatusTimeline = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
@@ -119,12 +113,10 @@ export async function getStatusTimeline(req, res) {
       status: l.status === 'UP' ? 1 : 0,
     }));
 
-    res.json({
-      message: 'Status timeline fetched successfully',
-      success: true,
-      data,
-    });
-       /*
+    res
+      .status(200)
+      .json(new ApiResponse(200, data, 'Status timeline fetched successfully'));
+    /*
     example response:
     {
       "message": "Status timeline fetched successfully",
@@ -137,10 +129,6 @@ export async function getStatusTimeline(req, res) {
     }
     */
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Timeline fetch failed',
-      error: error.message,
-    });
+    throw new ApiError(500, 'Status timeline fetch failed');
   }
-}
+});

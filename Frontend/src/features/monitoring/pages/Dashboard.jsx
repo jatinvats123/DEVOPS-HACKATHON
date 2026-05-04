@@ -69,8 +69,6 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-
-
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
   <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
     <div className="flex justify-between items-start">
@@ -194,9 +192,15 @@ const UptimeOverview = () => {
 };
 
 const StatusDistribution = ({ monitors = [] }) => {
-  const up = monitors.filter(m => (m.status || "").toUpperCase() === "UP").length;
-  const down = monitors.filter(m => (m.status || "").toUpperCase() === "DOWN").length;
-  const paused = monitors.filter(m => (m.status || "").toUpperCase() === "PAUSED").length;
+  const up = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "UP",
+  ).length;
+  const down = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "DOWN",
+  ).length;
+  const paused = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "PAUSED",
+  ).length;
   const total = monitors.length || 1;
   const uptimePct = ((up / total) * 100).toFixed(0);
 
@@ -462,7 +466,10 @@ const Dashboard = () => {
     total: monitors.length,
     up,
     down,
-    uptime: monitors.length > 0 ? `${((up / monitors.length) * 100).toFixed(2)}%` : "100%",
+    uptime:
+      monitors.length > 0
+        ? `${((up / monitors.length) * 100).toFixed(2)}%`
+        : "100%",
   };
 
   return (

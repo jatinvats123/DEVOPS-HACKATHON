@@ -26,6 +26,8 @@ const Sidebar = () => {
     { name: "Settings", icon: RiSettings4Line, path: "/settings" },
   ];
 
+  const navigate = useNavigate();
+
   const handleLogoutClick = () => {
     handleLogout();
     navigate('/login', { replace: true });
