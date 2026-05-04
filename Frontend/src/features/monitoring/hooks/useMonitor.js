@@ -1,4 +1,4 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   setLoading,
@@ -15,6 +15,8 @@ createMonitoring,getMonitors,deleteMonitor
 
 export const useMonitors = ()=>{
     const dispatch = useDispatch();
+    const monitors = useSelector((state) => state.monitor.monitors);
+    const lastFetched = useSelector((state) => state.monitor.lastFetched);
 
 const handleCreateMonitor = async (monitorData) => {
   try{
@@ -33,7 +35,15 @@ const handleCreateMonitor = async (monitorData) => {
 } 
 
 
-const handleGetMonitors = async () => {
+const handleGetMonitors = async (forceRefetch = false) => {
+  const CACHE_TIME = 2 * 60 * 1000;
+  const isFresh = lastFetched && (Date.now() - lastFetched < CACHE_TIME);
+
+  if (monitors.length > 0 && isFresh && !forceRefetch) {
+    console.log("Monitors recently fetched, skipping API call.");
+    return;
+  }
+
   try {
     dispatch(setLoading(true));
     const response = await getMonitors();
@@ -52,10 +62,17 @@ const handleGetMonitors = async () => {
 const handleDeleteMonitor = async (monitorId) => {
   try {
     dispatch(setLoading(true));
-    await deleteMonitor(monitorId);
+    const response = await deleteMonitor(monitorId);
+    console.log("Delete Response:", response);
+    
+    // If apiRequest didn't throw an error, it was a 2xx success
     dispatch(removeMonitor(monitorId));
+    return { success: true, message: response?.message || 'Monitor deleted successfully' };
   } catch (error) {
-    dispatch(setError(error.message));
+    const errorMessage = error?.response?.data?.message || error.message || 'Failed to delete monitor';
+    console.error("Delete Monitor Error:", errorMessage);
+    dispatch(setError(errorMessage));
+    throw error;
   } finally {
     dispatch(setLoading(false));
   }

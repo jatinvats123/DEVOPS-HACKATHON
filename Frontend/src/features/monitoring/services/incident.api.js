@@ -21,3 +21,12 @@ export const getIncidentsByMonitorId = async (monitorId) => {
     url: `${env.INCIDENTS_API}/${monitorId}`,
   });
 };
+
+
+
+export const getAllIncidents = async () => {
+  return apiRequest({
+    method: "get",
+    url: env.INCIDENTS_API,
+  });
+}

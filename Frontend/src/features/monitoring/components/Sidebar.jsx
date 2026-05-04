@@ -51,28 +51,13 @@ const Sidebar = () => {
     { name: "Incidents", icon: Icons.Incidents, path: "/incidents" },
     { name: "Alerts", icon: Icons.Alerts, path: "/alerts" },
     { name: "Status Pages", icon: Icons.Status, path: "/status-pages" },
-    { name: "Team", icon: Icons.Team, path: "/team" },
     { name: "Settings", icon: Icons.Settings, path: "/settings" },
-    { name: "Billing", icon: Icons.Billing, path: "/billing" },
   ];
 
-  return (
-    <aside className="w-[240px] bg-gradient-to-b from-blue-900 to-indigo-900 text-gray-300 flex-shrink-0 h-screen hidden lg:flex flex-col">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <Icons.Logo />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-tight leading-tight">
-              UptimeAI
-            </h1>
-            <p className="text-[10px] text-gray-300 font-medium tracking-wide">
-              Website Monitoring Platform
-            </p>
-          </div>
-        </div>
-      </div>
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/login', { replace: true });
+  };
 
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
@@ -122,8 +107,8 @@ const Sidebar = () => {
           </div>
           <Icons.Logout />
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 
