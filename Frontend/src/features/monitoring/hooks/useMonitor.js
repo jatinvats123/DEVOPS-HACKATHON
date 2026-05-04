@@ -22,7 +22,6 @@ const handleCreateMonitor = async (monitorData) => {
   try{
     dispatch(setLoading(true));
     const response = await createMonitoring(monitorData);
-    console.log("Create Monitor Response:", response);
     
     // Safely extract data depending on backend structure
     const newMonitor = response?.data?.data || response?.data || response;
@@ -40,14 +39,12 @@ const handleGetMonitors = async (forceRefetch = false) => {
   const isFresh = lastFetched && (Date.now() - lastFetched < CACHE_TIME);
 
   if (monitors.length > 0 && isFresh && !forceRefetch) {
-    console.log("Monitors recently fetched, skipping API call.");
     return;
   }
 
   try {
     dispatch(setLoading(true));
     const response = await getMonitors();
-    console.log("Get Monitors Response:", response);
     
     // Safely extract data depending on backend structure
     const monitorsList = response?.data?.data || response?.data || (Array.isArray(response) ? response : []);
@@ -63,7 +60,6 @@ const handleDeleteMonitor = async (monitorId) => {
   try {
     dispatch(setLoading(true));
     const response = await deleteMonitor(monitorId);
-    console.log("Delete Response:", response);
     
     // If apiRequest didn't throw an error, it was a 2xx success
     dispatch(removeMonitor(monitorId));

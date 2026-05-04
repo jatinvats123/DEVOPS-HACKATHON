@@ -21,14 +21,12 @@ export const useLogs = () => {
     const isFresh = lastFetched && (Date.now() - lastFetched < CACHE_TIME);
 
     if (logs.length > 0 && isFresh && !forceRefetch) {
-      console.log("Logs recently fetched, skipping API call.");
       return;
     }
 
     try {
       dispatch(setLogsLoading(true));
       const response = await getAllLogs();
-      console.log("Get All Logs Response:", response);
       
       const logsList = response?.data?.data || response?.data || (Array.isArray(response) ? response : []);
       
@@ -51,7 +49,6 @@ export const useLogs = () => {
     try {
       dispatch(setLogsLoading(true));
       const response = await getLogsByMonitorId(monitorId);
-      console.log(`Get Logs for Monitor ${monitorId} Response:`, response);
       
       const logsList = response?.data?.data || response?.data || (Array.isArray(response) ? response : []);
       
