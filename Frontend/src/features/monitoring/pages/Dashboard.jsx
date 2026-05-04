@@ -558,19 +558,11 @@ const Dashboard = () => {
                   Status
                 </span>
               </Link>
-              <Link
-                to="/team"
-                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
-              >
+              <Link to="/team" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
                 <Icons.Team />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
-                  Team
-                </span>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Team</span>
               </Link>
-              <Link
-                to="/settings"
-                className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
-              >
+              <Link to="/settings" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
                 <Icons.Settings />
                 <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">
                   Settings

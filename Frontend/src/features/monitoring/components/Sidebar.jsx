@@ -1,5 +1,5 @@
 
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   RiDashboardLine,
@@ -32,6 +32,7 @@ const Icons = {
 import { useAuth } from "../../auth/hooks/useAuth";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { handleLogout } = useAuth();
 
@@ -62,7 +63,7 @@ const Sidebar = () => {
   };
 
   return (
-    <>
+    <aside className="flex flex-col h-full bg-linear-to-b from-gray-900 to-gray-800">
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
@@ -89,8 +90,9 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-      <aside
-        onClick={handleLogoutClick}
+
+      <div
+        onClick={handleLogout}
         className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer group mt-auto"
         title="Logout"
       >
@@ -110,8 +112,8 @@ const Sidebar = () => {
           </div>
           <Icons.Logout />
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 };
 
