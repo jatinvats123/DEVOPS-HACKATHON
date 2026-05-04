@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
-import {useNavigate, Link} from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
-import { setUser, setAuthenticated } from '../state/authSlice';
+import { RiPulseLine, RiGoogleFill, RiGithubFill } from '@remixicon/react';
 import '../../../styles/auth.css';
 
 function Login() {
@@ -11,16 +10,14 @@ function Login() {
   const dispatch = useDispatch();
   const { handleLogin } = useAuth();
   const { loading, error, isAuthenticated } = useSelector(state => state.auth);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  
-  const [validationErrors, setValidationErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect to dashboard if already authenticated
+  const [validationErrors, setValidationErrors] = useState({});
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
@@ -29,53 +26,24 @@ function Login() {
 
   const validateForm = () => {
     const errors = {};
-    
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    }
-    
+    if (!formData.email.trim()) errors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format';
+    if (!formData.password) errors.password = 'Password is required';
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (validationErrors[name]) setValidationErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     try {
-      const response = await handleLogin({
-        email: formData.email,
-        password: formData.password
-      });
-      
-      if (response) {
-        // Redirect to dashboard
-        navigate('/dashboard', { replace: true });
-      }
+      await handleLogin({ email: formData.email, password: formData.password });
     } catch (err) {
       console.error('Login failed:', err);
     }
@@ -84,80 +52,59 @@ function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Login to your DevOps Monitor account</p>
+        <div className="auth-logo">
+          <RiPulseLine className="w-10 h-10 text-[#cc785c]" />
+        </div>
+
+        <h1 className="auth-title">Welcome back</h1>
+
+
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label className="auth-label">Email Address</label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
+              placeholder="you@work.com"
               disabled={loading}
               className={validationErrors.email ? 'input-error' : ''}
             />
-            {validationErrors.email && (
-              <span className="field-error">{validationErrors.email}</span>
-            )}
+            {validationErrors.email && <span className="field-error">{validationErrors.email}</span>}
           </div>
 
           <div className="form-group">
-            <div className="password-label">
-              <label htmlFor="password">Password</label>
+            <div className="password-header">
+              <label className="auth-label">Password</label>
+              <Link to="/forgot-password" title="Forgot Password?">Forgot?</Link>
             </div>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                disabled={loading}
-                className={validationErrors.password ? 'input-error' : ''}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex="-1"
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            {validationErrors.password && (
-              <span className="field-error">{validationErrors.password}</span>
-            )}
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Your password"
+              disabled={loading}
+              className={validationErrors.password ? 'input-error' : ''}
+            />
+            {validationErrors.password && <span className="field-error">{validationErrors.password}</span>}
           </div>
 
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? 'Logging in...' : 'Login'}
+          <button type="submit" className="auth-button-primary" disabled={loading}>
+            {loading ? 'Continuing...' : 'Continue'}
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>New to DevOps Monitor?</span>
-        </div>
-
-        <Link to="/register" className="auth-link-button">
-          Create an account
-        </Link>
-
-        <div className="auth-footer">
-          <Link to="/forgot-password" className="forgot-password-link">
-            Forgot your password?
-          </Link>
-        </div>
+        <p className="auth-footer">
+          Don't have an account? <Link to="/register">Create one</Link>
+        </p>
       </div>
     </div>
   );

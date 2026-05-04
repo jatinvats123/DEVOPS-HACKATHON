@@ -1,4 +1,3 @@
-
 import { NavLink, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
@@ -7,28 +6,10 @@ import {
   RiAlertLine,
   RiNotification3Line,
   RiHeartPulseLine,
-  RiTeamLine,
   RiSettings4Line,
-  RiBankCardLine,
   RiPulseLine,
-  RiArrowDownSLine,
   RiLogoutBoxLine
 } from "@remixicon/react";
-
-const Icons = {
-  Logo: () => <RiPulseLine className="w-5 h-5 text-indigo-600" />,
-  Dashboard: () => <RiDashboardLine className="w-5 h-5" />,
-  Monitors: () => <RiMacbookLine className="w-5 h-5" />,
-  Incidents: () => <RiAlertLine className="w-5 h-5" />,
-  Alerts: () => <RiNotification3Line className="w-5 h-5" />,
-  Status: () => <RiHeartPulseLine className="w-5 h-5" />,
-  Team: () => <RiTeamLine className="w-5 h-5" />,
-  Settings: () => <RiSettings4Line className="w-5 h-5" />,
-  Billing: () => <RiBankCardLine className="w-5 h-5" />,
-  ChevronDown: () => <RiArrowDownSLine className="w-4 h-4" />,
-  Logout: () => <RiLogoutBoxLine className="w-4 h-4" />,
-};
-
 import { useAuth } from "../../auth/hooks/useAuth";
 
 const Sidebar = () => {
@@ -36,23 +17,13 @@ const Sidebar = () => {
   const { user } = useSelector((state) => state.auth);
   const { handleLogout } = useAuth();
 
-  const getInitials = (name) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const menuItems = [
-    { name: "Dashboard", icon: Icons.Dashboard, path: "/dashboard" },
-    { name: "Monitors", icon: Icons.Monitors, path: "/monitors" },
-    { name: "Incidents", icon: Icons.Incidents, path: "/incidents" },
-    { name: "Alerts", icon: Icons.Alerts, path: "/alerts" },
-    { name: "Status Pages", icon: Icons.Status, path: "/status-pages" },
-    { name: "Settings", icon: Icons.Settings, path: "/settings" },
+    { name: "Dashboard", icon: RiDashboardLine, path: "/dashboard" },
+    { name: "Monitors", icon: RiMacbookLine, path: "/monitors" },
+    { name: "Incidents", icon: RiAlertLine, path: "/incidents" },
+    { name: "Alerts", icon: RiNotification3Line, path: "/alerts" },
+    { name: "Status Pages", icon: RiHeartPulseLine, path: "/status-pages" },
+    { name: "Settings", icon: RiSettings4Line, path: "/settings" },
   ];
 
   const handleLogoutClick = () => {
@@ -61,54 +32,47 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="flex flex-col h-full bg-linear-to-b from-gray-900 to-gray-800">
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+    <aside className="flex flex-col h-full luxury-sidebar">
+      <div className="px-8 py-12 mb-4">
+        <h2 className="luxury-heading text-2xl flex items-center gap-3">
+          <RiPulseLine className="w-8 h-8 text-[#cc785c]" />
+          WatchTower
+        </h2>
+      </div>
+
+      <nav className="flex-1 px-0 py-2 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 relative overflow-hidden ${isActive
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1"
+              `group flex items-center gap-4 luxury-sidebar-item ${isActive
+                ? "active"
+                : ""
               }`
             }
           >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400 rounded-r-md"></div>
-                )}
-                <div className="relative z-10 flex items-center gap-3">
-                  <item.icon />
-                  {item.name}
-                </div>
-              </>
-            )}
+            <item.icon className="w-5 h-5 transition-colors group-hover:text-[#cc785c]" />
+            <span className="tracking-tight">{item.name}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div
-        onClick={handleLogoutClick}
-        className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer group"
-        title="Logout"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner group-hover:bg-indigo-400 transition-colors">
-              {getInitials(user?.fullname || user?.username)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white leading-tight truncate">
-                {user?.fullname || user?.username || "Guest User"}
-              </p>
-              <p className="text-xs text-gray-300 truncate font-normal">
-                {user?.email || "No email available"}
-              </p>
-            </div>
+      <div className="p-8 border-t border-[#e6dfd8]">
+        <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-white transition-all cursor-pointer group">
+          <div className="w-10 h-10 rounded-full bg-[#cc785c] flex items-center justify-center text-white font-medium">
+            {user?.fullname?.[0] || user?.username?.[0] || 'U'}
           </div>
-          <Icons.Logout />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[#141413] truncate">{user?.fullname || user?.username}</p>
+            <p className="text-[11px] text-[#6c6a64] truncate">Free Plan</p>
+          </div>
+          <button
+            onClick={handleLogoutClick}
+            className="text-[#6c6a64] hover:text-[#cc785c] transition-colors"
+          >
+            <RiLogoutBoxLine className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </aside>

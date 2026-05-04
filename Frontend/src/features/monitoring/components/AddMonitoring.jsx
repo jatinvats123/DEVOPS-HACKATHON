@@ -15,7 +15,6 @@ const AddMonitoring = ({ isOpen, onClose }) => {
   const onSubmit = async (data) => {
     setSubmitError(null);
 
-    // Check if user is authenticated
     if (!isAuthenticated) {
       setSubmitError('You must be logged in to create a monitor');
       return;
@@ -31,123 +30,121 @@ const AddMonitoring = ({ isOpen, onClose }) => {
     }
   };
 
-
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">Add New Monitor</h2>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-            <RiCloseLine className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/40 backdrop-blur-sm">
+      <div className="bg-[#faf9f5] rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300 border border-[#e6dfd8]">
+        <div className="flex items-center justify-between px-10 py-8 border-b border-[#e6dfd8]">
+          <h2 className="luxury-heading text-2xl">New Asset</h2>
+          <button onClick={onClose} className="p-2 text-[#6c6a64] hover:text-[#cc785c] hover:bg-white rounded-full transition-all">
+            <RiCloseLine className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        <div className="p-10 overflow-y-auto">
           {submitError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
               {submitError}
             </div>
           )}
-          <form id="add-monitor-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-gray-700">Type <span className="text-red-500">*</span></label>
+          <form id="add-monitor-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="form-group">
+                <label className="luxury-label">Asset Type</label>
                 <select
                   {...register("type", { required: "Type is required" })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 bg-white"
+                  className="luxury-input bg-transparent"
                 >
-                  <option value="http">HTTP/HTTPS</option>
-                  <option value="tcp">TCP</option>
-                  <option value="ping">Ping</option>
+                  <option value="http">HTTP / HTTPS</option>
+                  <option value="tcp">TCP Protocol</option>
+                  <option value="ping">ICMP Ping</option>
                 </select>
-                {errors.type && <span className="text-xs font-medium text-red-500">{errors.type.message}</span>}
+                {errors.type && <span className="text-xs text-red-400 mt-2">{errors.type.message}</span>}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-gray-700">Title <span className="text-red-500">*</span></label>
+              <div className="form-group">
+                <label className="luxury-label">Asset Label</label>
                 <input
                   type="text"
-                  placeholder="e.g. Primary API"
+                  placeholder="e.g. Production Cluster"
                   {...register("title", { required: "Title is required" })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
+                  className="luxury-input"
                 />
-                {errors.title && <span className="text-xs font-medium text-red-500">{errors.title.message}</span>}
+                {errors.title && <span className="text-xs text-red-400 mt-2">{errors.title.message}</span>}
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-semibold text-gray-700">Name <span className="text-red-500">*</span></label>
+            <div className="form-group">
+              <label className="luxury-label">Internal Name</label>
               <input
                 type="text"
-                placeholder="e.g. API Server"
+                placeholder="e.g. api-server-v1"
                 {...register("name", { required: "Name is required" })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
+                className="luxury-input"
               />
-              {errors.name && <span className="text-xs font-medium text-red-500">{errors.name.message}</span>}
+              {errors.name && <span className="text-xs text-red-400 mt-2">{errors.name.message}</span>}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-semibold text-gray-700">URL <span className="text-red-500">*</span></label>
+            <div className="form-group">
+              <label className="luxury-label">Resource Identifier (URL)</label>
               <input
                 type="url"
-                placeholder="https://api.example.com"
+                placeholder="https://api.acme.com/health"
                 {...register("url", { required: "URL is required" })}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
+                className="luxury-input"
               />
-              {errors.url && <span className="text-xs font-medium text-red-500">{errors.url.message}</span>}
+              {errors.url && <span className="text-xs text-red-400 mt-2">{errors.url.message}</span>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-gray-700">Interval (seconds) <span className="text-red-500">*</span></label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="form-group">
+                <label className="luxury-label">Check Frequency (Seconds)</label>
                 <input
                   type="number"
                   defaultValue={60}
                   {...register("interval", { required: "Interval is required", min: 10 })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
+                  className="luxury-input"
                 />
-                {errors.interval && <span className="text-xs font-medium text-red-500">{errors.interval.message}</span>}
+                {errors.interval && <span className="text-xs text-red-400 mt-2">{errors.interval.message}</span>}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-gray-700">Timeout (seconds) <span className="text-red-500">*</span></label>
+              <div className="form-group">
+                <label className="luxury-label">Latency Timeout (Seconds)</label>
                 <input
                   type="number"
                   defaultValue={10}
                   {...register("timeout", { required: "Timeout is required", min: 1 })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
+                  className="luxury-input"
                 />
-                {errors.timeout && <span className="text-xs font-medium text-red-500">{errors.timeout.message}</span>}
+                {errors.timeout && <span className="text-xs text-red-400 mt-2">{errors.timeout.message}</span>}
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-semibold text-gray-700">Description</label>
+            <div className="form-group">
+              <label className="luxury-label">Contextual Notes</label>
               <textarea
                 rows="3"
-                placeholder="Brief description of this monitor..."
+                placeholder="Technical details or maintenance context..."
                 {...register("description")}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none placeholder:text-gray-400 text-gray-900"
+                className="luxury-input resize-none"
               ></textarea>
             </div>
           </form>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50 mt-auto">
+        <div className="px-10 py-8 border-t border-[#e6dfd8] flex items-center justify-end gap-6 bg-[#f5f0e8]/30 mt-auto">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+            className="luxury-button-outline px-8"
           >
-            Cancel
+            Discard
           </button>
           <button
             type="submit"
             form="add-monitor-form"
-            className="px-4 py-2 text-[13px] font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            className="luxury-button-primary px-8"
           >
-            Save Monitor
+            Authorize Asset
           </button>
         </div>
       </div>

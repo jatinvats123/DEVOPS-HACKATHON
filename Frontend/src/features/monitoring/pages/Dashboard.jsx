@@ -72,20 +72,18 @@ const Icons = {
 
 
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-transform hover:-translate-y-0.5 duration-200">
+  <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
     <div className="flex justify-between items-start">
       <div>
-        <h3 className="text-sm font-medium text-gray-500 mb-2">{title}</h3>
-        <span className="text-3xl font-bold text-gray-900 tracking-tight">
+        <h3 className="luxury-label mb-4">{title}</h3>
+        <span className="text-4xl luxury-heading">
           {value}
         </span>
         {sub && (
-          <p className={`text-[12px] font-medium mt-2 ${colorClass}`}>{sub}</p>
+          <p className="luxury-subtext mt-4">{sub}</p>
         )}
       </div>
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center bg-gray-50 ${colorClass}`}
-      >
+      <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
         <Icon />
       </div>
     </div>
@@ -94,98 +92,99 @@ const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
 
 const StatsCards = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-      <Card
-        title="Total Monitors"
-        value={stats.total}
-        sub={`Total managed assets`}
-        colorClass="text-indigo-600"
-        icon={Icons.MonitorCard}
-      />
-      <Card
-        title="Up Monitors"
-        value={stats.up}
-        sub={`${stats.total > 0 ? ((stats.up / stats.total) * 100).toFixed(1) : 0}% of total`}
-        colorClass="text-emerald-500"
-        icon={Icons.CheckCircle}
-      />
-      <Card
-        title="Down Monitors"
-        value={stats.down}
-        sub={`${stats.total > 0 ? ((stats.down / stats.total) * 100).toFixed(1) : 0}% requiring attention`}
-        colorClass="text-red-500"
-        icon={Icons.XCircle}
-      />
-      <Card
-        title="Avg. Uptime"
-        value={stats.uptime}
-        sub="Overall health score"
-        colorClass="text-emerald-500"
-        icon={Icons.Activity}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-12">
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Total Assets"
+          value={stats.total}
+          sub="Managed Infrastructure"
+          icon={Icons.MonitorCard}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Active Status"
+          value={stats.up}
+          sub={`${stats.total > 0 ? ((stats.up / stats.total) * 100).toFixed(1) : 0}% Uptime`}
+          icon={Icons.CheckCircle}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Attention Required"
+          value={stats.down}
+          sub="Service Outages"
+          icon={Icons.XCircle}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Global Health"
+          value={stats.uptime}
+          sub="Average Performance"
+          icon={Icons.Activity}
+        />
+      </div>
     </div>
   );
 };
 
 const UptimeOverview = () => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[350px]">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          Uptime Overview
+    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm">
+      <div className="flex items-center justify-between mb-10">
+        <h2 className="luxury-heading text-xl">
+          Performance History
         </h2>
-        <select className="text-xs border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 outline-none hover:bg-gray-50 cursor-pointer">
+        <select className="luxury-label bg-transparent border border-[#e6dfd8] rounded-md px-2 py-1 outline-none cursor-pointer">
           <option>Last 7 Days</option>
           <option>Last 30 Days</option>
         </select>
       </div>
-      <div className="h-64 w-full -ml-4">
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={uptimeData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
           >
-            <defs>
-              <linearGradient id="colorUptime" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-              </linearGradient>
-            </defs>
             <CartesianGrid
-              strokeDasharray="3 3"
+              strokeDasharray="0"
               vertical={false}
-              stroke="#f1f5f9"
+              stroke="#e6dfd8"
             />
             <XAxis
               dataKey="time"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#64748b", fontSize: 11 }}
-              dy={10}
+              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
+              dy={15}
             />
             <YAxis
               domain={["dataMin - 1", 100]}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#64748b", fontSize: 11 }}
+              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
               tickFormatter={(val) => `${val}%`}
             />
             <Tooltip
               contentStyle={{
                 borderRadius: "8px",
-                border: "none",
-                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                border: "1px solid #e6dfd8",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                fontFamily: 'Inter',
+                fontSize: '12px',
+                backgroundColor: '#fff'
               }}
             />
             <Area
               type="monotone"
               dataKey="val"
-              stroke="#4f46e5"
-              strokeWidth={2.5}
-              fillOpacity={1}
-              fill="url(#colorUptime)"
-              activeDot={{ r: 5, strokeWidth: 0 }}
-              dot={{ r: 3, fill: "#4f46e5", strokeWidth: 0 }}
+              stroke="#cc785c"
+              strokeWidth={2}
+              fillOpacity={0.1}
+              fill="#cc785c"
+              activeDot={{ r: 5, fill: '#cc785c', strokeWidth: 0 }}
+              dot={false}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -202,15 +201,15 @@ const StatusDistribution = ({ monitors = [] }) => {
   const uptimePct = ((up / total) * 100).toFixed(0);
 
   const dynamicPieData = [
-    { name: "Up", value: up, fill: "#22c55e" },
-    { name: "Down", value: down, fill: "#ef4444" },
-    { name: "Paused", value: paused, fill: "#9ca3af" },
+    { name: "Up", value: up, fill: "#cc785c" },
+    { name: "Down", value: down, fill: "#3d3d3a" },
+    { name: "Paused", value: paused, fill: "#e6dfd8" },
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col min-h-[350px]">
-      <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-2">
-        Status Distribution
+    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
+      <h2 className="luxury-heading text-xl mb-10">
+        Asset Distribution
       </h2>
       <div className="flex-1 relative flex items-center justify-center ">
         <ResponsiveContainer width="100%" height="100%">
@@ -219,11 +218,12 @@ const StatusDistribution = ({ monitors = [] }) => {
               data={dynamicPieData}
               cx="50%"
               cy="50%"
-              innerRadius={70}
-              outerRadius={90}
-              paddingAngle={2}
+              innerRadius={80}
+              outerRadius={100}
+              paddingAngle={4}
               dataKey="value"
               stroke="none"
+              cornerRadius={4}
             >
               {dynamicPieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -233,24 +233,33 @@ const StatusDistribution = ({ monitors = [] }) => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold text-gray-900">{uptimePct}%</span>
-          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+          <span className="text-4xl luxury-heading text-[#cc785c]">{uptimePct}%</span>
+          <span className="luxury-label mt-1">
             Uptime
           </span>
         </div>
       </div>
-      <div className="flex justify-center gap-5 mt-4">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span className="text-xs text-gray-500">Up ({up})</span>
+      <div className="flex flex-col gap-4 mt-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#cc785c]"></div>
+            <span className="luxury-label">Operational</span>
+          </div>
+          <span className="text-sm font-medium">{up}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span className="text-xs text-gray-500">Down ({down})</span>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#3d3d3a]"></div>
+            <span className="luxury-label">Critical</span>
+          </div>
+          <span className="text-sm font-medium">{down}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-          <span className="text-xs text-gray-500">Paused ({paused})</span>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#e6dfd8]"></div>
+            <span className="luxury-label">Inactive</span>
+          </div>
+          <span className="text-sm font-medium">{paused}</span>
         </div>
       </div>
     </div>
@@ -271,81 +280,57 @@ const AllMonitors = ({ monitors = [] }) => {
 
   const timeAgo = (dateString) => {
     if (!dateString) return "Just now";
-
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-
     const seconds = Math.floor((new Date() - date) / 1000);
-
-    if (seconds < 60) return `${Math.max(0, seconds)} sec ago`;
+    if (seconds < 60) return `${Math.max(0, seconds)}s ago`;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min ago`;
+    if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hrs ago`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days} days ago`;
-  };
-
-  const getBadgeStyle = (status) => {
-    if (status === "UP") return "bg-emerald-100 text-emerald-700";
-    if (status === "DOWN") return "bg-red-100 text-red-700";
-    return "bg-orange-100 text-orange-700";
+    return `${days}d ago`;
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          All Monitors
+    <div className="bg-white border border-gray-100 p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="luxury-heading text-base">
+          System Registry
         </h2>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="luxury-table">
           <thead>
             <tr>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Monitor Name
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Status
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Type
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Last Checked
-              </th>
-              <th className="px-6 py-3.5 border-b border-gray-100"></th>
+              <th>Asset Name</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Last Checked</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody>
             {paginatedMonitors.map((m, i) => (
-              <tr
-                key={m._id || i}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <p className="text-[13px] font-semibold text-gray-900">
-                    {m.title}
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{m.url}</p>
+              <tr key={m._id || i}>
+                <td>
+                  <p className="font-medium text-black">{m.title}</p>
+                  <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">{m.url}</p>
                 </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${getBadgeStyle(m.status)}`}
-                  >
+                <td>
+                  <span className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}>
                     {m.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-[13px] text-gray-600">
+                <td className="text-[12px] font-light uppercase tracking-tight">
                   {m.type || "Website"}
                 </td>
-                <td className="px-6 py-4 text-[13px] text-gray-500">
+                <td className="text-[12px] text-gray-400">
                   {timeAgo(m.lastChecked)}
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-gray-400 hover:text-gray-700 transition-colors">
+                <td className="text-right">
+                  <button className="text-gray-300 hover:text-black transition-colors">
                     <Icons.Dots />
                   </button>
                 </td>
@@ -355,26 +340,24 @@ const AllMonitors = ({ monitors = [] }) => {
         </table>
       </div>
 
-      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-        <span className="text-xs text-gray-500">
-          Showing {startIndex + 1} to{" "}
-          {Math.min(startIndex + itemsPerPage, validMonitors.length)} of{" "}
-          {validMonitors.length} monitors
+      <div className="mt-10 flex items-center justify-between">
+        <span className="luxury-label">
+          {startIndex + 1} — {Math.min(startIndex + itemsPerPage, validMonitors.length)} / {validMonitors.length}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-8">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 text-xs font-medium"
+            className="luxury-label hover:text-black disabled:opacity-30 transition-colors"
           >
-            ← Previous
+            Previous
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 text-xs font-medium"
+            className="luxury-label hover:text-black disabled:opacity-30 transition-colors"
           >
-            Next →
+            Next
           </button>
         </div>
       </div>
@@ -385,53 +368,51 @@ const AllMonitors = ({ monitors = [] }) => {
 const RecentIncidents = ({ incidents = [] }) => {
   if (incidents.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-4">
-          Recent Incidents
+      <div className="bg-white border border-gray-100 p-8">
+        <h2 className="luxury-heading text-base mb-8">
+          Incident Journal
         </h2>
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <Icons.CheckCircle className="w-8 h-8 text-emerald-500 mb-2 opacity-20" />
-          <p className="text-sm text-gray-500">No recent incidents</p>
-          <p className="text-[11px] text-gray-400">Your systems are running smoothly</p>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="luxury-subtext">Record is clear</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          Recent Incidents
+    <div className="bg-white border border-gray-100 p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="luxury-heading text-base">
+          Incident Journal
         </h2>
-        <Link to="/incidents" className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700">
+        <Link to="/incidents" className="luxury-label hover:text-black transition-colors">
           View All
         </Link>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {incidents.slice(0, 3).map((inc) => (
           <div
             key={inc._id || inc.id}
-            className="border border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
+            className="border-b border-gray-100 pb-6 last:border-0"
           >
             <div className="flex items-start justify-between mb-2">
-              <h4 className="text-[13px] font-semibold text-gray-900 truncate">
-                {inc.monitorTitle || inc.name || "Unknown Monitor"}
+              <h4 className="text-[13px] font-medium text-black">
+                {inc.monitorTitle || inc.name || "Unknown Asset"}
               </h4>
               <span
-                className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" || inc.status === "OPEN" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
+                className={`luxury-label text-[9px] ${inc.status === "ONGOING" || inc.status === "OPEN" ? "text-black" : "text-gray-400"}`}
               >
                 {inc.status}
               </span>
             </div>
-            <p className="text-[12px] text-gray-500 mb-3">
+            <p className="text-[11px] text-gray-400 mb-4 uppercase tracking-tight">
               {new Date(inc.createdAt || inc.date).toLocaleString()}
             </p>
             <Link
               to={`/incidents/${inc._id}`}
-              className="block w-full py-1.5 border border-gray-200 rounded text-[12px] text-center font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="luxury-button-outline w-full py-2 text-[10px] text-center"
             >
-              View Incident
+              Details
             </Link>
           </div>
         ))}
@@ -485,17 +466,17 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-8">
+    <main className="flex-1 overflow-y-auto p-12 luxury-container">
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
         {/* LEFT SIDE (8 columns) */}
-        <div className="xl:col-span-8 flex flex-col gap-6">
+        <div className="xl:col-span-8 flex flex-col gap-12">
           <UptimeOverview />
           <div className="relative">
             {loading && monitors.length === 0 && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
               </div>
             )}
             <AllMonitors monitors={monitors} />
@@ -503,32 +484,32 @@ const Dashboard = () => {
         </div>
 
         {/* RIGHT SIDE (4 columns) */}
-        <div className="xl:col-span-4 flex flex-col gap-6">
+        <div className="xl:col-span-4 flex flex-col gap-12">
           {/* Quick Navigation Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-4">
-              Quick Navigation
+          <div className="bg-white border border-gray-100 p-8">
+            <h2 className="luxury-heading text-base mb-8">
+              Quick Links
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <Link to="/monitors" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+            <div className="grid grid-cols-1 gap-2">
+              <Link to="/monitors" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
                 <Icons.Monitors />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Monitors</span>
+                <span>Monitors</span>
               </Link>
-              <Link to="/incidents" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link to="/incidents" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
                 <Icons.Incidents />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Incidents</span>
+                <span>Incidents</span>
               </Link>
-              <Link to="/alerts" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link to="/alerts" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
                 <Icons.Alerts />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Alerts</span>
+                <span>Alerts</span>
               </Link>
-              <Link to="/status-pages" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link to="/status-pages" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
                 <Icons.Status />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Status</span>
+                <span>Status</span>
               </Link>
-              <Link to="/settings" className="flex items-center gap-2 p-3 rounded-lg border border-gray-50 bg-gray-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all group">
+              <Link to="/settings" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
                 <Icons.Settings />
-                <span className="text-xs font-medium text-gray-700 group-hover:text-indigo-700">Settings</span>
+                <span>Settings</span>
               </Link>
             </div>
           </div>
