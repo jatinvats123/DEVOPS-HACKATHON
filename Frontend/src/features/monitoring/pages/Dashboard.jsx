@@ -400,7 +400,7 @@ const RecentIncidents = ({ incidents = [] }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           Recent Incidents
         </h2>

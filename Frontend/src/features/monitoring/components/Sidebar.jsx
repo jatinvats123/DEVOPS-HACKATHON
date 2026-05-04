@@ -1,5 +1,5 @@
 
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import {
   RiDashboardLine,
@@ -32,6 +32,7 @@ const Icons = {
 import { useAuth } from "../../auth/hooks/useAuth";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { handleLogout } = useAuth();
 
@@ -54,24 +55,13 @@ const Sidebar = () => {
     { name: "Settings", icon: Icons.Settings, path: "/settings" },
   ];
 
-  return (
-    <aside className="w-[240px] bg-gradient-to-b from-blue-900 to-indigo-900 text-gray-300 flex-shrink-0 h-screen hidden lg:flex flex-col">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <Icons.Logo />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-tight leading-tight">
-              UptimeAI
-            </h1>
-            <p className="text-[10px] text-gray-300 font-medium tracking-wide">
-              Website Monitoring Platform
-            </p>
-          </div>
-        </div>
-      </div>
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/login', { replace: true });
+  };
 
+  return (
+    <aside className="flex flex-col h-full bg-linear-to-b from-gray-900 to-gray-800">
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
@@ -100,8 +90,8 @@ const Sidebar = () => {
       </nav>
 
       <div
-        onClick={handleLogout}
-        className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer group mt-auto"
+        onClick={handleLogoutClick}
+        className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer group"
         title="Logout"
       >
         <div className="flex items-center justify-between">

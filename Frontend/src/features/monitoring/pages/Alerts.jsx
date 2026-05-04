@@ -77,6 +77,77 @@ const Alerts = () => {
           )}
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 shadow-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && activeLogs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
+          <p className="text-sm text-gray-500 font-medium">Fetching logs...</p>
+        </div>
+      ) : activeLogs.length === 0 ? (
+        /* Empty State */
+        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-500">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+            <RiFileList3Line className="w-8 h-8 text-gray-400" />
+          </div>
+          <p className="text-[15px] font-medium text-gray-900 mb-1">No logs found</p>
+          <p className="text-sm">There is no history recorded yet.</p>
+        </div>
+      ) : (
+        /* Logs List */
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Timestamp</th>
+                  <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Status</th>
+                  <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Monitor</th>
+                  <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Message / Reason</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {activeLogs.map((log) => {
+                  const status = (log.status || "").toUpperCase();
+                  let statusBadge = "bg-gray-100 text-gray-700";
+                  if (status === "UP" || status === "OK" || status === "RESOLVED") {
+                    statusBadge = "bg-emerald-100 text-emerald-700";
+                  } else if (status === "DOWN" || status === "ERROR" || status === "FAILING") {
+                    statusBadge = "bg-red-100 text-red-700";
+                  } else if (status === "ONGOING") {
+                    statusBadge = "bg-orange-100 text-orange-700";
+                  }
+
+                  return (
+                    <tr key={log._id || Math.random()} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 text-[13px] text-gray-500 whitespace-nowrap">
+                        {formatDate(log.createdAt || log.timestamp)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${statusBadge}`}>
+                          {status || "LOG"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-[13px] font-medium text-gray-900 whitespace-nowrap">
+                        {getMonitorName(log.monitorId)}
+                      </td>
+                      <td className="px-6 py-4 text-[13px] text-gray-600 max-w-md truncate">
+                        {typeof log.message === 'object' ? JSON.stringify(log.message) : (log.message || log.reason || "Execution recorded")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

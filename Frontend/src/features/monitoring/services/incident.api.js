@@ -21,3 +21,6 @@ export const getIncidentsByMonitorId = async (monitorId) => {
     url: `${env.INCIDENTS_API}/${monitorId}`,
   });
 };
+
+
+
