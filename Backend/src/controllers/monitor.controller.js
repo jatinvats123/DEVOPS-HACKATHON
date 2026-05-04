@@ -74,14 +74,16 @@ export const deleteMonitorController = async (req, res) => {
   const monitorId = req.params.monitorId;
 
   try {
+    console.log(`Attempting to delete monitor: ${monitorId} for user: ${userId}`);
     const monitor = await monitorModel.findOneAndDelete({
       _id: monitorId,
       userId,
     });
 
     if (!monitor) {
+      console.log(`Monitor ${monitorId} not found or not owned by user ${userId}`);
       return res.status(404).json({
-        message: 'Monitor not found',
+        message: 'Monitor not found or you do not have permission to delete it',
         success: false,
       });
     }

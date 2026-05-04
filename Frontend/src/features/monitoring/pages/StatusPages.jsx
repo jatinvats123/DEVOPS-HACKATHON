@@ -1,127 +1,165 @@
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useStatus } from "../hooks/useStatus";
-import { selectMonitors } from "../state/monitor.slice";
-import { useDashboardInit } from "../hooks/useDashboardInit";
-import { RiHeartPulseLine, RiCheckboxCircleLine, RiCloseCircleLine, RiTimeLine } from "@remixicon/react";
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectMonitors } from '../state/monitor.slice';
+import { useMonitors } from '../hooks/useMonitor';
+import { 
+  RiHeartPulseLine, 
+  RiAddLine, 
+  RiGlobalLine, 
+  RiSettings3Line, 
+  RiExternalLinkLine, 
+  RiDeleteBinLine,
+  RiCheckDoubleLine,
+  RiErrorWarningLine
+} from '@remixicon/react';
 
 const StatusPages = () => {
-  // Ensure monitors are loaded if we navigated directly here
-  useDashboardInit();
-  
-  const monitors = useSelector(selectMonitors) || [];
-  const { statusData, loading, error, handleGetMonitorStatus } = useStatus();
+  const monitors = useSelector(selectMonitors);
+  const { handleGetMonitors } = useMonitors();
+  const [loading, setLoading] = useState(true);
 
-  // Fetch status for all monitors
   useEffect(() => {
-    if (monitors.length > 0) {
-      monitors.forEach((monitor) => {
-        handleGetMonitorStatus(monitor._id || monitor.id);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monitors]);
+    const init = async () => {
+      setLoading(true);
+      await handleGetMonitors();
+      setLoading(false);
+    };
+    init();
+  }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "Never";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    return date.toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
+  const getStatusBadge = (monitorsList) => {
+    const total = monitorsList.length;
+    if (total === 0) return { label: 'Empty', color: 'bg-gray-100 text-gray-600' };
+    
+    const down = monitorsList.filter(m => m.status === 'DOWN').length;
+    if (down === 0) return { label: 'All Systems Operational', color: 'bg-emerald-100 text-emerald-700' };
+    if (down === total) return { label: 'Major Outage', color: 'bg-red-100 text-red-700' };
+    return { label: 'Partial Outage', color: 'bg-orange-100 text-orange-700' };
   };
 
+  const statusInfo = getStatusBadge(monitors);
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-gray-50">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-          <RiHeartPulseLine className="w-6 h-6 text-indigo-600" />
-          System Status
-        </h1>
-        <p className="text-[13px] text-gray-500 mt-1">
-          Real-time health overview derived from active monitor logs.
-        </p>
+    <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <RiHeartPulseLine className="w-7 h-7 text-indigo-500" />
+            Status Pages
+          </h1>
+          <p className="text-[13px] text-gray-500 mt-1">
+            Manage your public-facing service health dashboards.
+          </p>
+        </div>
+        <button
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
+        >
+          <RiAddLine className="w-4 h-4" /> Create Status Page
+        </button>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 shadow-sm">
-          {error}
-        </div>
-      )}
-
-      {loading && Object.keys(statusData).length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-sm text-gray-500 font-medium">Fetching health data...</p>
-        </div>
-      ) : monitors.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-500">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-            <RiHeartPulseLine className="w-8 h-8 text-gray-400" />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {loading ? (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
+            <p className="text-sm text-gray-500">Loading status pages...</p>
           </div>
-          <p className="text-[15px] font-medium text-gray-900 mb-1">No monitors configured</p>
-          <p className="text-sm">Create a monitor to view its real-time status.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {monitors.map((monitor) => {
-            const monitorId = monitor._id || monitor.id;
-            const data = statusData[monitorId];
-            
-            // Default to PENDING while data is being fetched
-            const currentStatus = data ? data.status : "PENDING";
-            const lastChecked = data ? data.lastChecked : null;
-            
-            let statusColor = "bg-gray-100 border-gray-200 text-gray-600";
-            let StatusIcon = RiTimeLine;
-            let statusLabel = "Pending";
-
-            if (currentStatus === "UP") {
-              statusColor = "bg-emerald-50 border-emerald-100 text-emerald-700";
-              StatusIcon = RiCheckboxCircleLine;
-              statusLabel = "Operational";
-            } else if (currentStatus === "DOWN") {
-              statusColor = "bg-red-50 border-red-100 text-red-700";
-              StatusIcon = RiCloseCircleLine;
-              statusLabel = "Outage";
-            }
-
-            return (
-              <div 
-                key={monitorId} 
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
-              >
-                <div className={`px-5 py-3 border-b flex items-center gap-2 ${statusColor}`}>
-                  <StatusIcon className="w-5 h-5 shrink-0" />
-                  <span className="font-semibold text-sm uppercase tracking-wide">
-                    {statusLabel}
-                  </span>
+        ) : monitors.length === 0 ? (
+          <div className="col-span-full bg-white rounded-xl border border-gray-100 p-12 text-center shadow-sm">
+            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <RiGlobalLine className="w-10 h-10 text-indigo-400 opacity-60" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">No status pages yet</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto mb-8">
+              Keep your users updated on your service status. Create a public page in seconds.
+            </p>
+            <button
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+            >
+              <RiAddLine className="w-5 h-5" /> Build Your First Page
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                  <RiGlobalLine className="w-6 h-6" />
                 </div>
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold text-gray-900 truncate mb-1" title={monitor.title || monitor.name}>
-                    {monitor.title || monitor.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 truncate mb-6" title={monitor.url}>
-                    {monitor.url}
-                  </p>
-                  
-                  <div className="mt-auto">
-                    <div className="flex justify-between items-end border-t border-gray-100 pt-4 mt-4">
-                      <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Last Checked</p>
-                        <p className="text-xs text-gray-600 font-medium">
-                          {formatDate(lastChecked)}
-                        </p>
-                      </div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        {monitor.type || "HTTP"}
-                      </div>
-                    </div>
-                  </div>
+                <span className={`px-2 py-1 ${statusInfo.color} text-[10px] font-bold rounded uppercase tracking-wider`}>
+                  {statusInfo.label}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Global Status Page</h3>
+              <p className="text-sm text-gray-500 mb-4 truncate">status.uptimeai.io/main</p>
+              
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-50">
+                  <span>Monitors Attached</span>
+                  <span className="font-semibold text-gray-900">{monitors.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-50">
+                  <span>Current Uptime</span>
+                  <span className="font-semibold text-emerald-600">99.98%</span>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="flex items-center gap-2">
+                <button className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-1.5">
+                  <RiSettings3Line className="w-4 h-4" /> Edit
+                </button>
+                <button className="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors">
+                  <RiExternalLinkLine className="w-4 h-4" />
+                </button>
+                <button className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors">
+                  <RiDeleteBinLine className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Preview Section */}
+      {monitors.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Live Preview</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden max-w-4xl">
+            <div className={`p-8 ${statusInfo.color.split(' ')[0]} flex items-center justify-between`}>
+              <div>
+                <h3 className="text-2xl font-bold mb-1">System Health</h3>
+                <p className="text-sm opacity-80 font-medium">{statusInfo.label}</p>
+              </div>
+              {statusInfo.label === 'All Systems Operational' ? (
+                <RiCheckDoubleLine className="w-12 h-12 opacity-40" />
+              ) : (
+                <RiErrorWarningLine className="w-12 h-12 opacity-40" />
+              )}
+            </div>
+            <div className="p-8 space-y-4">
+              {monitors.slice(0, 5).map((m) => (
+                <div key={m._id} className="flex items-center justify-between p-4 rounded-xl border border-gray-50 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${m.status === 'UP' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <span className="text-sm font-semibold text-gray-900">{m.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold uppercase ${m.status === 'UP' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {m.status}
+                    </span>
+                    {m.lastStatusCode && (
+                      <span className="text-[10px] font-mono text-gray-400">
+                        ({m.lastStatusCode})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {monitors.length > 5 && (
+                <p className="text-center text-xs text-gray-400 pt-2 italic">and {monitors.length - 5} more monitors...</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

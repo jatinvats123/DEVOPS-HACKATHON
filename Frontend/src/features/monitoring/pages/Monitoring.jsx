@@ -226,6 +226,11 @@ const Monitoring = () => {
                       >
                         {m.status || "PENDING"}
                       </span>
+                      {m.lastStatusCode && (
+                        <span className="ml-2 text-[11px] font-mono text-gray-400">
+                          {m.lastStatusCode}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-[13px] text-gray-600 font-medium uppercase tracking-wide">
                       {m.type || "HTTP"}

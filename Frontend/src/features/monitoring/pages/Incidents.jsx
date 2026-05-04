@@ -1,21 +1,35 @@
-import React, { useEffect } from "react";
-import { useIncident } from "../hooks/useIncident";
-import { RiAlertLine, RiRobot2Line, RiTimeLine, RiRefreshLine } from "@remixicon/react";
+import React, { useEffect, useState } from 'react';
+import { getAllIncidents } from '../services/incident.api';
+import { RiAlertLine, RiRefreshLine, RiHistoryLine } from '@remixicon/react';
 
 const Incidents = () => {
-  const { incidents, loading, error, handleGetAllIncidents } = useIncident();
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // On mount: call handleGetAllIncidents
+  const fetchIncidents = async () => {
+    try {
+      setLoading(true);
+      const res = await getAllIncidents();
+      if (res && res.data) {
+        setIncidents(res.data);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to fetch incidents");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    handleGetAllIncidents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchIncidents();
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString(undefined, {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+  const getStatusStyle = (status) => {
+    const s = (status || "").toUpperCase();
+    if (s === "ONGOING" || s === "OPEN" || s === "FAILING") return "bg-red-100 text-red-700";
+    if (s === "RESOLVED" || s === "CLOSED") return "bg-emerald-100 text-emerald-700";
+    return "bg-gray-100 text-gray-700";
   };
 
   return (
@@ -23,22 +37,82 @@ const Incidents = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <RiAlertLine className="w-6 h-6 text-indigo-600" />
-            All Incidents
+            <RiAlertLine className="w-7 h-7 text-red-500" />
+            Incidents
           </h1>
           <p className="text-[13px] text-gray-500 mt-1">
-            Global view of past and ongoing incidents across all monitors.
+            Track and manage service outages and performance issues.
           </p>
         </div>
-        
         <button
-          onClick={() => handleGetAllIncidents(true)}
+          onClick={fetchIncidents}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
         >
-          <RiRefreshLine className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-500' : ''}`} />
+          <RiRefreshLine className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </button>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto min-h-[400px]">
+          {loading && incidents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[400px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+              <p className="text-sm text-gray-500">Loading incidents...</p>
+            </div>
+          ) : incidents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[400px] text-center p-8">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                <RiHistoryLine className="w-8 h-8 text-emerald-500 opacity-40" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">All Systems Operational</h3>
+              <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                No incidents recorded. We'll list any service disruptions or performance issues here.
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Monitor / Service</th>
+                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Status</th>
+                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Started At</th>
+                  <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">Resolved At</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {incidents.map((inc) => (
+                  <tr key={inc._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="text-[14px] font-semibold text-gray-900">{inc.monitorTitle || "Unknown Monitor"}</p>
+                      <p className="text-[12px] text-gray-500 mt-0.5">{inc.monitorUrl || inc.url || "N/A"}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${getStatusStyle(inc.status)}`}>
+                        {inc.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-gray-600">
+                      {new Date(inc.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-gray-500">
+                      {inc.resolvedAt ? new Date(inc.resolvedAt).toLocaleString() : (
+                        <span className="text-red-500 italic font-medium">Ongoing</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {error && (

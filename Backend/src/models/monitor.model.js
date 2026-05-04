@@ -12,6 +12,10 @@ const monitorSchema = new mongoose.Schema({
     default: 'Untitled monitor',
     set: (value) => value?.trim() || 'Untitled monitor',
   },
+  name: {
+    type: String,
+    trim: true,
+  },
   description: {
     type: String,
     trim: true,
@@ -32,8 +36,8 @@ const monitorSchema = new mongoose.Schema({
     default: 60, //default to check every 60 seconds
   },
   timeout: {
-    type: Number, //request timeout in duration
-    default: 5000, //default timeout of 5 seconds
+    type: Number, //request timeout in seconds
+    default: 10, //default timeout of 10 seconds
   },
   status: {
     type: String,
@@ -42,6 +46,9 @@ const monitorSchema = new mongoose.Schema({
   },
   lastChecked: {
     type: Date,
+  },
+  lastStatusCode: {
+    type: Number,
   },
   timestamp: {
     type: Date,
