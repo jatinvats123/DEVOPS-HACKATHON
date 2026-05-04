@@ -11,10 +11,18 @@ import Alerts from "../features/monitoring/pages/Alerts";
 import StatusPages from "../features/monitoring/pages/StatusPages";
 import Settings from "../features/monitoring/pages/Settings";
 
+import { Navigate } from "react-router";
+import { useSelector } from "react-redux";
+
+const Home = () => {
+    const { isAuthenticated } = useSelector(state => state.auth);
+    return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />;
+};
+
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <Login />,
+        element: <Home />,
     },
     {
         path: "/login",

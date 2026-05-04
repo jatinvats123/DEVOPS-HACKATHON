@@ -41,8 +41,11 @@ const Middleware = (app) => {
     app.use(cookieParser());
     app.use(morgan("dev"));
     app.use(compression());
-    console.log('CORS_ORIGIN being used:', config.CORS_ORIGIN);
-    app.use(express.static("public"));
+    app.use(cors({
+        origin: config.CORS_ORIGIN,
+        credentials: true,
+    }));
+    app.use(express.static("public/dist"));
 };
 
 export default Middleware;

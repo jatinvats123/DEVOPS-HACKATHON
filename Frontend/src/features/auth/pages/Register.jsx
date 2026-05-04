@@ -31,8 +31,7 @@ function Register() {
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -110,12 +109,8 @@ function Register() {
         password: formData.password,
       });
       
-      // If response contains token, auto-login and redirect
+      // If response contains token, useAuth already handled login, just redirect
       if (response && response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        dispatch(setUser(response.data.user));
-        dispatch(setAuthenticated(true));
         navigate('/dashboard', { replace: true });
       } else if (response && otp.sent) {
         // Otherwise, move to OTP verification
@@ -137,15 +132,13 @@ function Register() {
     try {
       const response = await handleVerifyOtp(userId, otpData.otp);
       if (response) {
-        // If response contains token, auto-login
+        // If response contains token, useAuth should ideally handle it, but verifyOtp is a thunk
+        // Let's check if the thunk handles login. If not, we do it here or in useAuth.
         if (response.data && response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
           dispatch(setUser(response.data.user));
           dispatch(setAuthenticated(true));
           navigate('/dashboard', { replace: true });
         } else {
-          // Otherwise go to login
           navigate('/login', { replace: true });
         }
       }

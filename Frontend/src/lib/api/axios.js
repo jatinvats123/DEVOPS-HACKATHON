@@ -8,19 +8,8 @@ export const API = axios.create({
     headers: { "Content-Type": "application/json" },
 });
 
-// Add request interceptor to include auth token
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Cookie-based authentication is handled automatically by the browser
+// due to withCredentials: true. No need to manually set Authorization header.
 
 export default API;
 

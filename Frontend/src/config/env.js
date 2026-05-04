@@ -98,4 +98,5 @@ export const env = {
   GET_LOGS_API,
   HEALTH_API,
   LOGS_API,
+  LOGOUT_API: "/api/auth/logout",
 };
