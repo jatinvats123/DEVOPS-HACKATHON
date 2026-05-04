@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useMonitors } from "../hooks/useMonitor";
-import { selectMonitors, selectLoading } from "../state/monitor.slice";
+import { useDashboardInit } from "../hooks/useDashboardInit";
+import { selectLoading } from "../state/monitor.slice";
 import {
   AreaChart,
   Area,
@@ -143,10 +143,10 @@ const StatsCards = ({ stats }) => {
         icon={Icons.XCircle}
       />
       <Card
-        title="Avg. Uptime"
-        value={stats.uptime}
-        sub="▲ 1.2% this month"
-        colorClass="text-emerald-500"
+        title="Total Logs"
+        value={stats.logsTotal}
+        sub={`${stats.logsError} Recent Errors`}
+        colorClass="text-indigo-500"
         icon={Icons.Activity}
       />
     </div>
@@ -396,10 +396,13 @@ const AllMonitors = ({ monitors = [] }) => {
   );
 };
 
-const RecentIncidents = () => {
+const RecentIncidents = ({ incidents }) => {
+  const ongoing = incidents.filter((i) => i.status === "ONGOING").length;
+  const resolved = incidents.filter((i) => i.status === "RESOLVED").length;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
           Recent Incidents
         </h2>
@@ -407,28 +410,45 @@ const RecentIncidents = () => {
           View All
         </button>
       </div>
-      <div className="flex flex-col gap-4 ">
-        {mockIncidents.map((inc) => (
-          <div
-            key={inc.id}
-            className="border h-35 border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <h4 className="text-[13px] font-semibold text-gray-900 truncate">
-                {inc.name}
-              </h4>
-              <span
-                className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
-              >
-                {inc.status}
-              </span>
+      
+      <div className="flex items-center gap-4 mb-5 pb-4 border-b border-gray-50">
+        <div className="text-center">
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total</p>
+          <p className="text-lg font-bold text-gray-900">{incidents.length}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Ongoing</p>
+          <p className="text-lg font-bold text-red-600">{ongoing}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Resolved</p>
+          <p className="text-lg font-bold text-emerald-600">{resolved}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {incidents.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">No recent incidents.</p>
+        ) : (
+          incidents.slice(0, 5).map((inc) => (
+            <div
+              key={inc._id}
+              className="border border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="text-[13px] font-semibold text-gray-900 truncate">
+                  {inc.reason || "Unknown Incident"}
+                </h4>
+                <span
+                  className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
+                >
+                  {inc.status}
+                </span>
+              </div>
+              <p className="text-[12px] text-gray-500 mb-3">{new Date(inc.createdAt || inc.startTime).toLocaleString()}</p>
             </div>
-            <p className="text-[12px] text-gray-500 mb-3">{inc.date}</p>
-            <button className="w-full py-1.5 border border-gray-200 rounded text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              View Incident
-            </button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -437,15 +457,8 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
-  const monitorsData = useSelector(selectMonitors);
-  const monitors = monitorsData || [];
+  const { monitors, incidents, logs } = useDashboardInit();
   const loading = useSelector(selectLoading);
-  const { handleGetMonitors } = useMonitors();
-
-  useEffect(() => {
-    handleGetMonitors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const stats = {
     total: monitors.length,
@@ -457,7 +470,8 @@ const Dashboard = () => {
       const s = (m.status || "").toUpperCase();
       return s === "DOWN" || s === "FAILING";
     }).length,
-    uptime: "99.42%",
+    logsTotal: logs.length,
+    logsError: logs.filter((l) => (l.status || "").toUpperCase() === "ERROR" || (l.status || "").toUpperCase() === "DOWN").length,
   };
 
   return (
@@ -481,7 +495,7 @@ const Dashboard = () => {
         {/* RIGHT SIDE (4 columns) */}
         <div className="xl:col-span-4 flex flex-col gap-6">
           <StatusDistribution />
-          <RecentIncidents />
+          <RecentIncidents incidents={incidents} />
         </div>
       </div>
     </main>

@@ -13,7 +13,9 @@ export const createMonitorValidator = z.object({
 });
 
 export const deleteMonitorValidator = z.object({
-  monitorId: z.string().length(24, {
-    message: 'Invalid monitor ID format',
+  params: z.object({
+    monitorId: z.string().length(24, {
+      message: 'Invalid monitor ID format',
+    }),
   }),
 });

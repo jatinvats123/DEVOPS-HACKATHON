@@ -53,6 +53,21 @@ export const useAuth = () => {
     }
 
 
+    // Logout handler
+    const handleLogout = () => {
+        try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            dispatch(setUser(null));
+            dispatch(setAuthenticated(false));
+            dispatch(setError(null));
+            dispatch(setLoading(false));
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
+
     // Get user profile handler
     const handleGetUserProfile = async () => {
     try {
@@ -95,5 +110,5 @@ export const useAuth = () => {
         }
     };
 
-    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword };
+    return { handleRegister, handleVerifyOtp, handleLogin, handleLogout, handleGetUserProfile, handleForgotPassword, handleChangePassword };
 }

@@ -4,6 +4,7 @@ const initialState = {
   monitors: [],
   loading: false,
   error: null,
+  lastFetched: null,
 };
 
 const monitorSlice = createSlice({
@@ -20,6 +21,7 @@ const monitorSlice = createSlice({
     setMonitors: (state, action) => {
       state.monitors = action.payload;
       state.error = null;
+      state.lastFetched = Date.now();
     },
     addMonitor: (state, action) => {
       // Unshift adds the new monitor to the beginning (latest first)

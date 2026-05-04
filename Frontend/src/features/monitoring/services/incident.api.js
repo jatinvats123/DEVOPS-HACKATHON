@@ -1,18 +1,7 @@
 import { apiRequest } from "../../../lib/api/apiRequest.js";
 import { env } from "../../../config/env.js";
 
-export const axiosRequest = axios.create({
-  baseURL: "http://localhost:5000/api/incidents",
-  withCredentials: true,
-});
 
-/**
- * @getAllIncidents - Fetches all incidents
- */
-export const getAllIncidents = async () => {
-  const data = axiosRequest.get("/");
-  return data;
-};
 
 /**
  * @getIncidentsByMonitorId - Fetches incidents for a specific monitor by its ID
@@ -24,3 +13,12 @@ export const getIncidentsByMonitorId = async (monitorId) => {
     url: `${env.INCIDENTS_API}/${monitorId}`,
   });
 };
+
+
+
+export const getAllIncidents = async () => {
+  return apiRequest({
+    method: "get",
+    url: env.INCIDENTS_API,
+  });
+}
