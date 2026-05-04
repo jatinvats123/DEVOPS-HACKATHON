@@ -20,7 +20,7 @@ const CHANGE_PASSWORD_API = import.meta.env.VITE_CHANGE_PASSWORD_API;
 const INCIDENTS_API = import.meta.env.VITE_INCIDENTS_API;
 
 // logs API endpoint
-const LOGS_API = import.meta.env.VITE_LOGS_API;
+const LOGS_API = import.meta.env.VITE_GET_LOGS_API;
 
 // create monitoring API endpoint
 const CREATE_MONITORING_API = import.meta.env.VITE_CREATE_MONITORING_API;

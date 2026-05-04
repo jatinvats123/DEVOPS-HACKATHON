@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
+import { selectMonitors, selectLoading } from "../state/monitor.slice";
 import {
   AreaChart,
   Area,
@@ -93,117 +95,7 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-const Sidebar = () => {
-  const menuItems = [
-    { name: "Dashboard", icon: Icons.Dashboard, active: true },
-    { name: "Monitors", icon: Icons.Monitors },
-    { name: "Incidents", icon: Icons.Incidents },
-    { name: "Alerts", icon: Icons.Alerts },
-    { name: "Status Pages", icon: Icons.Status },
-    { name: "Team", icon: Icons.Team },
-    { name: "Settings", icon: Icons.Settings },
-    { name: "Billing", icon: Icons.Billing },
-  ];
 
-  return (
-    <aside className="w-[240px] bg-gradient-to-b from-blue-900 to-indigo-900 text-gray-300 flex-shrink-0 h-screen hidden lg:flex flex-col">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <Icons.Logo />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-tight leading-tight">
-              UptimeAI
-            </h1>
-            <p className="text-[10px] text-gray-300 font-medium tracking-wide">
-              Website Monitoring Platform
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
-          <a
-            key={item.name}
-            href="#"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
-              item.active
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <item.icon />
-            {item.name}
-          </a>
-        ))}
-      </nav>
-
-      <div className="px-4 pb-4">
-        <div className="bg-black/20 p-4 rounded-xl border border-white/10 shadow-inner">
-          <div className="flex items-center gap-2 text-white font-semibold text-sm mb-2">
-            <Icons.Star /> Upgrade to Pro
-          </div>
-          <p className="text-[11px] text-gray-300 mb-4 leading-relaxed">
-            Get advanced monitoring, multi-location checks, and more.
-          </p>
-          <button className="w-full bg-indigo-500 text-white text-[13px] font-medium py-2 rounded-lg hover:bg-indigo-600 transition-colors shadow-sm">
-            Upgrade Now
-          </button>
-        </div>
-      </div>
-
-      <div className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner">
-              AD
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white leading-tight truncate">
-                Arjun Dev
-              </p>
-              <p className="text-xs text-gray-300 truncate">
-                arjun@example.com
-              </p>
-            </div>
-          </div>
-          <Icons.ChevronDown />
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-const Navbar = () => {
-  return (
-    <header className="px-8 py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Dashboard
-        </h1>
-        <p className="text-[13px] text-gray-500 mt-1">
-          Overview of all your website and API monitors.
-        </p>
-      </div>
-      <div className="flex items-center gap-5">
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
-          <Icons.Plus /> Add Monitor
-        </button>
-        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-gray-200">
-          <Icons.Bell />
-          <span className="absolute top-0 right-0 -mt-1 -mr-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
-            3
-          </span>
-        </button>
-        <div className="w-9 h-9 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-gray-600 text-sm font-bold">
-          AD
-        </div>
-      </div>
-    </header>
-  );
-};
 
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-transform hover:-translate-y-0.5 duration-200">
@@ -379,13 +271,14 @@ const StatusDistribution = () => {
   );
 };
 
-const AllMonitors = ({ monitors }) => {
+const AllMonitors = ({ monitors = [] }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(monitors.length / itemsPerPage) || 1;
+  const validMonitors = monitors || [];
+  const totalPages = Math.ceil(validMonitors.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedMonitors = monitors.slice(
+  const paginatedMonitors = validMonitors.slice(
     startIndex,
     startIndex + itemsPerPage,
   );
@@ -479,8 +372,8 @@ const AllMonitors = ({ monitors }) => {
       <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
         <span className="text-xs text-gray-500">
           Showing {startIndex + 1} to{" "}
-          {Math.min(startIndex + itemsPerPage, monitors.length)} of{" "}
-          {monitors.length} monitors
+          {Math.min(startIndex + itemsPerPage, validMonitors.length)} of{" "}
+          {validMonitors.length} monitors
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -544,98 +437,54 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
-  const { fetchMonitors, fetchIncidents, incidents, monitors } = useMonitors();
+  const monitorsData = useSelector(selectMonitors);
+  const monitors = monitorsData || [];
+  const loading = useSelector(selectLoading);
+  const { handleGetMonitors } = useMonitors();
 
   useEffect(() => {
-    fetchMonitors();
-    fetchIncidents();
-  }, [fetchMonitors, fetchIncidents]);
-
-  const safeMonitors =
-    Array.isArray(monitors) && monitors.length > 0
-      ? monitors
-      : [
-          {
-            _id: "1",
-            title: "Payment API",
-            url: "https://api.payment-gateway.com",
-            type: "API",
-            status: "DOWN",
-            lastChecked: "10s ago",
-          },
-          {
-            _id: "2",
-            title: "Main Website",
-            url: "https://example.com",
-            type: "Website",
-            status: "UP",
-            lastChecked: "30s ago",
-          },
-          {
-            _id: "3",
-            title: "Storefront",
-            url: "https://store.example.com",
-            type: "Website",
-            status: "DEGRADED",
-            lastChecked: "20s ago",
-          },
-          {
-            _id: "4",
-            title: "User Service",
-            url: "https://api.user-service.com",
-            type: "API",
-            status: "UP",
-            lastChecked: "15s ago",
-          },
-          {
-            _id: "5",
-            title: "Blog",
-            url: "https://blog.example.com",
-            type: "Website",
-            status: "UP",
-            lastChecked: "25s ago",
-          },
-          {
-            _id: "6",
-            title: "Auth Service",
-            url: "https://auth.example.com",
-            type: "API",
-            status: "UP",
-            lastChecked: "1m ago",
-          },
-        ];
+    handleGetMonitors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats = {
-    total: safeMonitors.length,
-    up: safeMonitors.filter((m) => m.status === "UP").length,
-    down: safeMonitors.filter((m) => m.status === "DOWN").length,
+    total: monitors.length,
+    up: monitors.filter((m) => {
+      const s = (m.status || "").toUpperCase();
+      return s === "UP" || s === "HEALTHY";
+    }).length,
+    down: monitors.filter((m) => {
+      const s = (m.status || "").toUpperCase();
+      return s === "DOWN" || s === "FAILING";
+    }).length,
     uptime: "99.42%",
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-8">
-          <StatsCards stats={stats} />
+    <main className="flex-1 overflow-y-auto p-8">
+      <StatsCards stats={stats} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            {/* LEFT SIDE (8 columns) */}
-            <div className="xl:col-span-8 flex flex-col gap-6">
-              <UptimeOverview />
-              <AllMonitors monitors={safeMonitors} />
-            </div>
-
-            {/* RIGHT SIDE (4 columns) */}
-            <div className="xl:col-span-4 flex flex-col gap-6">
-              <StatusDistribution />
-              <RecentIncidents />
-            </div>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* LEFT SIDE (8 columns) */}
+        <div className="xl:col-span-8 flex flex-col gap-6">
+          <UptimeOverview />
+          <div className="relative">
+            {loading && monitors.length === 0 && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              </div>
+            )}
+            <AllMonitors monitors={monitors} />
           </div>
-        </main>
+        </div>
+
+        {/* RIGHT SIDE (4 columns) */}
+        <div className="xl:col-span-4 flex flex-col gap-6">
+          <StatusDistribution />
+          <RecentIncidents />
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 
