@@ -2,38 +2,41 @@ import { createBrowserRouter } from "react-router";
 import NotFound from "./NotFound";
 import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
+import DashboardPage from "../pages/DashboardPage";
+import AddMonitorPage from "../pages/AddMonitorPage";
+import ProtectedRoute from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <div>Home</div>,
+        element: <Login />,
     },
     {
         path: "/login",
-        element: <LoginPage />,
+        element: <Login />,
     },
     {
         path: "/register",
-        element: <RegisterPage />,
+        element: <Register />,
     },
     {
         path: "/dashboard",
-        element: <DashboardPage />,
+        element: (
+            <ProtectedRoute>
+                <DashboardPage />
+            </ProtectedRoute>
+        ),
     },
     {
         path: "/add-monitor",
-        element: <AddMonitorPage />,
+        element: (
+            <ProtectedRoute>
+                <AddMonitorPage />
+            </ProtectedRoute>
+        ),
     },
     {
         path: "*",
         element: <NotFound />
     },
-    {
-        path: "/login",
-        element: <Login />
-    },
-    {
-        path: "/register",
-        element:<Register />
-    }
 ]);

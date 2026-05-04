@@ -178,6 +178,112 @@
   text-decoration: underline;
 }
 
+/* Password Input Wrapper */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  color: #999;
+}
+
+.toggle-password:hover {
+  opacity: 0.7;
+}
+
+.toggle-password:focus {
+  outline: none;
+}
+
+/* Input Error State */
+.input-error {
+  border-color: #e85d75 !important;
+  background-color: #fff9fa !important;
+}
+
+/* Field Error Message */
+.field-error {
+  font-size: 12px;
+  color: #e85d75;
+  margin-top: -4px;
+  font-weight: 500;
+}
+
+/* Auth Link Button */
+.auth-link-button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: center;
+  background-color: #f5f5f5;
+  color: #667eea;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.auth-link-button:hover {
+  background-color: #efefef;
+  border-color: #667eea;
+  color: #764ba2;
+}
+
+/* Auth Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0 16px 0;
+  gap: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+.auth-divider span {
+  font-size: 13px;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* Password Label */
+.password-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.password-label label {
+  flex: 1;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .auth-card {
@@ -193,6 +299,10 @@
   }
 
   .form-group input {
+    font-size: 16px;
+  }
+
+  .password-input-wrapper input {
     font-size: 16px;
   }
 }
