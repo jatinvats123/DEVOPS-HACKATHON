@@ -8,7 +8,7 @@ const Icons = {
   Menu: () => <RiMenuLine className="w-6 h-6" />,
 };
 
-const Navbar = ({ onAddMonitorClick, onMobileMenuToggle }) => {
+const Navbar = ({  onMobileMenuToggle }) => {
   const { user } = useSelector(state => state.auth);
 
   const getInitials = (fullname) => {
@@ -36,13 +36,6 @@ const Navbar = ({ onAddMonitorClick, onMobileMenuToggle }) => {
       </div>
       
       <div className="flex items-center gap-2 sm:gap-5">
-        <button 
-          onClick={onAddMonitorClick} 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 sm:gap-2 transition-colors shadow-sm whitespace-nowrap"
-        >
-          <Icons.Plus /> <span className="hidden sm:inline">Add Monitor</span>
-          <span className="sm:hidden">Add</span>
-        </button>
 
         <div className="hidden sm:flex w-9 h-9 rounded-full bg-indigo-500 border-2 border-white shadow-sm overflow-hidden items-center justify-center text-white text-sm font-bold" title={user?.fullname || 'User'}>
           {getInitials(user?.fullname)}
