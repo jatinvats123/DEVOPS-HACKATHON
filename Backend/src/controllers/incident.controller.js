@@ -9,6 +9,7 @@ export const getAllIncidentsController = async (req, res) => {
       .limit(10)
       .populate('monitorId', 'url type name');
 
+
     res.status(200).json({
       message: 'Incidents fetched successfully',
       success: true,

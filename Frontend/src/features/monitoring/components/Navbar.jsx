@@ -1,34 +1,51 @@
 import React from 'react';
-import { RiAddLine, RiNotification3Line } from "@remixicon/react";
+import { useSelector } from 'react-redux';
+import { RiAddLine, RiNotification3Line, RiMenuLine } from "@remixicon/react";
 
 const Icons = {
-  Plus: () => <RiAddLine className="w-4 h-4" />,
+  Plus: () => <RiAddLine className="w-4 h-4 sm:w-5 sm:h-5" />,
   Bell: () => <RiNotification3Line className="w-5 h-5" />,
+  Menu: () => <RiMenuLine className="w-6 h-6" />,
 };
 
-const Navbar = ({ onAddMonitorClick }) => {
+const Navbar = ({ onAddMonitorClick, onMobileMenuToggle }) => {
+  const { user } = useSelector(state => state.auth);
+
+  const getInitials = (fullname) => {
+    if (!fullname) return 'U';
+    return fullname.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   return (
-    <header className="px-8 py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">
-          Overview
-        </h1>
-        <p className="text-[13px] text-gray-500 mt-1">
-          Monitor your services and infrastructure.
-        </p>
+    <header className="px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMobileMenuToggle}
+          className="p-1.5 -ml-1.5 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden transition-colors"
+        >
+          <Icons.Menu />
+        </button>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight capitalize leading-none">
+            Overview
+          </h1>
+          <p className="text-[11px] sm:text-[13px] text-gray-500 mt-1 hidden sm:block">
+            Monitor your services and infrastructure.
+          </p>
+        </div>
       </div>
-      <div className="flex items-center gap-5">
-        <button onClick={onAddMonitorClick} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
-          <Icons.Plus /> Add Monitor
+      
+      <div className="flex items-center gap-2 sm:gap-5">
+        <button 
+          onClick={onAddMonitorClick} 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 sm:gap-2 transition-colors shadow-sm whitespace-nowrap"
+        >
+          <Icons.Plus /> <span className="hidden sm:inline">Add Monitor</span>
+          <span className="sm:hidden">Add</span>
         </button>
-        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-gray-200">
-          <Icons.Bell />
-          <span className="absolute top-0 right-0 -mt-1 -mr-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
-            3
-          </span>
-        </button>
-        <div className="w-9 h-9 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-gray-600 text-sm font-bold">
-          AD
+
+        <div className="hidden sm:flex w-9 h-9 rounded-full bg-indigo-500 border-2 border-white shadow-sm overflow-hidden items-center justify-center text-white text-sm font-bold" title={user?.fullname || 'User'}>
+          {getInitials(user?.fullname)}
         </div>
       </div>
     </header>

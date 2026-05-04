@@ -9,9 +9,7 @@ import Monitoring from "../features/monitoring/pages/Monitoring";
 import Incidents from "../features/monitoring/pages/Incidents";
 import Alerts from "../features/monitoring/pages/Alerts";
 import StatusPages from "../features/monitoring/pages/StatusPages";
-import Team from "../features/monitoring/pages/Team";
 import Settings from "../features/monitoring/pages/Settings";
-import Billing from "../features/monitoring/pages/Billing";
 
 export const router = createBrowserRouter([
     {
@@ -54,16 +52,8 @@ export const router = createBrowserRouter([
                 element: <StatusPages />,
             },
             {
-                path: "/team",
-                element: <Team />,
-            },
-            {
                 path: "settings",
                 element: <Settings />,
-            },
-            {
-                path: "billing",
-                element: <Billing />,
             },
         ],
     },
