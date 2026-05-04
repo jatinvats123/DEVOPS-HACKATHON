@@ -165,11 +165,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 export const changePassword = asyncHandler(async (req, res) => {
     const userid = req.user.id
     const user = await UserService.findUserByIdWithPassword(userid);
-    const { oldPassword, newPassword } = req.body;
-    if (!oldPassword || !newPassword) {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
         throw new ApiError(401, "Invalid password")
     }
-    const ispassword = await user.comparePassword(oldPassword);
+    const ispassword = await user.comparePassword(currentPassword);
     if (!ispassword) {
         throw new ApiError(401, "Invalid password")
     }

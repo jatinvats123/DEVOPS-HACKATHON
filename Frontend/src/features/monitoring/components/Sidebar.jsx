@@ -1,6 +1,7 @@
 
 import { NavLink, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
+import { useState } from "react";
 import {
   RiDashboardLine,
   RiMacbookLine,
@@ -14,6 +15,7 @@ import {
   RiArrowDownSLine,
   RiLogoutBoxLine
 } from "@remixicon/react";
+import Notification, { ConfirmDialog } from "../../../components/Notification";
 
 const Icons = {
   Logo: () => <RiPulseLine className="w-5 h-5 text-indigo-600" />,
@@ -35,6 +37,9 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { handleLogout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   const getInitials = (name) => {
     if (!name) return "??";
@@ -56,8 +61,24 @@ const Sidebar = () => {
   ];
 
   const handleLogoutClick = () => {
-    handleLogout();
-    navigate('/login', { replace: true });
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await handleLogout();
+      setNotification({ message: 'Logged out successfully!', type: 'success' });
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 1000);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Logout failed. Please try again.';
+      setNotification({ message: errorMessage, type: 'error' });
+      setShowLogoutConfirm(false);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -89,14 +110,13 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div
-        onClick={handleLogoutClick}
-        className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer group"
-        title="Logout"
-      >
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 p-4 border-t border-white/10">
+        <div
+          className="p-3 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+          title="View profile"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner group-hover:bg-indigo-400 transition-colors">
+            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner">
               {getInitials(user?.fullname || user?.username)}
             </div>
             <div className="min-w-0">
@@ -108,9 +128,38 @@ const Sidebar = () => {
               </p>
             </div>
           </div>
-          <Icons.Logout />
         </div>
+
+        <button
+          onClick={handleLogoutClick}
+          className="w-full px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 hover:text-red-300 border border-red-600/30 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2"
+          title="Logout from your account"
+          disabled={isLoggingOut}
+        >
+          <Icons.Logout />
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
+        </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out? You will need to log in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="warning"
+        isLoading={isLoggingOut}
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </aside>
   );
 };

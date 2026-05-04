@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
-import { setUser, setAuthenticated } from '../state/authSlice';
+import { setUser, setAuthenticated, setError } from '../state/authSlice';
+import Notification from '../../../components/Notification';
 import '../../../styles/auth.css';
 
 function Register() {
@@ -28,6 +29,7 @@ function Register() {
   const [validationErrors, setValidationErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -35,6 +37,13 @@ function Register() {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // Show error notification when error occurs
+  useEffect(() => {
+    if (error) {
+      setNotification({ message: error, type: 'error' });
+    }
+  }, [error]);
 
   const validateForm = () => {
     const errors = {};
@@ -84,6 +93,12 @@ function Register() {
         [name]: ''
       }));
     }
+
+    // Clear error notification when user starts typing
+    if (error) {
+      dispatch(setError(null));
+      setNotification(null);
+    }
   };
 
   const handleOtpChange = (e) => {
@@ -112,7 +127,7 @@ function Register() {
       // If response contains token, useAuth already handled login, just redirect
       if (response && response.data && response.data.token) {
         navigate('/dashboard', { replace: true });
-      } else if (response && otp.sent) {
+      } else if (response && response.otp && response.otp.sent) {
         // Otherwise, move to OTP verification
         setStep('otp');
       }
@@ -132,15 +147,11 @@ function Register() {
     try {
       const response = await handleVerifyOtp(userId, otpData.otp);
       if (response) {
-        // If response contains token, useAuth should ideally handle it, but verifyOtp is a thunk
-        // Let's check if the thunk handles login. If not, we do it here or in useAuth.
-        if (response.data && response.data.token) {
-          dispatch(setUser(response.data.user));
-          dispatch(setAuthenticated(true));
-          navigate('/dashboard', { replace: true });
-        } else {
+        // OTP verification successful, redirect to login page
+        setNotification({ message: 'Email verified successfully! Please login with your credentials.', type: 'success' });
+        setTimeout(() => {
           navigate('/login', { replace: true });
-        }
+        }, 2000);
       }
     } catch (err) {
       console.error('OTP verification failed:', err);
@@ -153,8 +164,6 @@ function Register() {
         <div className="auth-card">
           <h1 className="auth-title">Verify OTP</h1>
           <p className="auth-subtitle">Enter the OTP sent to {formData.email}</p>
-
-          {error && <div className="error-message">{error}</div>}
 
           <form className="auth-form" onSubmit={handleOtpSubmit}>
             <div className="form-group">
@@ -191,6 +200,14 @@ function Register() {
             ← Back to Registration
           </button>
         </div>
+
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
       </div>
     );
   }
@@ -200,8 +217,6 @@ function Register() {
       <div className="auth-card">
         <h1 className="auth-title">Create Account</h1>
         <p className="auth-subtitle">Start monitoring your DevOps infrastructure</p>
-
-        {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleRegisterSubmit}>
           <div className="form-group">
@@ -326,6 +341,14 @@ function Register() {
           Login here
         </Link>
       </div>
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

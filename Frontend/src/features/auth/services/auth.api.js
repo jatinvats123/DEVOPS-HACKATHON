@@ -54,5 +54,5 @@ return apiRequest({method: "post", url: env.CHANGE_PASSWORD_API, data: passwordD
 }
 
 export const logout = async () => {
-    return apiRequest({method: "post", url: env.LOGOUT_API});
+    return apiRequest({method: "post", url: env.LOGOUT_API, data: {}});
 }

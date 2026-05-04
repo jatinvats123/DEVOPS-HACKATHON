@@ -33,10 +33,31 @@ export const apiRequest = async (methodOrConfig, url = null, data = null, params
       }
       
         const config = requestParams ? { params: requestParams } : {};
-        const response = await API[method](requestUrl, requestData, config);
+        // For POST/PUT requests with no data, send empty object instead of null
+        const data = (method.toLowerCase() === 'post' || method.toLowerCase() === 'put') && !requestData ? {} : requestData;
+        const response = await API[method](requestUrl, data, config);
         return response.data;
     } catch (error) {
-        console.error(`API Request Error: ${error.message}`, error);
-        throw error;
+        // Extract meaningful error message from axios error
+        let errorMessage = error.message || 'An error occurred';
+        
+        if (error.response) {
+          // Backend returned an error response
+          errorMessage = error.response.data?.message || 
+                        error.response.statusText || 
+                        `Request failed with status code ${error.response.status}`;
+        } else if (error.request) {
+          // Request was made but no response received
+          errorMessage = 'No response from server. Please check your connection.';
+        }
+        
+        console.error(`API Request Error: ${errorMessage}`, error);
+        
+        // Preserve the original error object for use in handlers
+        const enhancedError = new Error(errorMessage);
+        enhancedError.response = error.response;
+        enhancedError.request = error.request;
+        
+        throw enhancedError;
     } 
 }

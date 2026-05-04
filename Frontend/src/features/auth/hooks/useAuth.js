@@ -32,16 +32,6 @@ export const useAuth = () => {
     }
 
 
-    // OTP verification handler
-    const handleVerifyOtp = async (userId, otp) => {
-        try {
-            const response = await dispatch(verifyOtp({ userId, otp })).unwrap();
-            return response;
-        } catch (err) {
-            dispatch(setError(err.message || "OTP verification failed"));
-            throw err;
-        } 
-    }
 
 
     // Login handler
@@ -119,14 +109,20 @@ export const useAuth = () => {
 
     const handleLogout = async () => {
         try {
+            dispatch(setLoading(true));
             await logout();
-        } catch (error) {
-            console.error("Logout failed", error);
-        } finally {
             dispatch(setUser(null));
             dispatch(setAuthenticated(false));
+            return { success: true };
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || "Logout failed";
+            dispatch(setError(message));
+            console.error("Logout failed", error);
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
         }
     };
 
-    return { handleRegister, handleVerifyOtp, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword, handleLogout };
+    return { handleRegister, handleLogin, handleGetUserProfile, handleForgotPassword, handleChangePassword, handleLogout };
 }

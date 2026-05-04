@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
-import { RiAlertLine, RiRefreshLine, RiHistoryLine } from '@remixicon/react';
+import { RiAlertLine, RiRefreshLine, RiHistoryLine, RiTimeLine, RiRobot2Line } from '@remixicon/react';
 
 const Incidents = () => {
   const [incidents, setIncidents] = useState([]);
@@ -166,11 +166,11 @@ const Incidents = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Start Time</p>
-                    <p className="text-[13px] text-gray-900 font-medium">{formatDate(incident.startTime)}</p>
+                    <p className="text-[13px] text-gray-900 font-medium">{incident.startTime}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">End Time</p>
-                    <p className="text-[13px] text-gray-900 font-medium">{incident.endTime ? formatDate(incident.endTime) : 'N/A'}</p>
+                    <p className="text-[13px] text-gray-900 font-medium">{incident.endTime ? incident.endTime : 'N/A'}</p>
                   </div>
                 </div>
 

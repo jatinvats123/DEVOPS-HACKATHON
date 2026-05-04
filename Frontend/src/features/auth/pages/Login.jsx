@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import {useNavigate, Link} from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../hooks/useAuth';
-import { setUser, setAuthenticated } from '../state/authSlice';
+import { setUser, setAuthenticated, setError } from '../state/authSlice';
+import Notification from '../../../components/Notification';
 import '../../../styles/auth.css';
 
 function Login() {
@@ -19,6 +21,7 @@ function Login() {
   
   const [validationErrors, setValidationErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
@@ -26,6 +29,13 @@ function Login() {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // Show error notification when error occurs
+  useEffect(() => {
+    if (error) {
+      setNotification({ message: error, type: 'error' });
+    }
+  }, [error]);
 
   const validateForm = () => {
     const errors = {};
@@ -57,6 +67,12 @@ function Login() {
         [name]: ''
       }));
     }
+
+    // Clear error notification when user starts typing
+    if (error) {
+      dispatch(setError(null));
+      setNotification(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -86,8 +102,6 @@ function Login() {
       <div className="auth-card">
         <h1 className="auth-title">Welcome Back</h1>
         <p className="auth-subtitle">Login to your DevOps Monitor account</p>
-
-        {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -153,12 +167,15 @@ function Login() {
           Create an account
         </Link>
 
-        <div className="auth-footer">
-          <Link to="/forgot-password" className="forgot-password-link">
-            Forgot your password?
-          </Link>
-        </div>
       </div>
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }
