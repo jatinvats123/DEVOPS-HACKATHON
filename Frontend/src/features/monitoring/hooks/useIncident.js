@@ -21,14 +21,12 @@ export const useIncident = () => {
     const isFresh = lastFetched && (Date.now() - lastFetched < CACHE_TIME);
     
     if (incidents.length > 0 && isFresh && !forceRefetch) {
-      console.log("Incidents recently fetched, skipping API call.");
       return;
     }
 
     try {
       dispatch(setIncidentLoading(true));
       const response = await getAllIncidents();
-      console.log("Get All Incidents Response:", response);
       
       // Safely extract data depending on backend structure
       const incidentsList = response?.data?.data || response?.data || (Array.isArray(response) ? response : []);

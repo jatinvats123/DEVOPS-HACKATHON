@@ -8,14 +8,13 @@ const AddMonitoring = ({ isOpen, onClose }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const { handleCreateMonitor } = useMonitors();
   const { isAuthenticated } = useSelector(state => state.auth);
-  const monitors = useSelector(state => state.monitors);
   const [submitError, setSubmitError] = useState(null);
 
   if (!isOpen) return null;
 
-  const onSubmit = async(data) => {
+  const onSubmit = async (data) => {
     setSubmitError(null);
-   
+
     // Check if user is authenticated
     const token = localStorage.getItem('token');
     if (!token || !isAuthenticated) {
@@ -24,8 +23,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
     }
 
     try {
-      const response = await handleCreateMonitor(data);
-      console.log("Monitor created:", response);
+      await handleCreateMonitor(data);
       reset();
       onClose();
     } catch (error) {
@@ -34,7 +32,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
     }
   };
 
-  console.log("Monitors in state:", monitors);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -45,7 +43,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
             <RiCloseLine className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-6 overflow-y-auto">
           {submitError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -56,7 +54,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[13px] font-semibold text-gray-700">Type <span className="text-red-500">*</span></label>
-                <select 
+                <select
                   {...register("type", { required: "Type is required" })}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 bg-white"
                 >
@@ -69,8 +67,8 @@ const AddMonitoring = ({ isOpen, onClose }) => {
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-semibold text-gray-700">Title <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. Primary API"
                   {...register("title", { required: "Title is required" })}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
@@ -81,8 +79,8 @@ const AddMonitoring = ({ isOpen, onClose }) => {
 
             <div className="space-y-1.5">
               <label className="text-[13px] font-semibold text-gray-700">Name <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="e.g. API Server"
                 {...register("name", { required: "Name is required" })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
@@ -92,8 +90,8 @@ const AddMonitoring = ({ isOpen, onClose }) => {
 
             <div className="space-y-1.5">
               <label className="text-[13px] font-semibold text-gray-700">URL <span className="text-red-500">*</span></label>
-              <input 
-                type="url" 
+              <input
+                type="url"
                 placeholder="https://api.example.com"
                 {...register("url", { required: "URL is required" })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-gray-400 text-gray-900"
@@ -104,8 +102,8 @@ const AddMonitoring = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[13px] font-semibold text-gray-700">Interval (seconds) <span className="text-red-500">*</span></label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   defaultValue={60}
                   {...register("interval", { required: "Interval is required", min: 10 })}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
@@ -115,8 +113,8 @@ const AddMonitoring = ({ isOpen, onClose }) => {
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-semibold text-gray-700">Timeout (seconds) <span className="text-red-500">*</span></label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   defaultValue={10}
                   {...register("timeout", { required: "Timeout is required", min: 1 })}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
@@ -127,7 +125,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
 
             <div className="space-y-1.5">
               <label className="text-[13px] font-semibold text-gray-700">Description</label>
-              <textarea 
+              <textarea
                 rows="3"
                 placeholder="Brief description of this monitor..."
                 {...register("description")}
@@ -138,15 +136,15 @@ const AddMonitoring = ({ isOpen, onClose }) => {
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50 mt-auto">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             form="add-monitor-form"
             className="px-4 py-2 text-[13px] font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
           >

@@ -7,7 +7,7 @@ import { apiRequest } from "../../../lib/api/apiRequest.js";
  * @param {object} monitorData - The data for the new monitor, including URL, type, and frequency.
  */
 
-console.log(`${env.BACKEND_URL}${env.CREATE_MONITORING_API}`)
+
 
 export const createMonitoring = async (monitorData) => {
   return apiRequest("post", env.CREATE_MONITORING_API, monitorData);
