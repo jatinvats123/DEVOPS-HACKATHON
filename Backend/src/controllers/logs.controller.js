@@ -26,8 +26,9 @@ export const monitorLogsByIdController = async (req, res) => {
 
   try {
     const logs = await logModel
-      .findById(monitorId)
-      .populate('monitorId', 'url type');
+      .find({ monitorId })
+      .populate('monitorId', 'url type')
+      .sort({ createdAt: -1 });
 
     if (!logs) {
       return res.status(404).json({
