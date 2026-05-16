@@ -1,36 +1,37 @@
-import {env} from '../../../config/env.js';
-import { apiRequest } from '../../../lib/api/apiRequest.js';
+import { env } from "../../../config/env.js";
+import { apiRequest } from "../../../lib/api/apiRequest.js";
 
-/**
- * @createMonitoring - Creates a new monitor
- * @param {object} monitorData - Monitor data (url, type, etc.)
+import axios from "axios";
+
+//axios request for monitoring
+export const axiosRequest = axios.create({
+  baseURL: "http://localhost:5000/api/monitor",
+  withCredentials: true,
+});
+
+/*
+ * @getIncidentsByMonitorId - Fetches incidents for a specific monitor by its ID.
+ * @param {string} monitorId - The ID of the monitor for which to fetch incidents.
  */
+
 export const createMonitoring = async (monitorData) => {
-  return apiRequest({
-    method: 'post',
-    url: env.CREATE_MONITORING_API,
-    data: monitorData
-  });
+  return axiosRequest("post", env.CREATE_MONITORING_API, monitorData);
 };
 
-/**
- * @getMonitors - Fetches all monitors for the authenticated user
+/*
+ *@getMonitors - Fetches all monitors for the authenticated user.
  */
 export const getMonitors = async () => {
-  return apiRequest({
-    method: 'get',
-    url: env.CREATE_MONITORING_API
-  });
+  // return apiRequest("get", env.CREATE_MONITORING_API);
+  const data = axiosRequest.get("/");
+  return data;
 };
 
-/**
- * @deleteMonitor - Deletes a monitor by its ID
- * @param {string} monitorId - The ID of the monitor to delete
+/*
+ *@deleteMonitor - Deletes a monitor by its ID.
+ *@param {string} monitorId - The ID of the monitor to delete.
  */
+
 export const deleteMonitor = async (monitorId) => {
-  return apiRequest({
-    method: 'delete',
-    url: `${env.CREATE_MONITORING_API}/${monitorId}`
-  });
+  return apiRequest("delete", `${env.CREATE_MONITORING_API}/${monitorId}`);
 };
-    
