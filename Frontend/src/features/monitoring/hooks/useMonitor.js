@@ -1,135 +1,83 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useCallback } from "react";
+
 import {
   setLoading,
   setMonitors,
   addMonitor,
-  setIncidents,
+
   removeMonitor,
   setError,
 } from "../state/monitor.slice";
 import {
-  getMonitors as fetchMonitorsApi,
-  createMonitoring as createMonitoringApi,
-  deleteMonitor as deleteMonitorApi,
+createMonitoring,getMonitors,deleteMonitor
 } from "../services/monitor.api";
 
-export const useMonitors = () => {
-  const dispatch = useDispatch();
-  const monitors = useSelector((state) => state.monitor.monitors);
-  const incidents = useSelector((state) => state.monitor.incidents);
-  const loading = useSelector((state) => state.monitor.loading);
-  const error = useSelector((state) => state.monitor.error);
 
-  const fetchMonitors = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      const response = await fetchMonitorsApi();
-      // Try common API response shapes in order:
-      // { data: [...] }  |  { data: { monitors: [...] } }  |  { monitors: [...] }  |  [...]
-      const raw = response?.data ?? response;
-      const data = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw?.monitors)
-          ? raw.monitors
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : [];
-      dispatch(setMonitors(data));
-    } catch (err) {
-      dispatch(
-        setError(
-          err?.response?.data?.message ||
-            err.message ||
-            "Failed to fetch monitors",
-        ),
-      );
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch]);
+export const useMonitors = ()=>{
+    const dispatch = useDispatch();
+    const monitors = useSelector((state) => state.monitor.monitors);
+    const lastFetched = useSelector((state) => state.monitor.lastFetched);
 
-  const createMonitor = useCallback(
-    async (monitorData) => {
-      try {
-        dispatch(setLoading(true));
-        const response = await createMonitoringApi(monitorData);
-        // Adjust according to the actual response shape.
-        // Assuming response is the created monitor object or contains data
-        const data = response?.data || response;
-        dispatch(addMonitor(data));
-        return { success: true, data };
-      } catch (err) {
-        dispatch(
-          setError(
-            err?.response?.data?.message ||
-              err.message ||
-              "Failed to create monitor",
-          ),
-        );
-        return { success: false, error: err };
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-    [dispatch],
-  );
+const handleCreateMonitor = async (monitorData) => {
+  try{
+    dispatch(setLoading(true));
+    const response = await createMonitoring(monitorData);
+    
+    // Safely extract data depending on backend structure
+    const newMonitor = response?.data?.data || response?.data || response;
+    dispatch(addMonitor(newMonitor));
+  }catch(error){
+    dispatch(setError(error.message));
+  }finally{
+    dispatch(setLoading(false));
+  }
+} 
 
-  const removeMonitorById = useCallback(
-    async (id) => {
-      try {
-        dispatch(setLoading(true));
-        await deleteMonitorApi(id);
-        // Dispatch ID to reducer to remove it locally based on backend success
-        dispatch(removeMonitor(id));
-        return { success: true };
-      } catch (err) {
-        dispatch(
-          setError(
-            err?.response?.data?.message ||
-              err.message ||
-              "Failed to delete monitor",
-          ),
-        );
-        return { success: false, error: err };
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-    [dispatch],
-  );
 
-  const fetchIncidents = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      const response = await getAllIncidentsApi();
-      // Adjust according to the actual response shape.
-      // Assuming response is the created monitor object or contains data
-      const data = response?.data || response;
-      dispatch(setIncidents(data));
-      return { success: true, data };
-    } catch (err) {
-      dispatch(
-        setError(
-          err?.response?.data?.message ||
-            err.message ||
-            "Failed to create monitor",
-        ),
-      );
-      return { success: false, error: err };
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch]);
+const handleGetMonitors = async (forceRefetch = false) => {
+  const CACHE_TIME = 2 * 60 * 1000;
+  const isFresh = lastFetched && (Date.now() - lastFetched < CACHE_TIME);
 
-  return {
-    monitors,
-    loading,
-    error,
-    incidents,
-    fetchIncidents,
-    fetchMonitors,
-    addMonitor: createMonitor,
-    removeMonitor: removeMonitorById,
-  };
-};
+  if (monitors.length > 0 && isFresh && !forceRefetch) {
+    return;
+  }
+
+  try {
+    dispatch(setLoading(true));
+    const response = await getMonitors();
+    
+    // Safely extract data depending on backend structure
+    const monitorsList = response?.data?.data || response?.data || (Array.isArray(response) ? response : []);
+    dispatch(setMonitors(monitorsList));
+  } catch (error) {
+    dispatch(setError(error.message));
+  } finally {
+    dispatch(setLoading(false));
+  }
+}
+
+const handleDeleteMonitor = async (monitorId) => {
+  try {
+    dispatch(setLoading(true));
+    const response = await deleteMonitor(monitorId);
+    
+    // If apiRequest didn't throw an error, it was a 2xx success
+    dispatch(removeMonitor(monitorId));
+    return { success: true, message: response?.message || 'Monitor deleted successfully' };
+  } catch (error) {
+    const errorMessage = error?.response?.data?.message || error.message || 'Failed to delete monitor';
+    console.error("Delete Monitor Error:", errorMessage);
+    dispatch(setError(errorMessage));
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+}
+
+
+return {
+  handleCreateMonitor,
+  handleGetMonitors,
+  handleDeleteMonitor,
+}
+}

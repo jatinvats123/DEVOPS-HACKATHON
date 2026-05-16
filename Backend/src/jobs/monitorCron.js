@@ -11,6 +11,8 @@ import logger from '../config/logger.js';
 async function isReallyDown(url, timeout) {
   // Perform multiple checks to confirm the monitor is really down
   for (let i = 0; i < 3; i++) {
+    // Wait 2 seconds between retries to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const result = await checkMonitor(url, timeout);
     if (result.status !== 'DOWN') {
       return false;
@@ -58,7 +60,7 @@ export async function startMonitorCron() {
 
           logger.info(`previous status: ${monitor.status}`);
 
-          const result = await checkMonitor(monitor.url, monitor.timeout);
+          const result = await checkMonitor(monitor.url, monitor.timeout * 1000);
 
           let currentStatus = result.status;
 
@@ -68,35 +70,21 @@ export async function startMonitorCron() {
           if (result.status === 'DOWN') {
             const isReallyDownResult = await isReallyDown(
               monitor.url,
-              monitor.timeout
+              monitor.timeout * 1000
             );
-            if (!isReallyDownResult) currentStatus = prevStatus; // If it's not really down, set status to previous status
+            if (!isReallyDownResult) currentStatus = 'UP'; // If it's not really down, it's UP
 
             if (isReallyDownResult) {
               logger.error(
-                `Monitor ${monitor.url} is DOWN (Response Time: ${result.responseTime}ms)`
+                `Monitor ${monitor.url} is REALLY DOWN (Response Time: ${result.responseTime}ms)`
               );
             }
           }
 
-          // Incident management logic
-          if (
-            (prevStatus === 'UP' && currentStatus === 'DOWN') ||
-            (prevStatus === 'DOWN' && currentStatus === 'DOWN')
-          ) {
-            await createIncident(
-              monitor._id,
-              result.error || `Monitor ${monitor.url} is down`
-            );
-          }
-
-          if (prevStatus === 'DOWN' && currentStatus === 'UP') {
-            await resolveIncident(monitor._id);
-          }
-
-          // Update the monitor status in the database
+          // Update the monitor status in the database (Do this first to ensure UI is accurate)
           monitor.status = currentStatus;
           monitor.lastChecked = new Date();
+          monitor.lastStatusCode = result.statusCode;
           await monitor.save();
 
           // Save the result to the logs collection
@@ -108,12 +96,30 @@ export async function startMonitorCron() {
             error: result.error || null,
             timestamp: new Date(),
           });
+
+          // Incident management logic (In separate try/catch so status update isn't blocked)
+          try {
+            if (
+              (prevStatus === 'UP' && currentStatus === 'DOWN') ||
+              (prevStatus === 'DOWN' && currentStatus === 'DOWN')
+            ) {
+              await createIncident(
+                monitor._id,
+                result.error || `Monitor ${monitor.url} is down`
+              );
+            }
+
+            if (prevStatus === 'DOWN' && currentStatus === 'UP') {
+              await resolveIncident(monitor._id);
+            }
+          } catch (incidentError) {
+            logger.error(`Incident management failed for ${monitor.url}:`, incidentError);
+          }
         } catch (error) {
           logger.error(`Error checking monitor ${monitor.url}:`, error);
-        } finally {
-          isRunning = false;
         }
       })
     );
+    isRunning = false;
   });
 }

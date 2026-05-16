@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
 import { setUser, setAuthenticated } from '../state/authSlice';
+import { RiPulseLine, RiGoogleFill, RiGithubFill, RiArrowLeftLine } from '@remixicon/react';
 import '../../../styles/auth.css';
 
 function Register() {
@@ -11,7 +11,7 @@ function Register() {
   const dispatch = useDispatch();
   const { handleRegister, handleVerifyOtp } = useAuth();
   const { loading, error, otp, userId, isAuthenticated } = useSelector(state => state.auth);
-  
+
   const [step, setStep] = useState('register'); // 'register', 'otp'
   const [formData, setFormData] = useState({
     fullname: '',
@@ -20,88 +20,38 @@ function Register() {
     password: '',
     confirmPassword: '',
   });
-  
-  const [otpData, setOtpData] = useState({
-    otp: '',
-  });
-  
-  const [validationErrors, setValidationErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Redirect to dashboard if already authenticated
+  const [otpValue, setOtpValue] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
+
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
   const validateForm = () => {
     const errors = {};
-    
-    if (!formData.fullname.trim()) {
-      errors.fullname = 'Full name is required';
-    } else if (formData.fullname.trim().length < 2) {
-      errors.fullname = 'Full name must be at least 2 characters';
-    }
-    
-    if (!formData.username.trim()) {
-      errors.username = 'Username is required';
-    } else if (formData.username.trim().length < 3) {
-      errors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, _ and -';
-    }
-    
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Invalid email format';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    
+    if (!formData.fullname.trim()) errors.fullname = 'Full name is required';
+    if (!formData.username.trim()) errors.username = 'Username is required';
+    if (!formData.email.trim()) errors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format';
+    if (!formData.password) errors.password = 'Password is required';
+    if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const handleOtpChange = (e) => {
-    const { value } = e.target;
-    setOtpData({ otp: value });
-    if (validationErrors.otp) {
-      setValidationErrors(prev => ({ ...prev, otp: '' }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (validationErrors[name]) setValidationErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     try {
       const response = await handleRegister({
         fullname: formData.fullname,
@@ -109,16 +59,10 @@ function Register() {
         email: formData.email,
         password: formData.password,
       });
-      
-      // If response contains token, auto-login and redirect
+
       if (response && response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        dispatch(setUser(response.data.user));
-        dispatch(setAuthenticated(true));
         navigate('/dashboard', { replace: true });
-      } else if (response && otp.sent) {
-        // Otherwise, move to OTP verification
+      } else if (otp.sent || (response && response.data && response.data.otpSent)) {
         setStep('otp');
       }
     } catch (err) {
@@ -128,24 +72,18 @@ function Register() {
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!otpData.otp || otpData.otp.length !== 6) {
+    if (otpValue.length !== 6) {
       setValidationErrors({ otp: 'Please enter a valid 6-digit OTP' });
       return;
     }
-
     try {
-      const response = await handleVerifyOtp(userId, otpData.otp);
+      const response = await handleVerifyOtp(userId, otpValue);
       if (response) {
-        // If response contains token, auto-login
         if (response.data && response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
           dispatch(setUser(response.data.user));
           dispatch(setAuthenticated(true));
           navigate('/dashboard', { replace: true });
         } else {
-          // Otherwise go to login
           navigate('/login', { replace: true });
         }
       }
@@ -158,45 +96,39 @@ function Register() {
     return (
       <div className="auth-container">
         <div className="auth-card">
-          <h1 className="auth-title">Verify OTP</h1>
-          <p className="auth-subtitle">Enter the OTP sent to {formData.email}</p>
+          <button onClick={() => setStep('register')} className="auth-back-button">
+            <RiArrowLeftLine className="w-5 h-5" />
+            Back
+          </button>
+
+          <h1 className="auth-title">Verify your email</h1>
+          <p className="auth-subtitle">We sent a 6-digit code to <span className="font-medium text-[#141413]">{formData.email}</span></p>
 
           {error && <div className="error-message">{error}</div>}
 
           <form className="auth-form" onSubmit={handleOtpSubmit}>
             <div className="form-group">
-              <label htmlFor="otp">One-Time Password</label>
+              <label className="auth-label">Verification Code</label>
               <input
                 type="text"
-                id="otp"
-                value={otpData.otp}
-                onChange={handleOtpChange}
-                placeholder="Enter 6-digit OTP"
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value)}
+                placeholder="000000"
                 maxLength="6"
+                className={`auth-otp-input ${validationErrors.otp ? 'input-error' : ''}`}
                 disabled={loading}
-                className={validationErrors.otp ? 'input-error' : ''}
               />
-              {validationErrors.otp && (
-                <span className="field-error">{validationErrors.otp}</span>
-              )}
+              {validationErrors.otp && <span className="field-error">{validationErrors.otp}</span>}
             </div>
 
-            <button
-              type="submit"
-              className="auth-button"
-              disabled={loading || otpData.otp.length !== 6}
-            >
-              {loading ? 'Verifying...' : 'Verify OTP'}
+            <button type="submit" className="auth-button-primary" disabled={loading || otpValue.length !== 6}>
+              {loading ? 'Verifying...' : 'Verify code'}
             </button>
           </form>
 
-          <button
-            onClick={() => setStep('register')}
-            className="auth-link-button"
-            style={{ marginTop: '16px' }}
-          >
-            ← Back to Registration
-          </button>
+          <p className="auth-footer mt-8">
+            Didn't receive a code? <button className="text-[#cc785c] hover:underline">Resend</button>
+          </p>
         </div>
       </div>
     );
@@ -205,133 +137,104 @@ function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Start monitoring your DevOps infrastructure</p>
+        <div className="auth-logo">
+          <RiPulseLine className="w-10 h-10 text-[#cc785c]" />
+        </div>
+
+        <h1 className="auth-title">Create your account</h1>
+
+
+
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleRegisterSubmit}>
-          <div className="form-group">
-            <label htmlFor="fullname">Full Name</label>
-            <input
-              type="text"
-              id="fullname"
-              name="fullname"
-              value={formData.fullname}
-              onChange={handleChange}
-              placeholder="John Doe"
-              disabled={loading}
-              className={validationErrors.fullname ? 'input-error' : ''}
-            />
-            {validationErrors.fullname && (
-              <span className="field-error">{validationErrors.fullname}</span>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="auth-label">Full Name</label>
+              <input
+                type="text"
+                name="fullname"
+                value={formData.fullname}
+                onChange={handleChange}
+                placeholder="Jane Doe"
+                disabled={loading}
+                className={validationErrors.fullname ? 'input-error' : ''}
+              />
+              {validationErrors.fullname && <span className="field-error">{validationErrors.fullname}</span>}
+            </div>
+            <div className="form-group">
+              <label className="auth-label">Username</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="janedoe"
+                disabled={loading}
+                className={validationErrors.username ? 'input-error' : ''}
+              />
+              {validationErrors.username && <span className="field-error">{validationErrors.username}</span>}
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="johndoe"
-              disabled={loading}
-              className={validationErrors.username ? 'input-error' : ''}
-            />
-            {validationErrors.username && (
-              <span className="field-error">{validationErrors.username}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label className="auth-label">Work Email</label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
+              placeholder="jane@company.com"
               disabled={loading}
               className={validationErrors.email ? 'input-error' : ''}
             />
-            {validationErrors.email && (
-              <span className="field-error">{validationErrors.email}</span>
-            )}
+            {validationErrors.email && <span className="field-error">{validationErrors.email}</span>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter password"
-                disabled={loading}
-                className={validationErrors.password ? 'input-error' : ''}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex="-1"
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            {validationErrors.password && (
-              <span className="field-error">{validationErrors.password}</span>
-            )}
+            <label className="auth-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Min. 8 characters"
+              disabled={loading}
+              className={validationErrors.password ? 'input-error' : ''}
+            />
+            {validationErrors.password && <span className="field-error">{validationErrors.password}</span>}
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                disabled={loading}
-                className={validationErrors.confirmPassword ? 'input-error' : ''}
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex="-1"
-              >
-                {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            {validationErrors.confirmPassword && (
-              <span className="field-error">{validationErrors.confirmPassword}</span>
-            )}
+            <label className="auth-label">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Repeat your password"
+              disabled={loading}
+              className={validationErrors.confirmPassword ? 'input-error' : ''}
+            />
+            {validationErrors.confirmPassword && <span className="field-error">{validationErrors.confirmPassword}</span>}
           </div>
 
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
+          <button type="submit" className="auth-button-primary" disabled={loading}>
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>Already have an account?</span>
-        </div>
+        <p className="auth-footer">
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
 
-        <Link to="/login" className="auth-link-button">
-          Login here
-        </Link>
+        <p className="text-[11px] text-[#6c6a64] text-center mt-10 leading-relaxed">
+          By creating an account, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+        </p>
       </div>
     </div>
   );

@@ -46,8 +46,6 @@ export async function createIncident(monitorId, reason) {
       return;
     }
 
-    console.log(user);
-
     await sendEmail({
       email: user.email,
       subject: `New Incident Detected in ${monitor?.title || 'your'} monitor`,

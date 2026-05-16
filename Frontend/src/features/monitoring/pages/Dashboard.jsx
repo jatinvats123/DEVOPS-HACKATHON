@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
+import { selectMonitors, selectLoading } from "../state/monitor.slice";
+import { getAllIncidents } from "../services/incident.api";
 import {
   AreaChart,
   Area,
@@ -31,8 +35,7 @@ import {
   RiComputerLine,
 } from "@remixicon/react";
 
-// ─── DUMMY DATA & ICONS ─────────────────────────────────────────────────────
-
+// ─── SAMPLE DATA & ICONS ───────────────────────────────────────────────────
 const uptimeData = [
   { time: "May 12", val: 99.5 },
   { time: "May 13", val: 99.2 },
@@ -41,33 +44,6 @@ const uptimeData = [
   { time: "May 16", val: 99.3 },
   { time: "May 17", val: 99.5 },
   { time: "May 18", val: 99.7 },
-];
-
-const pieData = [
-  { name: "Up", value: 9, fill: "#22c55e" },
-  { name: "Down", value: 2, fill: "#ef4444" },
-  { name: "Paused", value: 1, fill: "#9ca3af" },
-];
-
-const mockIncidents = [
-  {
-    id: 1,
-    name: "api.payment-gateway.com",
-    date: "May 18, 2024 10:24 AM",
-    status: "ONGOING",
-  },
-  {
-    id: 2,
-    name: "store.example.com",
-    date: "May 17, 2024 08:15 PM",
-    status: "RESOLVED",
-  },
-  {
-    id: 3,
-    name: "api.user-service.com",
-    date: "May 16, 2024 11:02 AM",
-    status: "RESOLVED",
-  },
 ];
 
 const Icons = {
@@ -93,133 +69,19 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-const Sidebar = () => {
-  const menuItems = [
-    { name: "Dashboard", icon: Icons.Dashboard, active: true },
-    { name: "Monitors", icon: Icons.Monitors },
-    { name: "Incidents", icon: Icons.Incidents },
-    { name: "Alerts", icon: Icons.Alerts },
-    { name: "Status Pages", icon: Icons.Status },
-    { name: "Team", icon: Icons.Team },
-    { name: "Settings", icon: Icons.Settings },
-    { name: "Billing", icon: Icons.Billing },
-  ];
-
-  return (
-    <aside className="w-[240px] bg-gradient-to-b from-blue-900 to-indigo-900 text-gray-300 flex-shrink-0 h-screen hidden lg:flex flex-col">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <Icons.Logo />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-tight leading-tight">
-              UptimeAI
-            </h1>
-            <p className="text-[10px] text-gray-300 font-medium tracking-wide">
-              Website Monitoring Platform
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
-          <a
-            key={item.name}
-            href="#"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
-              item.active
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <item.icon />
-            {item.name}
-          </a>
-        ))}
-      </nav>
-
-      <div className="px-4 pb-4">
-        <div className="bg-black/20 p-4 rounded-xl border border-white/10 shadow-inner">
-          <div className="flex items-center gap-2 text-white font-semibold text-sm mb-2">
-            <Icons.Star /> Upgrade to Pro
-          </div>
-          <p className="text-[11px] text-gray-300 mb-4 leading-relaxed">
-            Get advanced monitoring, multi-location checks, and more.
-          </p>
-          <button className="w-full bg-indigo-500 text-white text-[13px] font-medium py-2 rounded-lg hover:bg-indigo-600 transition-colors shadow-sm">
-            Upgrade Now
-          </button>
-        </div>
-      </div>
-
-      <div className="p-4 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm shadow-inner">
-              AD
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white leading-tight truncate">
-                Arjun Dev
-              </p>
-              <p className="text-xs text-gray-300 truncate">
-                arjun@example.com
-              </p>
-            </div>
-          </div>
-          <Icons.ChevronDown />
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-const Navbar = () => {
-  return (
-    <header className="px-8 py-5 flex items-center justify-between bg-white border-b border-gray-100 z-10 shadow-sm shrink-0">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Dashboard
-        </h1>
-        <p className="text-[13px] text-gray-500 mt-1">
-          Overview of all your website and API monitors.
-        </p>
-      </div>
-      <div className="flex items-center gap-5">
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
-          <Icons.Plus /> Add Monitor
-        </button>
-        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-gray-200">
-          <Icons.Bell />
-          <span className="absolute top-0 right-0 -mt-1 -mr-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
-            3
-          </span>
-        </button>
-        <div className="w-9 h-9 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-gray-600 text-sm font-bold">
-          AD
-        </div>
-      </div>
-    </header>
-  );
-};
-
 const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-transform hover:-translate-y-0.5 duration-200">
+  <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
     <div className="flex justify-between items-start">
       <div>
-        <h3 className="text-sm font-medium text-gray-500 mb-2">{title}</h3>
-        <span className="text-3xl font-bold text-gray-900 tracking-tight">
+        <h3 className="luxury-label mb-4">{title}</h3>
+        <span className="text-4xl luxury-heading">
           {value}
         </span>
         {sub && (
-          <p className={`text-[12px] font-medium mt-2 ${colorClass}`}>{sub}</p>
+          <p className="luxury-subtext mt-4">{sub}</p>
         )}
       </div>
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center bg-gray-50 ${colorClass}`}
-      >
+      <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
         <Icon />
       </div>
     </div>
@@ -228,98 +90,99 @@ const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
 
 const StatsCards = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-      <Card
-        title="Total Monitors"
-        value={stats.total}
-        sub="▲ 2 this month"
-        colorClass="text-indigo-600"
-        icon={Icons.MonitorCard}
-      />
-      <Card
-        title="Up Monitors"
-        value={stats.up}
-        sub="75%"
-        colorClass="text-emerald-500"
-        icon={Icons.CheckCircle}
-      />
-      <Card
-        title="Down Monitors"
-        value={stats.down}
-        sub="16.7%"
-        colorClass="text-red-500"
-        icon={Icons.XCircle}
-      />
-      <Card
-        title="Avg. Uptime"
-        value={stats.uptime}
-        sub="▲ 1.2% this month"
-        colorClass="text-emerald-500"
-        icon={Icons.Activity}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-12">
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Total Assets"
+          value={stats.total}
+          sub="Managed Infrastructure"
+          icon={Icons.MonitorCard}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Active Status"
+          value={stats.up}
+          sub={`${stats.total > 0 ? ((stats.up / stats.total) * 100).toFixed(1) : 0}% Uptime`}
+          icon={Icons.CheckCircle}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Attention Required"
+          value={stats.down}
+          sub="Service Outages"
+          icon={Icons.XCircle}
+        />
+      </div>
+      <div className="border-r border-b border-gray-100">
+        <Card
+          title="Global Health"
+          value={stats.uptime}
+          sub="Average Performance"
+          icon={Icons.Activity}
+        />
+      </div>
     </div>
   );
 };
 
 const UptimeOverview = () => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[350px]">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          Uptime Overview
+    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm">
+      <div className="flex items-center justify-between mb-10">
+        <h2 className="luxury-heading text-xl">
+          Performance History
         </h2>
-        <select className="text-xs border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 outline-none hover:bg-gray-50 cursor-pointer">
+        <select className="luxury-label bg-transparent border border-[#e6dfd8] rounded-md px-2 py-1 outline-none cursor-pointer">
           <option>Last 7 Days</option>
           <option>Last 30 Days</option>
         </select>
       </div>
-      <div className="h-64 w-full -ml-4">
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={uptimeData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
           >
-            <defs>
-              <linearGradient id="colorUptime" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-              </linearGradient>
-            </defs>
             <CartesianGrid
-              strokeDasharray="3 3"
+              strokeDasharray="0"
               vertical={false}
-              stroke="#f1f5f9"
+              stroke="#e6dfd8"
             />
             <XAxis
               dataKey="time"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#64748b", fontSize: 11 }}
-              dy={10}
+              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
+              dy={15}
             />
             <YAxis
               domain={["dataMin - 1", 100]}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#64748b", fontSize: 11 }}
+              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
               tickFormatter={(val) => `${val}%`}
             />
             <Tooltip
               contentStyle={{
                 borderRadius: "8px",
-                border: "none",
-                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                border: "1px solid #e6dfd8",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                fontFamily: 'Inter',
+                fontSize: '12px',
+                backgroundColor: '#fff'
               }}
             />
             <Area
               type="monotone"
               dataKey="val"
-              stroke="#4f46e5"
-              strokeWidth={2.5}
-              fillOpacity={1}
-              fill="url(#colorUptime)"
-              activeDot={{ r: 5, strokeWidth: 0 }}
-              dot={{ r: 3, fill: "#4f46e5", strokeWidth: 0 }}
+              stroke="#cc785c"
+              strokeWidth={2}
+              fillOpacity={0.1}
+              fill="#cc785c"
+              activeDot={{ r: 5, fill: '#cc785c', strokeWidth: 0 }}
+              dot={false}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -328,26 +191,45 @@ const UptimeOverview = () => {
   );
 };
 
-const StatusDistribution = () => {
+const StatusDistribution = ({ monitors = [] }) => {
+  const up = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "UP",
+  ).length;
+  const down = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "DOWN",
+  ).length;
+  const paused = monitors.filter(
+    (m) => (m.status || "").toUpperCase() === "PAUSED",
+  ).length;
+  const total = monitors.length || 1;
+  const uptimePct = ((up / total) * 100).toFixed(0);
+
+  const dynamicPieData = [
+    { name: "Up", value: up, fill: "#cc785c" },
+    { name: "Down", value: down, fill: "#3d3d3a" },
+    { name: "Paused", value: paused, fill: "#e6dfd8" },
+  ];
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col min-h-[350px]">
-      <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight mb-2">
-        Status Distribution
+    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
+      <h2 className="luxury-heading text-xl mb-10">
+        Asset Distribution
       </h2>
       <div className="flex-1 relative flex items-center justify-center ">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={pieData}
+              data={dynamicPieData}
               cx="50%"
               cy="50%"
-              innerRadius={70}
-              outerRadius={90}
-              paddingAngle={2}
+              innerRadius={80}
+              outerRadius={100}
+              paddingAngle={4}
               dataKey="value"
               stroke="none"
+              cornerRadius={4}
             >
-              {pieData.map((entry, index) => (
+              {dynamicPieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
@@ -355,118 +237,104 @@ const StatusDistribution = () => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold text-gray-900">75%</span>
-          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+          <span className="text-4xl luxury-heading text-[#cc785c]">{uptimePct}%</span>
+          <span className="luxury-label mt-1">
             Uptime
           </span>
         </div>
       </div>
-      <div className="flex justify-center gap-5 mt-4">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span className="text-xs text-gray-500">Up (9)</span>
+      <div className="flex flex-col gap-4 mt-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#cc785c]"></div>
+            <span className="luxury-label">Operational</span>
+          </div>
+          <span className="text-sm font-medium">{up}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span className="text-xs text-gray-500">Down (2)</span>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#3d3d3a]"></div>
+            <span className="luxury-label">Critical</span>
+          </div>
+          <span className="text-sm font-medium">{down}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-          <span className="text-xs text-gray-500">Paused (1)</span>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#e6dfd8]"></div>
+            <span className="luxury-label">Inactive</span>
+          </div>
+          <span className="text-sm font-medium">{paused}</span>
         </div>
       </div>
     </div>
   );
 };
 
-const AllMonitors = ({ monitors }) => {
+const AllMonitors = ({ monitors = [] }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(monitors.length / itemsPerPage) || 1;
+  const validMonitors = monitors || [];
+  const totalPages = Math.ceil(validMonitors.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedMonitors = monitors.slice(
+  const paginatedMonitors = validMonitors.slice(
     startIndex,
     startIndex + itemsPerPage,
   );
 
   const timeAgo = (dateString) => {
     if (!dateString) return "Just now";
-
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-
     const seconds = Math.floor((new Date() - date) / 1000);
-
-    if (seconds < 60) return `${Math.max(0, seconds)} sec ago`;
+    if (seconds < 60) return `${Math.max(0, seconds)}s ago`;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min ago`;
+    if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hrs ago`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days} days ago`;
-  };
-
-  const getBadgeStyle = (status) => {
-    if (status === "UP") return "bg-emerald-100 text-emerald-700";
-    if (status === "DOWN") return "bg-red-100 text-red-700";
-    return "bg-orange-100 text-orange-700";
+    return `${days}d ago`;
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          All Monitors
+    <div className="bg-white border border-gray-100 p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="luxury-heading text-base">
+          System Registry
         </h2>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="luxury-table">
           <thead>
             <tr>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Monitor Name
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Status
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Type
-              </th>
-              <th className="px-6 py-3.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Last Checked
-              </th>
-              <th className="px-6 py-3.5 border-b border-gray-100"></th>
+              <th>Asset Name</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Last Checked</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody>
             {paginatedMonitors.map((m, i) => (
-              <tr
-                key={m._id || i}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <p className="text-[13px] font-semibold text-gray-900">
-                    {m.title}
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{m.url}</p>
+              <tr key={m._id || i}>
+                <td>
+                  <p className="font-medium text-black">{m.title}</p>
+                  <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">{m.url}</p>
                 </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${getBadgeStyle(m.status)}`}
-                  >
+                <td>
+                  <span className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}>
                     {m.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-[13px] text-gray-600">
+                <td className="text-[12px] font-light uppercase tracking-tight">
                   {m.type || "Website"}
                 </td>
-                <td className="px-6 py-4 text-[13px] text-gray-500">
+                <td className="text-[12px] text-gray-400">
                   {timeAgo(m.lastChecked)}
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-gray-400 hover:text-gray-700 transition-colors">
+                <td className="text-right">
+                  <button className="text-gray-300 hover:text-black transition-colors">
                     <Icons.Dots />
                   </button>
                 </td>
@@ -476,26 +344,24 @@ const AllMonitors = ({ monitors }) => {
         </table>
       </div>
 
-      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-        <span className="text-xs text-gray-500">
-          Showing {startIndex + 1} to{" "}
-          {Math.min(startIndex + itemsPerPage, monitors.length)} of{" "}
-          {monitors.length} monitors
+      <div className="mt-10 flex items-center justify-between">
+        <span className="luxury-label">
+          {startIndex + 1} — {Math.min(startIndex + itemsPerPage, validMonitors.length)} / {validMonitors.length}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-8">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 text-xs font-medium"
+            className="luxury-label hover:text-black disabled:opacity-30 transition-colors"
           >
-            ← Previous
+            Previous
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 text-xs font-medium"
+            className="luxury-label hover:text-black disabled:opacity-30 transition-colors"
           >
-            Next →
+            Next
           </button>
         </div>
       </div>
@@ -503,37 +369,55 @@ const AllMonitors = ({ monitors }) => {
   );
 };
 
-const RecentIncidents = () => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-          Recent Incidents
+const RecentIncidents = ({ incidents = [] }) => {
+  if (incidents.length === 0) {
+    return (
+      <div className="bg-white border border-gray-100 p-8">
+        <h2 className="luxury-heading text-base mb-8">
+          Incident Journal
         </h2>
-        <button className="text-[12px] font-medium text-indigo-600 hover:text-indigo-700">
-          View All
-        </button>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="luxury-subtext">Record is clear</p>
+        </div>
       </div>
-      <div className="flex flex-col gap-4 ">
-        {mockIncidents.map((inc) => (
+    );
+  }
+
+  return (
+    <div className="bg-white border border-gray-100 p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="luxury-heading text-base">
+          Incident Journal
+        </h2>
+        <Link to="/incidents" className="luxury-label hover:text-black transition-colors">
+          View All
+        </Link>
+      </div>
+      <div className="flex flex-col gap-6">
+        {incidents.slice(0, 3).map((inc) => (
           <div
-            key={inc.id}
-            className="border h-35 border-gray-100 rounded-lg p-4 shadow-sm hover:border-gray-200 transition-colors"
+            key={inc._id || inc.id}
+            className="border-b border-gray-100 pb-6 last:border-0"
           >
             <div className="flex items-start justify-between mb-2">
-              <h4 className="text-[13px] font-semibold text-gray-900 truncate">
-                {inc.name}
+              <h4 className="text-[13px] font-medium text-black">
+                {inc.monitorTitle || inc.name || "Unknown Asset"}
               </h4>
               <span
-                className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${inc.status === "ONGOING" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
+                className={`luxury-label text-[9px] ${inc.status === "ONGOING" || inc.status === "OPEN" ? "text-black" : "text-gray-400"}`}
               >
                 {inc.status}
               </span>
             </div>
-            <p className="text-[12px] text-gray-500 mb-3">{inc.date}</p>
-            <button className="w-full py-1.5 border border-gray-200 rounded text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              View Incident
-            </button>
+            <p className="text-[11px] text-gray-400 mb-4 uppercase tracking-tight">
+              {new Date(inc.createdAt || inc.date).toLocaleString()}
+            </p>
+            <Link
+              to={`/incidents/${inc._id}`}
+              className="luxury-button-outline w-full py-2 text-[10px] text-center"
+            >
+              Details
+            </Link>
           </div>
         ))}
       </div>
@@ -544,98 +428,104 @@ const RecentIncidents = () => {
 // ─── MAIN DASHBOARD COMPONENT ───────────────────────────────────────────────
 
 const Dashboard = () => {
-  const { fetchMonitors, fetchIncidents, incidents, monitors } = useMonitors();
+  const [incidents, setIncidents] = useState([]);
+  const monitorsData = useSelector(selectMonitors);
+  const monitors = monitorsData || [];
+  const loading = useSelector(selectLoading);
+  const { handleGetMonitors } = useMonitors();
 
   useEffect(() => {
-    fetchMonitors();
-    fetchIncidents();
-  }, [fetchMonitors, fetchIncidents]);
+    handleGetMonitors();
 
-  const safeMonitors =
-    Array.isArray(monitors) && monitors.length > 0
-      ? monitors
-      : [
-          {
-            _id: "1",
-            title: "Payment API",
-            url: "https://api.payment-gateway.com",
-            type: "API",
-            status: "DOWN",
-            lastChecked: "10s ago",
-          },
-          {
-            _id: "2",
-            title: "Main Website",
-            url: "https://example.com",
-            type: "Website",
-            status: "UP",
-            lastChecked: "30s ago",
-          },
-          {
-            _id: "3",
-            title: "Storefront",
-            url: "https://store.example.com",
-            type: "Website",
-            status: "DEGRADED",
-            lastChecked: "20s ago",
-          },
-          {
-            _id: "4",
-            title: "User Service",
-            url: "https://api.user-service.com",
-            type: "API",
-            status: "UP",
-            lastChecked: "15s ago",
-          },
-          {
-            _id: "5",
-            title: "Blog",
-            url: "https://blog.example.com",
-            type: "Website",
-            status: "UP",
-            lastChecked: "25s ago",
-          },
-          {
-            _id: "6",
-            title: "Auth Service",
-            url: "https://auth.example.com",
-            type: "API",
-            status: "UP",
-            lastChecked: "1m ago",
-          },
-        ];
+    const fetchIncidents = async () => {
+      try {
+        const res = await getAllIncidents();
+        if (res && res.data) {
+          setIncidents(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch incidents:", err);
+      }
+    };
+
+    fetchIncidents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const up = monitors.filter((m) => {
+    const s = (m.status || "").toUpperCase();
+    return s === "UP" || s === "HEALTHY";
+  }).length;
+
+  const down = monitors.filter((m) => {
+    const s = (m.status || "").toUpperCase();
+    return s === "DOWN" || s === "FAILING";
+  }).length;
 
   const stats = {
-    total: safeMonitors.length,
-    up: safeMonitors.filter((m) => m.status === "UP").length,
-    down: safeMonitors.filter((m) => m.status === "DOWN").length,
-    uptime: "99.42%",
+    total: monitors.length,
+    up,
+    down,
+    uptime:
+      monitors.length > 0
+        ? `${((up / monitors.length) * 100).toFixed(2)}%`
+        : "100%",
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-8">
-          <StatsCards stats={stats} />
+    <main className="flex-1 overflow-y-auto p-12 luxury-container">
+      <StatsCards stats={stats} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            {/* LEFT SIDE (8 columns) */}
-            <div className="xl:col-span-8 flex flex-col gap-6">
-              <UptimeOverview />
-              <AllMonitors monitors={safeMonitors} />
-            </div>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        {/* LEFT SIDE (8 columns) */}
+        <div className="xl:col-span-8 flex flex-col gap-12">
+          <UptimeOverview />
+          <div className="relative">
+            {loading && monitors.length === 0 && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+              </div>
+            )}
+            <AllMonitors monitors={monitors} />
+          </div>
+        </div>
 
-            {/* RIGHT SIDE (4 columns) */}
-            <div className="xl:col-span-4 flex flex-col gap-6">
-              <StatusDistribution />
-              <RecentIncidents />
+        {/* RIGHT SIDE (4 columns) */}
+        <div className="xl:col-span-4 flex flex-col gap-12">
+          {/* Quick Navigation Section */}
+          <div className="bg-white border border-gray-100 p-8">
+            <h2 className="luxury-heading text-base mb-8">
+              Quick Links
+            </h2>
+            <div className="grid grid-cols-1 gap-2">
+              <Link to="/monitors" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+                <Icons.Monitors />
+                <span>Monitors</span>
+              </Link>
+              <Link to="/incidents" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+                <Icons.Incidents />
+                <span>Incidents</span>
+              </Link>
+              <Link to="/alerts" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+                <Icons.Alerts />
+                <span>Alerts</span>
+              </Link>
+              <Link to="/status-pages" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+                <Icons.Status />
+                <span>Status</span>
+              </Link>
+              <Link to="/settings" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+                <Icons.Settings />
+                <span>Settings</span>
+              </Link>
             </div>
           </div>
-        </main>
+
+          <StatusDistribution monitors={monitors} />
+          <RecentIncidents incidents={incidents} />
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 

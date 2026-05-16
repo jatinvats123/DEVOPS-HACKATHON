@@ -1,4 +1,3 @@
-
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -34,10 +33,18 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     // Skip OTP and email for development
     const accessToken = user.generateAccessToken();
-    
-    return res.status(201).json(
-        new ApiResponse(201, { user: createdUser, token: accessToken }, "User registered successfully")
-    );
+    const options = {
+        httpOnly: true,
+        secure: config.NODE_ENV === "production",
+        sameSite: "strict"
+    };
+
+    return res
+        .status(201)
+        .cookie("uptimeaitoken", accessToken, options)
+        .json(
+            new ApiResponse(201, { user: createdUser, token: accessToken }, "User registered successfully")
+        );
 });
 
 export const loginUser = asyncHandler(async (req, res) => {
@@ -72,10 +79,9 @@ export const loginUser = asyncHandler(async (req, res) => {
         secure: config.NODE_ENV === "production",
         sameSite: "strict"
     };
-
+    res.cookie("uptimeaitoken", accessToken, options)
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
         .json(
             new ApiResponse(200, { user: loggedInUser, token: accessToken }, "User logged in successfully")
         );
@@ -87,10 +93,9 @@ export const logoutUser = asyncHandler(async (req, res) => {
         secure: config.NODE_ENV === "production",
         sameSite: "strict"
     };
-
     return res
         .status(200)
-        .clearCookie("accessToken", options)
+        .clearCookie("uptimeaitoken", options)
         .json(new ApiResponse(200, {}, "User logged out"));
 });
 

@@ -2,9 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   monitors: [],
-  incidents: [],
   loading: false,
   error: null,
+  lastFetched: null,
 };
 
 const monitorSlice = createSlice({
@@ -14,43 +14,51 @@ const monitorSlice = createSlice({
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
-    setMonitors: (state, action) => {
-      // Assuming getMonitors returns an array of monitor objects
-      state.monitors = action.payload;
-      state.error = null;
-    },
-    addMonitor: (state, action) => {
-      // Assuming createMonitoring returns the created monitor object
-      state.monitors.push(action.payload);
-      state.error = null;
-    },
-    setIncidents: (state, action) => {
-      state.incidents = action.payload;
-      state.error = null;
-    },
-
-    removeMonitor: (state, action) => {
-      // Assuming deleteMonitor returns confirmation and we remove by id or _id
-      state.monitors = state.monitors.filter(
-        (monitor) =>
-          monitor._id !== action.payload && monitor.id !== action.payload,
-      );
-      state.error = null;
-    },
     setError: (state, action) => {
       state.error = action.payload;
       state.loading = false;
+    },
+    setMonitors: (state, action) => {
+      state.monitors = action.payload;
+      state.error = null;
+      state.lastFetched = Date.now();
+    },
+    addMonitor: (state, action) => {
+      // Unshift adds the new monitor to the beginning (latest first)
+      state.monitors.unshift(action.payload);
+      state.error = null;
+    },
+    removeMonitor: (state, action) => {
+      // Filter out the monitor by _id
+      state.monitors = state.monitors.filter(
+        (monitor) => monitor._id !== action.payload
+      );
+      state.error = null;
+    },
+    updateMonitorStatus: (state, action) => {
+      // Find monitor by _id and update status and lastChecked
+      const { _id, status, lastChecked } = action.payload;
+      const monitor = state.monitors.find((m) => m._id === _id);
+      
+      if (monitor) {
+        if (status !== undefined) monitor.status = status;
+        if (lastChecked !== undefined) monitor.lastChecked = lastChecked;
+      }
     },
   },
 });
 
 export const {
   setLoading,
+  setError,
   setMonitors,
   addMonitor,
   removeMonitor,
-  setError,
-  setIncidents,
+  updateMonitorStatus,
 } = monitorSlice.actions;
+
+export const selectMonitors = (state) => state.monitor.monitors;
+export const selectLoading = (state) => state.monitor.loading;
+export const selectError = (state) => state.monitor.error;
 
 export default monitorSlice.reducer;

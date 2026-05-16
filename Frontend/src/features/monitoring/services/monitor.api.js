@@ -1,21 +1,16 @@
 import { env } from "../../../config/env.js";
 import { apiRequest } from "../../../lib/api/apiRequest.js";
 
-import axios from "axios";
 
-//axios request for monitoring
-export const axiosRequest = axios.create({
-  baseURL: "http://localhost:5000/api/monitor",
-  withCredentials: true,
-});
-
-/*
- * @getIncidentsByMonitorId - Fetches incidents for a specific monitor by its ID.
- * @param {string} monitorId - The ID of the monitor for which to fetch incidents.
+/* 
+ *@createMonitoring - Creates a new monitor with the provided data.
+ * @param {object} monitorData - The data for the new monitor, including URL, type, and frequency.
  */
 
+
+
 export const createMonitoring = async (monitorData) => {
-  return axiosRequest("post", env.CREATE_MONITORING_API, monitorData);
+  return apiRequest("post", env.CREATE_MONITORING_API, monitorData);
 };
 
 /*
@@ -23,7 +18,7 @@ export const createMonitoring = async (monitorData) => {
  */
 export const getMonitors = async () => {
   // return apiRequest("get", env.CREATE_MONITORING_API);
-  const data = axiosRequest.get("/");
+  const data = await apiRequest("get", env.CREATE_MONITORING_API);
   return data;
 };
 
