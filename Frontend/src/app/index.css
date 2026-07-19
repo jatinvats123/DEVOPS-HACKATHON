@@ -1,1 +1,48 @@
 @import "tailwindcss";
+
+@theme {
+  /* Minimal near-black palette (Better Stack inspired) */
+  --color-surface: #0c0c0e;
+  --color-panel: #131316;
+  --color-panel-2: #18181c;
+  --color-edge: #26262b;
+  --color-accent: #6e79d6;
+  --color-accent-strong: #8590e8;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-surface text-zinc-200 antialiased;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04';
+}
+
+/* Subtle scrollbar for the dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a30;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a42;
+}
+
+/* Pulse dot animation for live status */
+@keyframes ping-slow {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.animate-ping-slow {
+  animation: ping-slow 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}

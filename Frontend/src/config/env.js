@@ -1,76 +1,25 @@
-//backend url and api endpoints 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+// Backend url and api endpoints (env overrides, sensible localhost defaults)
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
-// register API endpoints
-const REGISTER_API = import.meta.env.VITE_REGISTER_API;
-
-
-// login API endpoints
-const LOGIN_API = import.meta.env.VITE_LOGIN_API;
-
-
-//get user profile API endpoint
-const GET_USER_API = import.meta.env.VITE_GET_USER_API;
-
-// forgot password API endpoint
-const FORGOT_PASSWORD_API = import.meta.env.VITE_FORGOT_PASSWORD_API;
-
-
-// change password API endpoint
-const CHANGE_PASSWORD_API = import.meta.env.VITE_CHANGE_PASSWORD_API;
-
-// incidents API endpoint
-const INCIDENTS_API = import.meta.env.VITE_INCIDENTS_API;
-
-
-// create monitoring API endpoint
-const CREATE_MONITORING_API = import.meta.env.VITE_CREATE_MONITORING_API;
-
-// Validate environment variables
-if(!BACKEND_URL) {
-    throw new Error("BACKEND_URL is not defined in the environment variables");
-}
-
-
-if(!REGISTER_API) {
-    throw new Error("REGISTER_API is not defined in the environment variables");
-}
-
-
-if(!LOGIN_API) {
-    throw new Error("LOGIN_API is not defined in the environment variables");
-}
-
-
-if(!GET_USER_API) {
-    throw new Error("GET_USER_API is not defined in the environment variables");
-}
-
-if(!FORGOT_PASSWORD_API) {
-    throw new Error("FORGOT_PASSWORD_API is not defined in the environment variables");
-}
-
-if(!CHANGE_PASSWORD_API) {
-    throw new Error("CHANGE_PASSWORD_API is not defined in the environment variables");
-}
-
-if(!INCIDENTS_API) {
-    throw new Error("INCIDENTS_API is not defined in the environment variables");
-}
-
-
-
-if(!CREATE_MONITORING_API) {
-    throw new Error("CREATE_MONITORING_API is not defined in the environment variables");
-}
-// Export the environment variables as a config object
 export const env = {
-    BACKEND_URL,
-    REGISTER_API,
-    LOGIN_API,
-    GET_USER_API,
-  FORGOT_PASSWORD_API,
-  CHANGE_PASSWORD_API,
-  INCIDENTS_API ,
-    CREATE_MONITORING_API
-}
+  BACKEND_URL,
+  REGISTER_API: import.meta.env.VITE_REGISTER_API || '/api/auth/register',
+  LOGIN_API: import.meta.env.VITE_LOGIN_API || '/api/auth/login',
+  LOGOUT_API: import.meta.env.VITE_LOGOUT_API || '/api/auth/logout',
+  GET_USER_API: import.meta.env.VITE_GET_USER_API || '/api/auth/profile',
+  FORGOT_PASSWORD_API:
+    import.meta.env.VITE_FORGOT_PASSWORD_API || '/api/auth/forgot-password',
+  CHANGE_PASSWORD_API:
+    import.meta.env.VITE_CHANGE_PASSWORD_API || '/api/auth/change-password',
+  RESET_PASSWORD_API:
+    import.meta.env.VITE_RESET_PASSWORD_API || '/api/auth/reset-password',
+  INCIDENTS_API: import.meta.env.VITE_INCIDENTS_API || '/api/incidents',
+  LOGS_API: import.meta.env.VITE_LOGS_API || '/api/logs',
+  CREATE_MONITORING_API:
+    import.meta.env.VITE_CREATE_MONITORING_API || '/api/monitor',
+  // Socket.IO server origin (defaults to the backend origin)
+  SOCKET_URL:
+    import.meta.env.VITE_SOCKET_URL ||
+    import.meta.env.VITE_BACKEND_URL ||
+    'http://localhost:8000',
+};
