@@ -144,15 +144,14 @@ export async function resolveIncident(monitorId) {
     return null;
   }
 
-  const resolvedIncident = await incidentModel.create({
-    monitorId,
-    status: 'RESOLVED',
-    startTime: ongoingIncident.startTime,
-    endTime: new Date(),
-    reason: `Resolved: ${ongoingIncident.reason}`,
-    aiSummary: 'Issue resolved. Monitor is back up.',
-    duration: Math.floor((new Date() - ongoingIncident.startTime) / 1000), // Duration in seconds
-  });
+  // Close the SAME open incident instead of creating a duplicate RESOLVED doc,
+  // otherwise the ONGOING record lingers forever and recovery fires repeatedly.
+  ongoingIncident.status = 'RESOLVED';
+  ongoingIncident.endTime = new Date();
+  ongoingIncident.duration = Math.floor(
+    (ongoingIncident.endTime - ongoingIncident.startTime) / 1000
+  );
+  const resolvedIncident = await ongoingIncident.save();
 
   // Send email notification to the user associated with the monitor
   try {

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router';
 import Sidebar from '../features/monitoring/components/Sidebar';
 import AddMonitoring from '../features/monitoring/components/AddMonitoring';
 import Navbar from '../features/monitoring/components/Navbar';
+import ChatWidget from '../features/chat/ChatWidget';
 
 import '../styles/luxury.css';
 
@@ -23,6 +24,7 @@ const Layout = () => {
         </div>
       </div>
       <AddMonitoring isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
+      <ChatWidget />
     </div>
   );
 };
