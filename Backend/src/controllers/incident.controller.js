@@ -1,12 +1,14 @@
 import incidentModel from '../models/incidents.model.js';
+import logger from '../config/logger.js';
 
 export const getIncidentsByMonitorIdController = async (req, res) => {
   const monitorId = req.params.monitorId;
 
   try {
     const incidents = await incidentModel
-      .findById(monitorId)
-      .populate('monitorId', 'url type');
+      .find({ monitorId })
+      .sort({ createdAt: -1 })
+      .populate('monitorId', 'url type title');
 
     res.status(200).json({
       message: 'Incidents fetched successfully',

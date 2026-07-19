@@ -36,7 +36,7 @@ const Middleware = (app) => {
     app.use(morgan("dev"));
     app.use(compression());
     app.use(cors({
-        origin: config.CORS_ORIGIN,
+        origin: config.CORS_ORIGINS,
         credentials: true,
     }));
     app.use(express.static("public"));

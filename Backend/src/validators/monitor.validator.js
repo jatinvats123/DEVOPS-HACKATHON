@@ -1,19 +1,20 @@
 import { z } from 'zod';
-import { validateRequest } from '../config/validate.js';
 
+// Shapes match the `validate` middleware, which parses { body, params, query }.
 export const createMonitorValidator = z.object({
-  type: z.enum(['website', 'api'], {
-    errorMap: () => ({ message: 'Type must be either "website" or "api"' }),
+  body: z.object({
+    type: z.enum(['website', 'api']).default('website'),
+    title: z.string().trim().optional(),
+    url: z.string().url({ message: 'Invalid URL format' }),
+    interval: z.number().positive().optional(),
+    timeout: z.number().positive().optional(),
   }),
-  title: z.string().trim().default('Untitled monitor'),
-  url: z.url({ message: 'invalid url format' }),
-  interval: z.number().positive().optional(),
-  timeout: z.number().positive().optional(),
-  validateRequest,
 });
 
 export const deleteMonitorValidator = z.object({
-  monitorId: z.string().length(24, {
-    message: 'Invalid monitor ID format',
+  params: z.object({
+    monitorId: z
+      .string()
+      .length(24, { message: 'Invalid monitor ID format' }),
   }),
 });

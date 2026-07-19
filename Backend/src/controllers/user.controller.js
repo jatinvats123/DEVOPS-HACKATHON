@@ -7,7 +7,6 @@ import { sendEmail } from "../services/sendEmail.js";
 import { config } from "../config/config.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
-    console.log(req.body)
     const { username, email, fullname, password } = req.body;
 
     const existedUser = await UserService.findUserByEmailOrUsername(email, username);
@@ -29,11 +28,15 @@ export const registerUser = asyncHandler(async (req, res) => {
     }
     await user.generateOTP();
 
-    await sendEmail({
-        email: user.email,
-        subject: "OTP Verification",
-        message: `Your OTP is: ${user.otp}`
-    })
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: "OTP Verification",
+            message: `Your OTP is: ${user.otp}`
+        });
+    } catch (error) {
+        console.error("Failed to send OTP email:", error.message);
+    }
     return res.status(201).json(
         new ApiResponse(201, createdUser, "User registered successfully. Please verify your email with the OTP.")
     );
@@ -144,14 +147,33 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const resetToken = user.generateForgotToken();
     await UserService.saveUser(user, { validateBeforeSave: false });
 
-    const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
-    sendEmail({
-        email: user.email,
-        subject: "Password Reset Request",
-        message: `You requested a password reset. Please use the following token to reset your POST to: ${resetUrl}`,
-    })
+    // Link to the FRONTEND reset page (not the API route) so the user lands
+    // on a form they can actually use.
+    const resetUrl = `${config.FRONTEND_URL}/reset-password/${resetToken}`;
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: "Password Reset Request",
+            html: `<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f6f8;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:20px;"><tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+      <tr><td style="background:#111827;color:#fff;padding:20px;text-align:center;"><h2 style="margin:0;">Reset your password</h2></td></tr>
+      <tr><td style="padding:24px;color:#333;">
+        <p>Hello <strong>${user.username || "there"}</strong>,</p>
+        <p>We received a request to reset your WatchTower password. This link is valid for 15 minutes.</p>
+        <p style="text-align:center;margin:28px 0;">
+          <a href="${resetUrl}" style="background:#111827;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;display:inline-block;">Reset password</a>
+        </p>
+        <p style="font-size:13px;color:#666;">If the button doesn't work, paste this into your browser:<br/><span style="color:#4f46e5;">${resetUrl}</span></p>
+        <p style="font-size:13px;color:#666;">If you didn't request this, you can safely ignore this email.</p>
+      </td></tr>
+    </table></td></tr></table></body></html>`,
+        });
+    } catch (error) {
+        console.error("Failed to send reset email:", error.message);
+    }
     return res.status(200).json(
-        new ApiResponse(200, {}, "Password reset token sent to email")
+        new ApiResponse(200, {}, "Password reset link sent to email")
     );
 });
 

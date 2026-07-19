@@ -5,6 +5,7 @@ import MonitorRouter from './routes/monitor.route.js';
 import Middleware from './app.middleware.js';
 import LogsRouter from './routes/logs.route.js';
 import IncidentRouter from './routes/incident.route.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
 
 const app = express();
 
@@ -16,6 +17,6 @@ app.use('/api/monitor', MonitorRouter);
 app.use('/api/logs', LogsRouter);
 app.use('/api/incidents', IncidentRouter);
 
-
+app.use(errorMiddleware);
 
 export default app;

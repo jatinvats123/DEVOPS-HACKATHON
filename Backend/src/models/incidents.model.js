@@ -43,8 +43,9 @@ const incidentSchema = new mongoose.Schema(
 //Compound index to optimize queries for ongoing incidents of a monitor
 incidentSchema.index({ monitorId: 1, status: 1 }); // Index to optimize queries by monitor and time
 
-//Auto duration calculation when resolving an incident
-incidentSchema.pre('save', function (next) {
+//Auto duration calculation when resolving an incident.
+//Mongoose 9 dropped callback-style `next`; a synchronous hook just returns.
+incidentSchema.pre('save', function () {
   if (this.startTime && this.endTime) {
     this.duration = Math.floor((this.endTime - this.startTime) / 1000); // Duration in seconds
   }
