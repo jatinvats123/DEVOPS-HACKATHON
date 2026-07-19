@@ -1,18 +1,27 @@
+# Production-style full-stack run.
+# Backend reads its secrets from Backend/.env (Mongo Atlas, SMTP, Mistral, JWT).
+# The frontend is built into static files and served by nginx on port 5173.
 services:
   backend:
     build: ./Backend
     ports:
-      - "3000:3000"
-    volumes:
-      - ./Backend:/app
-      - Backend_node_modules:/app/node_modules
+      - "8000:8000"
+    env_file:
+      - ./Backend/.env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
   frontend:
-    build: ./Frontend
+    build:
+      context: ./Frontend
+      args:
+        # Point the built frontend at the backend's public origin
+        VITE_BACKEND_URL: http://localhost:8000
     ports:
-      - "5173:5173"
-    volumes:
-      - ./Frontend:/app
-      - Frontend_node_modules:/app/node_modules
-volumes:
-  Backend_node_modules:
-  Frontend_node_modules:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+# Using MongoDB Atlas (see Backend/.env). To run Mongo locally instead, add a
+# `mongo` service here and set MONGO_URL=mongodb://mongo:27017/watchtower.

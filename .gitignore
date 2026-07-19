@@ -4,4 +4,5 @@ dist
 build
 coverage
 .vscode
-dns.js
+logs
+*.log
