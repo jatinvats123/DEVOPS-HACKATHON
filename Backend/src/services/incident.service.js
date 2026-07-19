@@ -4,6 +4,7 @@ import { analyzeIncident } from './ai.services.js';
 import { sendEmail } from './sendEmail.js';
 import logger from '../config/logger.js';
 import monitorModel from '../models/monitor.model.js';
+import { emitToUser } from '../sockets/index.js';
 
 export async function createIncident(monitorId, reason) {
   const existingIncident = await incidentModel.findOne({
@@ -27,16 +28,23 @@ export async function createIncident(monitorId, reason) {
     // populate only what you need
     await newIncident.populate({
       path: 'monitorId',
-      select: 'title',
-      select: 'userId',
+      select: 'title userId',
     });
 
     const userId = newIncident?.monitorId?.userId;
 
     if (!userId) {
       logger.warn('UserId not found for monitor:', monitorId);
-      return;
+      return newIncident;
     }
+
+    // Push the new incident to the owner in real time
+    emitToUser(userId, 'incident:new', {
+      monitorId: String(monitorId),
+      reason,
+      aiSummary,
+      startTime: newIncident.startTime,
+    });
 
     const user = await UserService.findUserByIdWithoutPassword(userId);
     const monitor = await monitorModel.findById(monitorId);
@@ -146,15 +154,14 @@ export async function resolveIncident(monitorId) {
     return null;
   }
 
-  const resolvedIncident = await incidentModel.create({
-    monitorId,
-    status: 'RESOLVED',
-    startTime: ongoingIncident.startTime,
-    endTime: new Date(),
-    reason: `Resolved: ${ongoingIncident.reason}`,
-    aiSummary: 'Issue resolved. Monitor is back up.',
-    duration: Math.floor((new Date() - ongoingIncident.startTime) / 1000), // Duration in seconds
-  });
+  // Close the SAME open incident instead of creating a duplicate RESOLVED doc,
+  // otherwise the ONGOING record lingers forever and recovery fires repeatedly.
+  ongoingIncident.status = 'RESOLVED';
+  ongoingIncident.endTime = new Date();
+  ongoingIncident.duration = Math.floor(
+    (ongoingIncident.endTime - ongoingIncident.startTime) / 1000
+  );
+  const resolvedIncident = await ongoingIncident.save();
 
   // Send email notification to the user associated with the monitor
   try {
@@ -169,8 +176,15 @@ export async function resolveIncident(monitorId) {
 
     if (!userId) {
       logger.warn('UserId not found for monitor:', monitorId);
-      return;
+      return resolvedIncident;
     }
+
+    // Push the resolution to the owner in real time
+    emitToUser(userId, 'incident:resolved', {
+      monitorId: String(monitorId),
+      duration: resolvedIncident.duration,
+      endTime: resolvedIncident.endTime,
+    });
 
     const user = await UserService.findUserByIdWithoutPassword(userId);
 

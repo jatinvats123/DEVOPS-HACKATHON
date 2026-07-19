@@ -7,6 +7,7 @@ import {
   resolveIncident,
 } from '../services/incident.service.js';
 import logger from '../config/logger.js';
+import { emitToUser } from '../sockets/index.js';
 
 async function isReallyDown(url, timeout) {
   // Perform multiple checks to confirm the monitor is really down
@@ -100,7 +101,7 @@ export async function startMonitorCron() {
           await monitor.save();
 
           // Save the result to the logs collection
-          await logModel.create({
+          const log = await logModel.create({
             monitorId: monitor._id,
             status: currentStatus,
             latency: result.responseTime || null,
@@ -108,12 +109,22 @@ export async function startMonitorCron() {
             error: result.error || null,
             timestamp: new Date(),
           });
+
+          // Push a live update to the monitor's owner (dashboard + detail view)
+          emitToUser(monitor.userId, 'monitor:update', {
+            monitorId: String(monitor._id),
+            status: currentStatus,
+            lastChecked: monitor.lastChecked,
+            latency: log.latency,
+            statusCode: log.statusCode,
+            error: log.error,
+            changed: prevStatus !== currentStatus,
+          });
         } catch (error) {
           logger.error(`Error checking monitor ${monitor.url}:`, error);
-        } finally {
-          isRunning = false;
         }
       })
     );
+    isRunning = false;
   });
 }

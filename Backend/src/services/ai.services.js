@@ -6,7 +6,11 @@
  */
 
 import { mistralAiModel } from '../ai/model.ai.js';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} from '@langchain/core/messages';
 
 // Define the system prompt for the AI model to ensure it provides structured and relevant analysis
 const systemPrompt = `You are a senior DevOps and Site Reliability Engineer (SRE).
@@ -65,4 +69,52 @@ export const analyzeIncident = async (reason) => {
 
     return 'AI analysis failed. Please try again.';
   }
+};
+
+// System prompt for the real-time conversational assistant (WatchTower's AI SRE).
+const assistantSystemPrompt = `You are WatchTower's AI assistant — a friendly, sharp Site Reliability Engineer.
+
+You help users understand uptime monitoring, interpret incidents and logs, and debug DevOps issues (HTTP errors, timeouts, DNS, TLS, deploys, databases, etc.).
+
+Rules:
+- Be concise and practical. Prefer short paragraphs and tight bullet lists.
+- Plain text only — no markdown code fences or JSON.
+- If asked something unrelated to reliability/monitoring/devops, answer briefly and steer back.
+- Never invent specific metrics you weren't given.`;
+
+/**
+ * Stream a conversational assistant reply token-by-token.
+ * @param {{ message: string, history?: Array<{role:string, content:string}> }} input
+ * @param {(chunk: string) => void} onChunk - called for each streamed text chunk
+ * @returns {Promise<string>} the full reply
+ */
+export const streamAssistantReply = async ({ message, history = [] }, onChunk) => {
+  const messages = [new SystemMessage(assistantSystemPrompt)];
+
+  for (const h of history) {
+    const content = String(h?.content || '').trim();
+    if (!content) continue;
+    if (h.role === 'assistant') messages.push(new AIMessage(content));
+    else messages.push(new HumanMessage(content));
+  }
+  messages.push(new HumanMessage(message));
+
+  let full = '';
+  try {
+    const stream = await mistralAiModel.stream(messages);
+    for await (const chunk of stream) {
+      const text = typeof chunk.content === 'string' ? chunk.content : '';
+      if (text) {
+        full += text;
+        onChunk(text);
+      }
+    }
+  } catch (err) {
+    // Fall back to a single non-streamed call if streaming isn't available.
+    console.error('AI stream error, falling back to invoke:', err?.message);
+    const res = await mistralAiModel.invoke(messages);
+    full = typeof res.content === 'string' ? res.content : '';
+    if (full) onChunk(full);
+  }
+  return full;
 };
