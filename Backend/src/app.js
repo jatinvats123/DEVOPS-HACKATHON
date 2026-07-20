@@ -8,6 +8,7 @@ import Middleware from './app.middleware.js';
 import LogsRouter from './routes/logs.route.js';
 import IncidentRouter from './routes/incident.route.js';
 import metricsRouter from './routes/metrics.route.js';
+import ChannelRouter from './routes/channel.route.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
 
@@ -24,6 +25,7 @@ app.use('/api/monitor', MonitorRouter);
 app.use('/api/logs', LogsRouter);
 app.use('/api/incidents', IncidentRouter);
 app.use('/api/metrics', metricsRouter);
+app.use('/api/channels', ChannelRouter);
 
 // Unknown API routes must return JSON, never the SPA shell
 app.use('/api', (req, _res, next) => {

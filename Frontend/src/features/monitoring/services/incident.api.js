@@ -24,3 +24,13 @@ export const getIncidentsByMonitorId = async (monitorId) => {
 
 
 
+/**
+ * @getIncidentById - Fetches a single incident by its own id (detail page)
+ * @param {string} incidentId
+ */
+export const getIncidentById = async (incidentId) => {
+  return apiRequest({
+    method: "get",
+    url: `${env.INCIDENTS_API}/detail/${incidentId}`,
+  });
+};

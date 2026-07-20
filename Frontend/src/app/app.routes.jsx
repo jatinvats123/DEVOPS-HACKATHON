@@ -7,6 +7,7 @@ import Dashboard from "../features/monitoring/pages/Dashboard";
 import Layout from "../components/Layout";
 import Monitoring from "../features/monitoring/pages/Monitoring";
 import Incidents from "../features/monitoring/pages/Incidents";
+import IncidentDetail from "../features/monitoring/pages/IncidentDetail";
 import Alerts from "../features/monitoring/pages/Alerts";
 import StatusPages from "../features/monitoring/pages/StatusPages";
 import Settings from "../features/monitoring/pages/Settings";
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
             {
                 path: "/incidents",
                 element: <Incidents />,
+            },
+            {
+                path: "/incidents/:incidentId",
+                element: <IncidentDetail />,
             },
             {
                 path: "/alerts",

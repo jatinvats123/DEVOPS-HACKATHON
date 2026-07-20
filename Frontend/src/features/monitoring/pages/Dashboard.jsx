@@ -334,9 +334,14 @@ const AllMonitors = ({ monitors = [] }) => {
                   {timeAgo(m.lastChecked)}
                 </td>
                 <td className="text-right">
-                  <button className="text-gray-300 hover:text-black transition-colors">
+                  <Link
+                    to="/monitors"
+                    title="Manage this monitor"
+                    aria-label={`Manage ${m.title || 'monitor'}`}
+                    className="inline-flex text-gray-300 hover:text-black transition-colors"
+                  >
                     <Icons.Dots />
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}

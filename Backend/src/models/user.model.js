@@ -66,6 +66,17 @@ const userSchema = new mongoose.Schema(
       default: 'user',
     },
 
+    avatar: {
+      type: String, // data URL (small, size-capped on upload)
+      default: '',
+    },
+
+    preferences: {
+      incidentAlerts: { type: Boolean, default: true },
+      weeklyDigest: { type: Boolean, default: false },
+      securityAlerts: { type: Boolean, default: true },
+    },
+
     isBan: {
       type: Boolean,
       default: false,

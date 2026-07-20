@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
+import { Link } from "react-router-dom";
 import { RiRefreshLine, RiRobot2Line } from '@remixicon/react';
 
 const Incidents = () => {
@@ -76,14 +77,15 @@ const Incidents = () => {
                   <th>Status</th>
                   <th>Triggered</th>
                   <th>Resolved</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.map((inc) => (
                   <tr key={inc._id} className="group hover:bg-[#faf9f5] transition-colors">
                     <td>
-                      <p className="font-semibold text-[#141413]">{inc.monitorTitle || "Unknown Asset"}</p>
-                      <p className="text-xs text-[#6c6a64] mt-1 font-mono uppercase tracking-widest">{inc.monitorUrl || inc.url || "N/A"}</p>
+                      <p className="font-semibold text-[#141413]">{inc.monitorId?.title || inc.monitorId?.url || "Untitled monitor"}</p>
+                      <p className="text-xs text-[#6c6a64] mt-1 font-mono uppercase tracking-widest">{inc.monitorId?.url || "N/A"}</p>
                     </td>
                     <td>
                       <span className={`luxury-badge ${inc.status === 'ONGOING' || inc.status === 'OPEN' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#e6dfd8]/30 text-[#6c6a64]'}`}>
@@ -94,9 +96,17 @@ const Incidents = () => {
                       {new Date(inc.createdAt).toLocaleString()}
                     </td>
                     <td className="text-sm text-[#6c6a64]">
-                      {inc.resolvedAt ? new Date(inc.resolvedAt).toLocaleString() : (
+                      {inc.endTime ? new Date(inc.endTime).toLocaleString() : (
                         <span className="text-[#cc785c] font-medium">Ongoing</span>
                       )}
+                    </td>
+                    <td className="text-right">
+                      <Link
+                        to={`/incidents/${inc._id}`}
+                        className="text-xs font-semibold text-[#cc785c] hover:underline"
+                      >
+                        Details
+                      </Link>
                     </td>
                   </tr>
                 ))}

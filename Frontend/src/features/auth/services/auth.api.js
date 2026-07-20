@@ -56,3 +56,11 @@ return apiRequest({method: "post", url: env.CHANGE_PASSWORD_API, data: passwordD
 export const logout = async () => {
     return apiRequest({method: "post", url: env.LOGOUT_API});
 }
+
+/*
+ * @updateProfile - Updates avatar and/or notification preferences.
+ * @param {Object} data - { avatar?: dataUrl, preferences?: {...} }
+ */
+export const updateProfile = async (data) => {
+    return apiRequest({ method: "patch", url: env.GET_USER_API, data });
+}

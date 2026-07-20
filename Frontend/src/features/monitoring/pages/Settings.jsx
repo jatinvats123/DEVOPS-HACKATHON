@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import {
   RiUserLine,
@@ -10,6 +10,8 @@ import {
   RiMailLine
 } from '@remixicon/react';
 import { useAuth } from '../../auth/hooks/useAuth';
+import { updateProfile } from '../../auth/services/auth.api';
+import { setUser } from '../../auth/state/authSlice';
 import Notification from '../../../components/Notification';
 
 const Settings = () => {
@@ -29,6 +31,80 @@ const Settings = () => {
   });
   
   const { handleChangePassword } = useAuth();
+  const dispatch = useDispatch();
+  const fileRef = useRef(null);
+
+  // Avatar + preferences are persisted via PATCH /api/auth/profile
+  const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [uploading, setUploading] = useState(false);
+  const [prefs, setPrefs] = useState({
+    incidentAlerts: true,
+    weeklyDigest: false,
+    securityAlerts: true,
+  });
+  const [savingPref, setSavingPref] = useState(null);
+
+  useEffect(() => {
+    setAvatar(user?.avatar || '');
+    if (user?.preferences) {
+      setPrefs((p) => ({ ...p, ...user.preferences }));
+    }
+  }, [user]);
+
+  const onAvatarPick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
+      setNotification({ message: 'Please choose a PNG, JPG, WEBP or GIF image.', type: 'error' });
+      return;
+    }
+    if (file.size > 800 * 1024) {
+      setNotification({ message: 'Image is too large. Max size is 800KB.', type: 'error' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read that file'));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await updateProfile({ avatar: dataUrl });
+      setAvatar(res?.data?.avatar || dataUrl);
+      if (res?.data) dispatch(setUser(res.data));
+      setNotification({ message: 'Avatar updated', type: 'success' });
+    } catch (err) {
+      setNotification({
+        message: err.response?.data?.message || err.message || 'Avatar upload failed',
+        type: 'error',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onTogglePref = async (key) => {
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    setSavingPref(key);
+    try {
+      const res = await updateProfile({ preferences: { [key]: next[key] } });
+      if (res?.data) dispatch(setUser(res.data));
+    } catch (err) {
+      setPrefs(prefs); // revert
+      setNotification({
+        message: err.response?.data?.message || 'Failed to save preference',
+        type: 'error',
+      });
+    } finally {
+      setSavingPref(null);
+    }
+  };
 
   const tabs = [
     { id: 'profile', name: 'Profile Account', icon: RiUserLine },
@@ -42,8 +118,10 @@ const Settings = () => {
       return;
     }
     try {
+      // the API expects `oldPassword` — sending `currentPassword` made the
+      // backend see an empty old password and reject with "Invalid password"
       await handleChangePassword({
-        currentPassword: data.currentPassword,
+        oldPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
       reset();
@@ -97,13 +175,53 @@ const Settings = () => {
                 <h3 className="luxury-heading text-2xl mb-12">Personal Details</h3>
                 <div className="space-y-12">
                   <div className="flex items-center gap-12 pb-12 border-b border-[#e6dfd8]">
-                    <div className="w-24 h-24 bg-[#cc785c] rounded-full flex items-center justify-center text-white text-3xl font-medium">
-                      {user?.fullname?.[0] || user?.username?.[0] || '?'}
+                    <div className="w-24 h-24 bg-[#cc785c] rounded-full flex items-center justify-center text-white text-3xl font-medium overflow-hidden">
+                      {avatar ? (
+                        <img
+                          src={avatar}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        user?.fullname?.[0] || user?.username?.[0] || '?'
+                      )}
                     </div>
                     <div>
-                      <button className="luxury-button-outline py-2 px-6 text-xs mb-3">
-                        Upload New Avatar
-                      </button>
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={onAvatarPick}
+                      />
+                      <div className="flex items-center gap-3 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => fileRef.current?.click()}
+                          disabled={uploading}
+                          className="luxury-button-outline py-2 px-6 text-xs disabled:opacity-60"
+                        >
+                          {uploading ? 'Uploading…' : 'Upload New Avatar'}
+                        </button>
+                        {avatar && !uploading && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const res = await updateProfile({ avatar: '' });
+                                setAvatar('');
+                                if (res?.data) dispatch(setUser(res.data));
+                                setNotification({ message: 'Avatar removed', type: 'success' });
+                              } catch {
+                                setNotification({ message: 'Failed to remove avatar', type: 'error' });
+                              }
+                            }}
+                            className="text-xs font-semibold text-[#6c6a64] hover:text-red-600"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       <p className="text-xs text-[#6c6a64]">JPG or PNG. Max size 800KB.</p>
                     </div>
                   </div>
@@ -146,11 +264,11 @@ const Settings = () => {
                 <h3 className="luxury-heading text-2xl mb-12">Dispatch Preferences</h3>
                 <div className="space-y-4">
                   {[
-                    { title: 'Incident Alerts', desc: 'Real-time service outage notifications via email.' },
-                    { title: 'Weekly Digest', desc: 'A summary of your infrastructure performance.' },
-                    { title: 'Security Alerts', desc: 'Notifications about login attempts and API key usage.' },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-8 bg-[#faf9f5] border border-[#e6dfd8] rounded-2xl hover:border-[#cc785c]/30 transition-all">
+                    { key: 'incidentAlerts', title: 'Incident Alerts', desc: 'Real-time service outage notifications via email.' },
+                    { key: 'weeklyDigest', title: 'Weekly Digest', desc: 'A summary of your infrastructure performance.' },
+                    { key: 'securityAlerts', title: 'Security Alerts', desc: 'Notifications about login attempts and API key usage.' },
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-8 bg-[#faf9f5] border border-[#e6dfd8] rounded-2xl hover:border-[#cc785c]/30 transition-all">
                       <div className="flex gap-8 items-center">
                         <RiMailLine className="w-6 h-6 text-[#cc785c]" />
                         <div>
@@ -158,10 +276,16 @@ const Settings = () => {
                           <p className="text-sm text-[#6c6a64] mt-1">{item.desc}</p>
                         </div>
                       </div>
-                      <div className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked={idx === 0} />
+                      <label className={`relative inline-flex items-center cursor-pointer ${savingPref === item.key ? 'opacity-60' : ''}`}>
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={!!prefs[item.key]}
+                          disabled={savingPref === item.key}
+                          onChange={() => onTogglePref(item.key)}
+                        />
                         <div className="w-12 h-6 bg-[#e6dfd8] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#cc785c]"></div>
-                      </div>
+                      </label>
                     </div>
                   ))}
                 </div>

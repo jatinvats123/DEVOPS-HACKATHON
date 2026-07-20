@@ -1,5 +1,5 @@
 import express from 'express';
-import { getIncidentsByMonitorIdController, getAllIncidentsController } from '../controllers/incident.controller.js';
+import { getIncidentsByMonitorIdController, getIncidentByIdController, getAllIncidentsController } from '../controllers/incident.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 const IncidentRouter = express.Router();
 
@@ -15,6 +15,7 @@ IncidentRouter.get('/', verifyJWT, getAllIncidentsController);
 @desc Get incidents for a specific monitor
 @access Private
 */
+IncidentRouter.get('/detail/:incidentId', verifyJWT, getIncidentByIdController);
 IncidentRouter.get('/:monitorId', verifyJWT, getIncidentsByMonitorIdController);
 
 export default IncidentRouter;

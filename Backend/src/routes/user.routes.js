@@ -3,6 +3,7 @@ import {
     loginUser,
     logoutUser,
     getUserProfile,
+    updateProfile,
     verifyUser,
     forgotPassword,
     changePassword,
@@ -77,5 +78,12 @@ authRouter.post("/change-password", verifyJWT, changePassword);
 @access Private
 */
 authRouter.get("/profile", verifyJWT, getUserProfile);
+
+/*
+@route PATCH /api/auth/profile
+@desc Update avatar / notification preferences
+@access Private
+*/
+authRouter.patch("/profile", verifyJWT, updateProfile);
 
 export default authRouter;

@@ -199,3 +199,44 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "Password reset successfully"));
 });
+// Update avatar and/or notification preferences for the signed-in user
+export const updateProfile = asyncHandler(async (req, res) => {
+    const { avatar, preferences } = req.body;
+    const update = {};
+
+    if (typeof avatar === 'string') {
+        if (avatar && !/^data:image\/(png|jpe?g|webp|gif);base64,/.test(avatar)) {
+            throw new ApiError(400, 'Avatar must be a PNG, JPG, WEBP or GIF image');
+        }
+        // ~800KB of raw image is ~1.1MB once base64-encoded
+        if (avatar.length > 1_200_000) {
+            throw new ApiError(400, 'Avatar is too large. Max size is 800KB.');
+        }
+        update.avatar = avatar;
+    }
+
+    if (preferences && typeof preferences === 'object') {
+        for (const key of ['incidentAlerts', 'weeklyDigest', 'securityAlerts']) {
+            if (typeof preferences[key] === 'boolean') {
+                update[`preferences.${key}`] = preferences[key];
+            }
+        }
+    }
+
+    if (Object.keys(update).length === 0) {
+        throw new ApiError(400, 'Nothing to update');
+    }
+
+    const user = await UserService.findUserById(req.user.id);
+    if (!user) throw new ApiError(404, 'User not found');
+
+    const updated = await user.constructor.findByIdAndUpdate(
+        req.user.id,
+        { $set: update },
+        { new: true, runValidators: true }
+    );
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updated, 'Profile updated successfully'));
+});

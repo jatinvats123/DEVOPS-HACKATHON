@@ -3,6 +3,7 @@ import { UserService } from './user.service.js';
 import { analyzeIncident } from './ai.services.js';
 import { sendEmail } from './sendEmail.js';
 import logger from '../config/logger.js';
+import { dispatchToChannels } from './notify.service.js';
 import monitorModel from '../models/monitor.model.js';
 
 export async function createIncident(monitorId, reason) {
@@ -127,6 +128,7 @@ export async function createIncident(monitorId, reason) {
     });
 
     logger.info(`Email sent successfully to user: ${user.email}`);
+    await dispatchToChannels({ userId, monitorId, event: 'CRITICAL_OUTAGE', primaryEmail: user.email });
   } catch (error) {
     logger.error('Error sending incident email:', error);
   }
@@ -256,6 +258,7 @@ export async function resolveIncident(monitorId) {
     });
 
     logger.info(`Resolved email sent successfully to user: ${user.email}`);
+    await dispatchToChannels({ userId, monitorId, event: 'HEALTH_RECOVERY', primaryEmail: user.email });
   } catch (error) {
     logger.error('Error sending incident email:', error);
   }
