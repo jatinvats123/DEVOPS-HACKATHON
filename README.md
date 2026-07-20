@@ -9,7 +9,7 @@
 A comprehensive full-stack web application for monitoring infrastructure, APIs, and services with real-time status tracking, incident management, and centralized logging.
 
 ## 🌐 Live Demo
-**➜ [https://monitoring-production-19a5.up.railway.app/](https://monitoring-production-19a5.up.railway.app/)**
+**➜ [https://monitoring-production-19a5.up.railway.app/](https://watchtower-monitoring.onrender.com)**
 
 > Try the live application deployed on Railway. Register a new account or login to test the monitoring features!
 
