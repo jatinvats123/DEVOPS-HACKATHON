@@ -34,7 +34,7 @@ A comprehensive full-stack web application for monitoring infrastructure, APIs, 
 ## ⚡ Quick Start
 
 ### 1. **Register/Login**
-- Visit [https://monitoring-production-19a5.up.railway.app/](https://monitoring-production-19a5.up.railway.app/)
+- Visit [https://monitoring-production-19a5.up.railway.app/]([https://monitoring-production-19a5.up.railway.app/](https://watchtower-monitoring.onrender.com))
 - Create a new account with your details
 - You'll be automatically logged in and redirected to the dashboard
 
