@@ -17,5 +17,11 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Fetch-on-mount is an intentional, standard pattern throughout this app.
+      'react-hooks/set-state-in-effect': 'off',
+      // Route/store files intentionally export non-component values.
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
 import { selectMonitors, selectLoading, selectError } from "../state/monitor.slice";
 import AddMonitoring from "../components/AddMonitoring";
-import { RiAddLine, RiDeleteBinLine, RiRefreshLine, RiMacbookLine } from "@remixicon/react";
+import { RiAddLine, RiDeleteBinLine, RiRefreshLine } from "@remixicon/react";
 
 const ConfirmDeleteModal = ({ isOpen, monitorName, onConfirm, onCancel, isDeleting }) => {
   if (!isOpen) return null;
@@ -62,8 +62,11 @@ const Monitoring = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  // Load once on mount. handleGetMonitors is re-created each render, so
+  // including it in deps would re-fetch in a loop.
   useEffect(() => {
     handleGetMonitors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const timeAgo = (dateString) => {

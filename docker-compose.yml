@@ -1,18 +1,33 @@
+# Local full-stack run.
+# The frontend is built into Backend/public/dist and served by the backend,
+# so this is a single service (same topology as the Render deployment).
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   backend:
     build: ./Backend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    volumes:
-      - ./Backend:/app
-      - Backend_node_modules:/app/node_modules
-  frontend:
-    build: ./Frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./Frontend:/app
-      - Frontend_node_modules:/app/node_modules
+      - "8000:8000"
+    env_file:
+      - ./Backend/.env
+    environment:
+      # Override so the container talks to the mongo service, not localhost
+      - MONGO_URL=mongodb://mongo:27017/watchtower
+      - NODE_ENV=production
+      - PORT=8000
+      - CORS_ORIGIN=http://localhost:8000
+      - FRONTEND_URL=http://localhost:8000
+    depends_on:
+      - mongo
+
 volumes:
-  Backend_node_modules:
-  Frontend_node_modules:
+  mongo_data:
+# Note: rebuild the SPA into Backend/public/dist before `docker compose up`:
+#   cd Frontend && npm run build && cp -r dist ../Backend/public/dist

@@ -24,11 +24,13 @@ export function initSocket(httpServer) {
     },
   });
 
-  // Authenticate each socket with the same JWT accessToken cookie as the REST API
+  // Authenticate each socket with the same auth cookie the REST API uses
   io.use((socket, next) => {
     try {
+      const cookieHeader = socket.handshake.headers?.cookie;
       const token =
-        getCookie(socket.handshake.headers?.cookie, 'accessToken') ||
+        getCookie(cookieHeader, config.AUTH_COOKIE) ||
+        getCookie(cookieHeader, 'accessToken') || // legacy name
         socket.handshake.auth?.token;
       if (!token) return next(new Error('Unauthorized'));
       socket.user = jwt.verify(token, config.JWT_SECRET);

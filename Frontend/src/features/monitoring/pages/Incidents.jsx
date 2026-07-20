@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
-import { RiAlertLine, RiRefreshLine, RiHistoryLine, RiTimeLine, RiRobot2Line } from '@remixicon/react';
+import { RiRefreshLine, RiRobot2Line } from '@remixicon/react';
 
 const Incidents = () => {
   const [incidents, setIncidents] = useState([]);

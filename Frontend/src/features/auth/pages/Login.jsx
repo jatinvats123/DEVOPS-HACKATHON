@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
-import { RiPulseLine, RiGoogleFill, RiGithubFill } from '@remixicon/react';
+import { RiPulseLine } from '@remixicon/react';
 import '../../../styles/auth.css';
 
 function Login() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
   const { handleLogin } = useAuth();
   const { loading, error, isAuthenticated } = useSelector(state => state.auth);
 

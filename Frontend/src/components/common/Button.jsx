@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 const Button = forwardRef(
   ({ className = '', variant = 'primary', size = 'md', color, disabled, children, ...props }, ref) => {

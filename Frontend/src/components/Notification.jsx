@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const Notification = ({ message, type = 'success', onClose }) => {
   useEffect(() => {

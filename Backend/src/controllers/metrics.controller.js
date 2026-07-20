@@ -4,12 +4,14 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import logger from '../config/logger.js';
+import { assertMonitorOwned } from '../utils/ownership.js';
 import mongoose from 'mongoose';
 
 export const getLatencyMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
+    await assertMonitorOwned(monitorId, req.user?.id);
 
     const logs = await logModel
       .find({ monitorId })
@@ -41,6 +43,8 @@ export const getLatencyMetrics = asyncHandler(async (req, res) => {
     }
     */
   } catch (error) {
+    if (error instanceof ApiError) throw error;
+    logger.error('Latency fetch failed', error);
     throw new ApiError(500, 'Latency fetch failed');
   }
 });
@@ -49,6 +53,7 @@ export const getUptimeMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
+    await assertMonitorOwned(monitorId, req.user?.id);
 
     const result = await logModel.aggregate([
       { $match: { monitorId: new mongoose.Types.ObjectId(monitorId) } },
@@ -90,6 +95,8 @@ export const getUptimeMetrics = asyncHandler(async (req, res) => {
     }
     */
   } catch (error) {
+    if (error instanceof ApiError) throw error;
+    logger.error('Uptime fetch failed', error);
     throw new ApiError(500, 'Uptime fetch failed');
   }
 });
@@ -98,6 +105,7 @@ export const getStatusTimeline = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
+    await assertMonitorOwned(monitorId, req.user?.id);
 
     const logs = await logModel
       .find({ monitorId })
@@ -129,6 +137,8 @@ export const getStatusTimeline = asyncHandler(async (req, res) => {
     }
     */
   } catch (error) {
+    if (error instanceof ApiError) throw error;
+    logger.error('Status timeline fetch failed', error);
     throw new ApiError(500, 'Status timeline fetch failed');
   }
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useMonitors } from "../hooks/useMonitor";
@@ -69,7 +69,7 @@ const Icons = {
 
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
-const Card = ({ title, value, sub, colorClass, icon: Icon }) => (
+const Card = ({ title, value, sub, icon: Icon }) => (
   <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
     <div className="flex justify-between items-start">
       <div>

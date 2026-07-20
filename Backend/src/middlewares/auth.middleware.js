@@ -4,7 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { config } from '../config/config.js';
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
-  const token = req.cookies?.uptimeaitoken;
+  const token = req.cookies?.[config.AUTH_COOKIE];
   if (!token) {
     throw new ApiError(401, 'Unauthorized request');
   }

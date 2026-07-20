@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { RiNotification3Line, RiAddLine } from '@remixicon/react';
 
 const Alerts = () => {

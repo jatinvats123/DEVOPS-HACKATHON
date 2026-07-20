@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSelector } from 'react-redux';
 import { RiNotification3Line, RiMenuLine } from "@remixicon/react";
 

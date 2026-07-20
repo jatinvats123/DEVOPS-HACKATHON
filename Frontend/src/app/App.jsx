@@ -3,7 +3,7 @@ import { Provider, useDispatch } from 'react-redux'
 import { RouterProvider } from 'react-router'
 import { store } from './app.store'
 import { router } from './app.routes'
-import { setUser, setAuthenticated } from '../features/auth/state/authSlice'
+import { setAuthenticated } from '../features/auth/state/authSlice'
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useState } from 'react';
 
@@ -20,7 +20,7 @@ function AppContent() {
         if (response) {
           dispatch(setAuthenticated(true));
         }
-      } catch (err) {
+      } catch {
         console.log('Not authenticated');
       } finally {
         setIsInitializing(false);

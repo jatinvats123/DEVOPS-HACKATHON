@@ -5,8 +5,8 @@ let socket = null;
 
 /**
  * Lazily create the shared Socket.IO connection. Auth is cookie-based
- * (withCredentials), matching the REST API — the JWT accessToken cookie is
- * sent automatically on the handshake.
+ * (withCredentials), matching the REST API — the JWT auth cookie is sent
+ * automatically on the handshake.
  */
 export const getSocket = () => {
   if (!socket) {

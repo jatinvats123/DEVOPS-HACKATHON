@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet } from 'react-router';
 import Sidebar from '../features/monitoring/components/Sidebar';
 import AddMonitoring from '../features/monitoring/components/AddMonitoring';

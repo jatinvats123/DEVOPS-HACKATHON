@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
 import { setUser, setAuthenticated } from '../state/authSlice';
-import { RiPulseLine, RiGoogleFill, RiGithubFill, RiArrowLeftLine } from '@remixicon/react';
+import { RiPulseLine, RiArrowLeftLine } from '@remixicon/react';
 import '../../../styles/auth.css';
 
 function Register() {

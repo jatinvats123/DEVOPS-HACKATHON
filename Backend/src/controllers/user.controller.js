@@ -41,7 +41,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     return res
         .status(201)
-        .cookie("uptimeaitoken", accessToken, options)
+        .cookie(config.AUTH_COOKIE, accessToken, options)
         .json(
             new ApiResponse(201, { user: createdUser, token: accessToken }, "User registered successfully")
         );
@@ -79,7 +79,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         secure: config.NODE_ENV === "production",
         sameSite: "strict"
     };
-    res.cookie("uptimeaitoken", accessToken, options)
+    res.cookie(config.AUTH_COOKIE, accessToken, options)
     return res
         .status(200)
         .json(
@@ -95,7 +95,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
     };
     return res
         .status(200)
-        .clearCookie("uptimeaitoken", options)
+        .clearCookie(config.AUTH_COOKIE, options)
         .json(new ApiResponse(200, {}, "User logged out"));
 });
 

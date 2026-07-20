@@ -1,41 +1,38 @@
 import incidentModel from '../models/incidents.model.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { assertMonitorOwned, getUserMonitorIds } from '../utils/ownership.js';
 
-// Get all incidents for dashboard
-export const getAllIncidentsController = async (req, res) => {
-  try {
+// Recent incidents across the authenticated user's own monitors
+export const getAllIncidentsController = asyncHandler(async (req, res) => {
+  const monitorIds = await getUserMonitorIds(req.user?.id);
+
+  const incidents = await incidentModel
+    .find({ monitorId: { $in: monitorIds } })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .populate('monitorId', 'url type title');
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, incidents, 'Incidents fetched successfully'));
+});
+
+// Incidents for one monitor — only if the requester owns it.
+// NOTE: previously used findById(monitorId), which looked up an *incident*
+// by a *monitor* id and therefore never returned the right data.
+export const getIncidentsByMonitorIdController = asyncHandler(
+  async (req, res) => {
+    const { monitorId } = req.params;
+    await assertMonitorOwned(monitorId, req.user?.id);
+
     const incidents = await incidentModel
-      .find()
+      .find({ monitorId })
       .sort({ createdAt: -1 })
-      .limit(10)
-      .populate('monitorId', 'url type name');
+      .populate('monitorId', 'url type title');
 
-
-    res.status(200).json({
-      message: 'Incidents fetched successfully',
-      success: true,
-      data: incidents,
-    });
-  } catch (error) {
-    console.error('Error fetching incidents:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    res
+      .status(200)
+      .json(new ApiResponse(200, incidents, 'Incidents fetched successfully'));
   }
-};
-
-export const getIncidentsByMonitorIdController = async (req, res) => {
-  const monitorId = req.params.monitorId;
-
-  try {
-    const incidents = await incidentModel
-      .findById(monitorId)
-      .populate('monitorId', 'url type');
-
-    res.status(200).json({
-      message: 'Incidents fetched successfully',
-      success: true,
-      data: incidents,
-    });
-  } catch (error) {
-    console.error(`Error fetching incidents for monitor ${monitorId}:`, error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
+);

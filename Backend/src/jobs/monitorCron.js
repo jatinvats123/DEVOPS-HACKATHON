@@ -31,6 +31,10 @@ export async function startMonitorCron() {
     if (isRunning) return;
     isRunning = true;
 
+    // Wrapped in try/finally: if anything throws (e.g. a DB blip), isRunning
+    // must still reset or the cron would stay "locked" and monitoring would
+    // silently stop forever.
+    try {
     logger.info(
       `Running monitor checks at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
     );
@@ -41,7 +45,6 @@ export async function startMonitorCron() {
       logger.info(
         'No monitors found to check. please add some monitors to start monitoring.'
       );
-      isRunning = false;
       return;
     }
     await Promise.all(
@@ -120,6 +123,10 @@ export async function startMonitorCron() {
         }
       })
     );
-    isRunning = false;
+    } catch (error) {
+      logger.error('Monitor cron run failed:', error);
+    } finally {
+      isRunning = false;
+    }
   });
 }
