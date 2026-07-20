@@ -1,7 +1,8 @@
 import { register, login, getUserProfile, forgotPassword, changePassword, logout } from "../services/auth.api";
 import { verifyOtp } from "../services/asyncThunk.api";
 import { useDispatch } from "react-redux";
-import { setLoading, setError, setUserId, setOtpSent, setUser, setAuthenticated } from "../state/authSlice";
+import { setLoading, setError, setUserId, setOtpSent, setUser, setAuthenticated, clearAuthState } from "../state/authSlice";
+import { disconnectSocket } from "../../../lib/socket/socket";
 
 
 export const useAuth = () => {
@@ -125,8 +126,10 @@ export const useAuth = () => {
             console.error("Logout failed", error);
         } finally {
             dispatch(setLoading(false));
-            dispatch(setUser(null));
-            dispatch(setAuthenticated(false));
+            // Drop the realtime connection and wipe ALL cached state so the
+            // next account signing in on this tab cannot see previous data.
+            disconnectSocket();
+            dispatch(clearAuthState());
         }
     };
 
