@@ -1,5 +1,8 @@
 import express from 'express';
-import { monitorLogsByIdController, getAllLogsController } from '../controllers/logs.controller.js';
+import {
+  monitorLogsByIdController,
+  getAllLogsController,
+} from '../controllers/logs.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 const LogsRouter = express.Router();
 

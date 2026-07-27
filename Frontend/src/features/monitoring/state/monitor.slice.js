@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   monitors: [],
@@ -8,7 +8,7 @@ const initialState = {
 };
 
 const monitorSlice = createSlice({
-  name: "monitor",
+  name: 'monitor',
   initialState,
   reducers: {
     setLoading: (state, action) => {
@@ -39,7 +39,7 @@ const monitorSlice = createSlice({
       // Find monitor by _id and update status and lastChecked
       const { _id, status, lastChecked } = action.payload;
       const monitor = state.monitors.find((m) => m._id === _id);
-      
+
       if (monitor) {
         if (status !== undefined) monitor.status = status;
         if (lastChecked !== undefined) monitor.lastChecked = lastChecked;

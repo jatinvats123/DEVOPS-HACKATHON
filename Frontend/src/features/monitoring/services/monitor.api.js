@@ -1,16 +1,13 @@
-import { env } from "../../../config/env.js";
-import { apiRequest } from "../../../lib/api/apiRequest.js";
+import { env } from '../../../config/env.js';
+import { apiRequest } from '../../../lib/api/apiRequest.js';
 
-
-/* 
+/*
  *@createMonitoring - Creates a new monitor with the provided data.
  * @param {object} monitorData - The data for the new monitor, including URL, type, and frequency.
  */
 
-
-
 export const createMonitoring = async (monitorData) => {
-  return apiRequest("post", env.CREATE_MONITORING_API, monitorData);
+  return apiRequest('post', env.CREATE_MONITORING_API, monitorData);
 };
 
 /*
@@ -18,7 +15,7 @@ export const createMonitoring = async (monitorData) => {
  */
 export const getMonitors = async () => {
   // return apiRequest("get", env.CREATE_MONITORING_API);
-  const data = await apiRequest("get", env.CREATE_MONITORING_API);
+  const data = await apiRequest('get', env.CREATE_MONITORING_API);
   return data;
 };
 
@@ -28,5 +25,5 @@ export const getMonitors = async () => {
  */
 
 export const deleteMonitor = async (monitorId) => {
-  return apiRequest("delete", `${env.CREATE_MONITORING_API}/${monitorId}`);
+  return apiRequest('delete', `${env.CREATE_MONITORING_API}/${monitorId}`);
 };

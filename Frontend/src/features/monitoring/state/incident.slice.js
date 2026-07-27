@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   incidents: [],
@@ -8,7 +8,7 @@ const initialState = {
 };
 
 const incidentSlice = createSlice({
-  name: "incident",
+  name: 'incident',
   initialState,
   reducers: {
     setIncidentLoading: (state, action) => {

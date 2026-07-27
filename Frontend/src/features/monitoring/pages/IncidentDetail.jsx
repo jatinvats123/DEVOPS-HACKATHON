@@ -55,7 +55,10 @@ const IncidentDetail = () => {
       ) : error ? (
         <div className="p-8 bg-red-50 border border-red-100 rounded-2xl">
           <p className="text-sm text-red-700 mb-4">{error}</p>
-          <button onClick={load} className="luxury-button-outline flex items-center gap-2">
+          <button
+            onClick={load}
+            className="luxury-button-outline flex items-center gap-2"
+          >
             <RiRefreshLine className="w-4 h-4" /> Try again
           </button>
         </div>

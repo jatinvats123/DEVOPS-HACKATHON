@@ -127,7 +127,12 @@ export async function createIncident(monitorId, reason) {
     });
 
     logger.info(`Email sent successfully to user: ${user.email}`);
-    await dispatchToChannels({ userId, monitorId, event: 'CRITICAL_OUTAGE', primaryEmail: user.email });
+    await dispatchToChannels({
+      userId,
+      monitorId,
+      event: 'CRITICAL_OUTAGE',
+      primaryEmail: user.email,
+    });
   } catch (error) {
     logger.error('Error sending incident email:', error);
   }
@@ -257,7 +262,12 @@ export async function resolveIncident(monitorId) {
     });
 
     logger.info(`Resolved email sent successfully to user: ${user.email}`);
-    await dispatchToChannels({ userId, monitorId, event: 'HEALTH_RECOVERY', primaryEmail: user.email });
+    await dispatchToChannels({
+      userId,
+      monitorId,
+      event: 'HEALTH_RECOVERY',
+      primaryEmail: user.email,
+    });
   } catch (error) {
     logger.error('Error sending incident email:', error);
   }

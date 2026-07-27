@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { Provider, useDispatch } from 'react-redux'
-import { RouterProvider } from 'react-router'
-import { store } from './app.store'
-import { router } from './app.routes'
-import { setAuthenticated } from '../features/auth/state/authSlice'
+import { Provider, useDispatch } from 'react-redux';
+import { RouterProvider } from 'react-router';
+import { store } from './app.store';
+import { router } from './app.routes';
+import { setAuthenticated } from '../features/auth/state/authSlice';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useState } from 'react';
 
@@ -31,12 +31,14 @@ function AppContent() {
   }, [dispatch, handleGetUserProfile]);
 
   if (isInitializing) {
-    return <div className="h-screen w-screen flex items-center justify-center bg-[#faf9f5]">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
-    </div>;
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#faf9f5]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
+      </div>
+    );
   }
 
-  return <RouterProvider router={router} />
+  return <RouterProvider router={router} />;
 }
 
 const App = () => {
@@ -44,7 +46,7 @@ const App = () => {
     <Provider store={store}>
       <AppContent />
     </Provider>
-  )
-}
+  );
+};
 
-export default App
+export default App;

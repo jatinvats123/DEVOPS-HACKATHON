@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from "react-router";
-import { useSelector } from "react-redux";
+import { NavLink, useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 import {
   RiDashboardLine,
   RiMacbookLine,
@@ -8,9 +8,9 @@ import {
   RiHeartPulseLine,
   RiSettings4Line,
   RiPulseLine,
-  RiLogoutBoxLine
-} from "@remixicon/react";
-import { useAuth } from "../../auth/hooks/useAuth";
+  RiLogoutBoxLine,
+} from '@remixicon/react';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -18,14 +18,13 @@ const Sidebar = () => {
   const { handleLogout } = useAuth();
 
   const menuItems = [
-    { name: "Dashboard", icon: RiDashboardLine, path: "/dashboard" },
-    { name: "Monitors", icon: RiMacbookLine, path: "/monitors" },
-    { name: "Incidents", icon: RiAlertLine, path: "/incidents" },
-    { name: "Alerts", icon: RiNotification3Line, path: "/alerts" },
-    { name: "Status Pages", icon: RiHeartPulseLine, path: "/status-pages" },
-    { name: "Settings", icon: RiSettings4Line, path: "/settings" },
+    { name: 'Dashboard', icon: RiDashboardLine, path: '/dashboard' },
+    { name: 'Monitors', icon: RiMacbookLine, path: '/monitors' },
+    { name: 'Incidents', icon: RiAlertLine, path: '/incidents' },
+    { name: 'Alerts', icon: RiNotification3Line, path: '/alerts' },
+    { name: 'Status Pages', icon: RiHeartPulseLine, path: '/status-pages' },
+    { name: 'Settings', icon: RiSettings4Line, path: '/settings' },
   ];
-
 
   const handleLogoutClick = () => {
     handleLogout();
@@ -47,9 +46,8 @@ const Sidebar = () => {
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `group flex items-center gap-4 luxury-sidebar-item ${isActive
-                ? "active"
-                : ""
+              `group flex items-center gap-4 luxury-sidebar-item ${
+                isActive ? 'active' : ''
               }`
             }
           >
@@ -65,7 +63,9 @@ const Sidebar = () => {
             {user?.fullname?.[0] || user?.username?.[0] || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#141413] truncate">{user?.fullname || user?.username}</p>
+            <p className="text-sm font-medium text-[#141413] truncate">
+              {user?.fullname || user?.username}
+            </p>
             <p className="text-[11px] text-[#6c6a64] truncate">Free Plan</p>
           </div>
           <button

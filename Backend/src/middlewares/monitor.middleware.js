@@ -34,7 +34,9 @@ export const validate = (schema) => (req, res, next) => {
         success: false,
         message: 'Validation failed',
         errors: issues.map((e) => ({
-          field: Array.isArray(e.path) ? e.path.join('.') : String(e.path ?? ''),
+          field: Array.isArray(e.path)
+            ? e.path.join('.')
+            : String(e.path ?? ''),
           message: e.message,
         })),
       });

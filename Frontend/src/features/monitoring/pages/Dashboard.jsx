@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { useMonitors } from "../hooks/useMonitor";
-import { selectMonitors, selectLoading } from "../state/monitor.slice";
-import { getAllIncidents } from "../services/incident.api";
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useMonitors } from '../hooks/useMonitor';
+import { selectMonitors, selectLoading } from '../state/monitor.slice';
+import { getAllIncidents } from '../services/incident.api';
 import {
   AreaChart,
   Area,
@@ -15,7 +15,7 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
+} from 'recharts';
 import {
   RiPulseLine,
   RiDashboardLine,
@@ -33,17 +33,17 @@ import {
   RiCloseCircleLine,
   RiMoreFill,
   RiComputerLine,
-} from "@remixicon/react";
+} from '@remixicon/react';
 
 // ─── SAMPLE DATA & ICONS ───────────────────────────────────────────────────
 const uptimeData = [
-  { time: "May 12", val: 99.5 },
-  { time: "May 13", val: 99.2 },
-  { time: "May 14", val: 97.8 },
-  { time: "May 15", val: 98.0 },
-  { time: "May 16", val: 99.3 },
-  { time: "May 17", val: 99.5 },
-  { time: "May 18", val: 99.7 },
+  { time: 'May 12', val: 99.5 },
+  { time: 'May 13', val: 99.2 },
+  { time: 'May 14', val: 97.8 },
+  { time: 'May 15', val: 98.0 },
+  { time: 'May 16', val: 99.3 },
+  { time: 'May 17', val: 99.5 },
+  { time: 'May 18', val: 99.7 },
 ];
 
 const Icons = {
@@ -74,12 +74,8 @@ const Card = ({ title, value, sub, icon: Icon }) => (
     <div className="flex justify-between items-start">
       <div>
         <h3 className="luxury-label mb-4">{title}</h3>
-        <span className="text-4xl luxury-heading">
-          {value}
-        </span>
-        {sub && (
-          <p className="luxury-subtext mt-4">{sub}</p>
-        )}
+        <span className="text-4xl luxury-heading">{value}</span>
+        {sub && <p className="luxury-subtext mt-4">{sub}</p>}
       </div>
       <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
         <Icon />
@@ -131,9 +127,7 @@ const UptimeOverview = () => {
   return (
     <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm">
       <div className="flex items-center justify-between mb-10">
-        <h2 className="luxury-heading text-xl">
-          Performance History
-        </h2>
+        <h2 className="luxury-heading text-xl">Performance History</h2>
         <select className="luxury-label bg-transparent border border-[#e6dfd8] rounded-md px-2 py-1 outline-none cursor-pointer">
           <option>Last 7 Days</option>
           <option>Last 30 Days</option>
@@ -154,24 +148,24 @@ const UptimeOverview = () => {
               dataKey="time"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
+              tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
               dy={15}
             />
             <YAxis
-              domain={["dataMin - 1", 100]}
+              domain={['dataMin - 1', 100]}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6c6a64", fontSize: 11, fontFamily: 'Inter' }}
+              tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
               tickFormatter={(val) => `${val}%`}
             />
             <Tooltip
               contentStyle={{
-                borderRadius: "8px",
-                border: "1px solid #e6dfd8",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                borderRadius: '8px',
+                border: '1px solid #e6dfd8',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                 fontFamily: 'Inter',
                 fontSize: '12px',
-                backgroundColor: '#fff'
+                backgroundColor: '#fff',
               }}
             />
             <Area
@@ -193,28 +187,26 @@ const UptimeOverview = () => {
 
 const StatusDistribution = ({ monitors = [] }) => {
   const up = monitors.filter(
-    (m) => (m.status || "").toUpperCase() === "UP",
+    (m) => (m.status || '').toUpperCase() === 'UP'
   ).length;
   const down = monitors.filter(
-    (m) => (m.status || "").toUpperCase() === "DOWN",
+    (m) => (m.status || '').toUpperCase() === 'DOWN'
   ).length;
   const paused = monitors.filter(
-    (m) => (m.status || "").toUpperCase() === "PAUSED",
+    (m) => (m.status || '').toUpperCase() === 'PAUSED'
   ).length;
   const total = monitors.length || 1;
   const uptimePct = ((up / total) * 100).toFixed(0);
 
   const dynamicPieData = [
-    { name: "Up", value: up, fill: "#cc785c" },
-    { name: "Down", value: down, fill: "#3d3d3a" },
-    { name: "Paused", value: paused, fill: "#e6dfd8" },
+    { name: 'Up', value: up, fill: '#cc785c' },
+    { name: 'Down', value: down, fill: '#3d3d3a' },
+    { name: 'Paused', value: paused, fill: '#e6dfd8' },
   ];
 
   return (
     <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
-      <h2 className="luxury-heading text-xl mb-10">
-        Asset Distribution
-      </h2>
+      <h2 className="luxury-heading text-xl mb-10">Asset Distribution</h2>
       <div className="flex-1 relative flex items-center justify-center ">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -237,10 +229,10 @@ const StatusDistribution = ({ monitors = [] }) => {
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-4xl luxury-heading text-[#cc785c]">{uptimePct}%</span>
-          <span className="luxury-label mt-1">
-            Uptime
+          <span className="text-4xl luxury-heading text-[#cc785c]">
+            {uptimePct}%
           </span>
+          <span className="luxury-label mt-1">Uptime</span>
         </div>
       </div>
       <div className="flex flex-col gap-4 mt-8">
@@ -279,11 +271,11 @@ const AllMonitors = ({ monitors = [] }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedMonitors = validMonitors.slice(
     startIndex,
-    startIndex + itemsPerPage,
+    startIndex + itemsPerPage
   );
 
   const timeAgo = (dateString) => {
-    if (!dateString) return "Just now";
+    if (!dateString) return 'Just now';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
     const seconds = Math.floor((new Date() - date) / 1000);
@@ -299,9 +291,7 @@ const AllMonitors = ({ monitors = [] }) => {
   return (
     <div className="bg-white border border-gray-100 p-8">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="luxury-heading text-base">
-          System Registry
-        </h2>
+        <h2 className="luxury-heading text-base">System Registry</h2>
       </div>
 
       <div className="overflow-x-auto">
@@ -320,15 +310,19 @@ const AllMonitors = ({ monitors = [] }) => {
               <tr key={m._id || i}>
                 <td>
                   <p className="font-medium text-black">{m.title}</p>
-                  <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">{m.url}</p>
+                  <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">
+                    {m.url}
+                  </p>
                 </td>
                 <td>
-                  <span className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}>
+                  <span
+                    className={`text-[10px] font-bold tracking-widest uppercase ${m.status === 'UP' ? 'text-black' : 'text-gray-400'}`}
+                  >
                     {m.status}
                   </span>
                 </td>
                 <td className="text-[12px] font-light uppercase tracking-tight">
-                  {m.type || "Website"}
+                  {m.type || 'Website'}
                 </td>
                 <td className="text-[12px] text-gray-400">
                   {timeAgo(m.lastChecked)}
@@ -351,7 +345,9 @@ const AllMonitors = ({ monitors = [] }) => {
 
       <div className="mt-10 flex items-center justify-between">
         <span className="luxury-label">
-          {startIndex + 1} — {Math.min(startIndex + itemsPerPage, validMonitors.length)} / {validMonitors.length}
+          {startIndex + 1} —{' '}
+          {Math.min(startIndex + itemsPerPage, validMonitors.length)} /{' '}
+          {validMonitors.length}
         </span>
         <div className="flex items-center gap-8">
           <button
@@ -378,9 +374,7 @@ const RecentIncidents = ({ incidents = [] }) => {
   if (incidents.length === 0) {
     return (
       <div className="bg-white border border-gray-100 p-8">
-        <h2 className="luxury-heading text-base mb-8">
-          Incident Journal
-        </h2>
+        <h2 className="luxury-heading text-base mb-8">Incident Journal</h2>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="luxury-subtext">Record is clear</p>
         </div>
@@ -391,10 +385,11 @@ const RecentIncidents = ({ incidents = [] }) => {
   return (
     <div className="bg-white border border-gray-100 p-8">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="luxury-heading text-base">
-          Incident Journal
-        </h2>
-        <Link to="/incidents" className="luxury-label hover:text-black transition-colors">
+        <h2 className="luxury-heading text-base">Incident Journal</h2>
+        <Link
+          to="/incidents"
+          className="luxury-label hover:text-black transition-colors"
+        >
           View All
         </Link>
       </div>
@@ -406,10 +401,10 @@ const RecentIncidents = ({ incidents = [] }) => {
           >
             <div className="flex items-start justify-between mb-2">
               <h4 className="text-[13px] font-medium text-black">
-                {inc.monitorTitle || inc.name || "Unknown Asset"}
+                {inc.monitorTitle || inc.name || 'Unknown Asset'}
               </h4>
               <span
-                className={`luxury-label text-[9px] ${inc.status === "ONGOING" || inc.status === "OPEN" ? "text-black" : "text-gray-400"}`}
+                className={`luxury-label text-[9px] ${inc.status === 'ONGOING' || inc.status === 'OPEN' ? 'text-black' : 'text-gray-400'}`}
               >
                 {inc.status}
               </span>
@@ -449,7 +444,7 @@ const Dashboard = () => {
           setIncidents(res.data);
         }
       } catch (err) {
-        console.error("Failed to fetch incidents:", err);
+        console.error('Failed to fetch incidents:', err);
       }
     };
 
@@ -458,13 +453,13 @@ const Dashboard = () => {
   }, []);
 
   const up = monitors.filter((m) => {
-    const s = (m.status || "").toUpperCase();
-    return s === "UP" || s === "HEALTHY";
+    const s = (m.status || '').toUpperCase();
+    return s === 'UP' || s === 'HEALTHY';
   }).length;
 
   const down = monitors.filter((m) => {
-    const s = (m.status || "").toUpperCase();
-    return s === "DOWN" || s === "FAILING";
+    const s = (m.status || '').toUpperCase();
+    return s === 'DOWN' || s === 'FAILING';
   }).length;
 
   const stats = {
@@ -474,7 +469,7 @@ const Dashboard = () => {
     uptime:
       monitors.length > 0
         ? `${((up / monitors.length) * 100).toFixed(2)}%`
-        : "100%",
+        : '100%',
   };
 
   return (
@@ -499,27 +494,40 @@ const Dashboard = () => {
         <div className="xl:col-span-4 flex flex-col gap-12">
           {/* Quick Navigation Section */}
           <div className="bg-white border border-gray-100 p-8">
-            <h2 className="luxury-heading text-base mb-8">
-              Quick Links
-            </h2>
+            <h2 className="luxury-heading text-base mb-8">Quick Links</h2>
             <div className="grid grid-cols-1 gap-2">
-              <Link to="/monitors" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link
+                to="/monitors"
+                className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all"
+              >
                 <Icons.Monitors />
                 <span>Monitors</span>
               </Link>
-              <Link to="/incidents" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link
+                to="/incidents"
+                className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all"
+              >
                 <Icons.Incidents />
                 <span>Incidents</span>
               </Link>
-              <Link to="/alerts" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link
+                to="/alerts"
+                className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all"
+              >
                 <Icons.Alerts />
                 <span>Alerts</span>
               </Link>
-              <Link to="/status-pages" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link
+                to="/status-pages"
+                className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all"
+              >
                 <Icons.Status />
                 <span>Status</span>
               </Link>
-              <Link to="/settings" className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all">
+              <Link
+                to="/settings"
+                className="luxury-sidebar-item border border-gray-50 flex items-center gap-4 hover:border-black transition-all"
+              >
                 <Icons.Settings />
                 <span>Settings</span>
               </Link>

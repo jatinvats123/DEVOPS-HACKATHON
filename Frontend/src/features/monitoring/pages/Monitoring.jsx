@@ -1,11 +1,21 @@
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useMonitors } from "../hooks/useMonitor";
-import { selectMonitors, selectLoading, selectError } from "../state/monitor.slice";
-import AddMonitoring from "../components/AddMonitoring";
-import { RiAddLine, RiDeleteBinLine, RiRefreshLine } from "@remixicon/react";
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useMonitors } from '../hooks/useMonitor';
+import {
+  selectMonitors,
+  selectLoading,
+  selectError,
+} from '../state/monitor.slice';
+import AddMonitoring from '../components/AddMonitoring';
+import { RiAddLine, RiDeleteBinLine, RiRefreshLine } from '@remixicon/react';
 
-const ConfirmDeleteModal = ({ isOpen, monitorName, onConfirm, onCancel, isDeleting }) => {
+const ConfirmDeleteModal = ({
+  isOpen,
+  monitorName,
+  onConfirm,
+  onCancel,
+  isDeleting,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -14,7 +24,9 @@ const ConfirmDeleteModal = ({ isOpen, monitorName, onConfirm, onCancel, isDeleti
         <div className="p-10">
           <h2 className="luxury-heading text-2xl mb-4">Are you sure?</h2>
           <p className="text-[#6c6a64] text-sm mb-10 leading-relaxed">
-            Removing <span className="text-[#141413] font-medium">"{monitorName}"</span> from the registry will permanently delete its history.
+            Removing{' '}
+            <span className="text-[#141413] font-medium">"{monitorName}"</span>{' '}
+            from the registry will permanently delete its history.
           </p>
           <div className="flex flex-col gap-3">
             <button
@@ -22,7 +34,7 @@ const ConfirmDeleteModal = ({ isOpen, monitorName, onConfirm, onCancel, isDeleti
               disabled={isDeleting}
               className="luxury-button-primary w-full"
             >
-              {isDeleting ? "Deleting..." : "Delete Asset"}
+              {isDeleting ? 'Deleting...' : 'Delete Asset'}
             </button>
             <button
               onClick={onCancel}
@@ -58,7 +70,11 @@ const Monitoring = () => {
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, monitorId: null, monitorName: null });
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    monitorId: null,
+    monitorName: null,
+  });
   const [isDeleting, setIsDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -70,7 +86,7 @@ const Monitoring = () => {
   }, []);
 
   const timeAgo = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
     const seconds = Math.floor((new Date() - date) / 1000);
@@ -95,7 +111,7 @@ const Monitoring = () => {
       setSuccessMessage(`Registry entry removed successfully`);
       setDeleteConfirm({ isOpen: false, monitorId: null, monitorName: null });
     } catch (err) {
-      console.error("Delete error:", err);
+      console.error('Delete error:', err);
       setDeleteConfirm({ isOpen: false, monitorId: null, monitorName: null });
     } finally {
       setIsDeleting(false);
@@ -110,9 +126,7 @@ const Monitoring = () => {
     <div className="flex-1 overflow-y-auto p-12 luxury-container">
       <div className="flex items-center justify-between mb-16">
         <div>
-          <h1 className="luxury-heading text-4xl">
-            Registry
-          </h1>
+          <h1 className="luxury-heading text-4xl">Registry</h1>
           <p className="luxury-subtext mt-3 max-w-md">
             Manage your infrastructure monitoring assets and service endpoints.
           </p>
@@ -133,15 +147,15 @@ const Monitoring = () => {
 
       <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-10 overflow-hidden">
         <div className="flex items-center justify-between mb-12">
-          <h2 className="luxury-heading text-2xl">
-            Current Assets
-          </h2>
+          <h2 className="luxury-heading text-2xl">Current Assets</h2>
           <button
             onClick={() => handleGetMonitors()}
             className="text-[#6c6a64] hover:text-[#cc785c] transition-colors"
             disabled={loading}
           >
-            <RiRefreshLine className={`w-6 h-6 ${loading ? "animate-spin text-[#cc785c]" : ""}`} />
+            <RiRefreshLine
+              className={`w-6 h-6 ${loading ? 'animate-spin text-[#cc785c]' : ''}`}
+            />
           </button>
         </div>
 
@@ -152,7 +166,9 @@ const Monitoring = () => {
             </div>
           ) : !monitors || monitors.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-center">
-              <p className="luxury-subtext mb-10 text-lg">Registry is currently empty</p>
+              <p className="luxury-subtext mb-10 text-lg">
+                Registry is currently empty
+              </p>
               <button
                 onClick={() => setIsAddOpen(true)}
                 className="luxury-button-outline px-10"
@@ -172,7 +188,10 @@ const Monitoring = () => {
               </thead>
               <tbody>
                 {monitors.map((m) => (
-                  <tr key={m._id || m.id} className="group hover:bg-[#faf9f5] transition-colors">
+                  <tr
+                    key={m._id || m.id}
+                    className="group hover:bg-[#faf9f5] transition-colors"
+                  >
                     <td>
                       <p className="font-semibold text-[#141413]">
                         {m.title || m.name}
@@ -182,8 +201,10 @@ const Monitoring = () => {
                       </p>
                     </td>
                     <td>
-                      <span className={`luxury-badge ${m.status === 'UP' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#3d3d3a]/10 text-[#3d3d3a]'}`}>
-                        {m.status || "PENDING"}
+                      <span
+                        className={`luxury-badge ${m.status === 'UP' ? 'bg-[#cc785c]/10 text-[#cc785c]' : 'bg-[#3d3d3a]/10 text-[#3d3d3a]'}`}
+                      >
+                        {m.status || 'PENDING'}
                       </span>
                     </td>
                     <td className="text-sm text-[#6c6a64]">
@@ -191,7 +212,9 @@ const Monitoring = () => {
                     </td>
                     <td className="text-right">
                       <button
-                        onClick={() => handleDeleteClick(m._id || m.id, m.title || m.name)}
+                        onClick={() =>
+                          handleDeleteClick(m._id || m.id, m.title || m.name)
+                        }
                         className="text-[#e6dfd8] group-hover:text-[#cc785c] transition-colors p-2"
                         disabled={isDeleting}
                       >

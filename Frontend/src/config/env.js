@@ -33,57 +33,57 @@ const HEALTH_API = import.meta.env.VITE_HEALTH_API;
 
 // Validate environment variables
 if (!BACKEND_URL) {
-  throw new Error("BACKEND_URL is not defined in the environment variables");
+  throw new Error('BACKEND_URL is not defined in the environment variables');
 }
 
 if (!REGISTER_API) {
-  throw new Error("REGISTER_API is not defined in the environment variables");
+  throw new Error('REGISTER_API is not defined in the environment variables');
 }
 
 if (!LOGIN_API) {
-  throw new Error("LOGIN_API is not defined in the environment variables");
+  throw new Error('LOGIN_API is not defined in the environment variables');
 }
 
 if (!GET_USER_API) {
-  throw new Error("GET_USER_API is not defined in the environment variables");
+  throw new Error('GET_USER_API is not defined in the environment variables');
 }
 
 if (!FORGOT_PASSWORD_API) {
   throw new Error(
-    "FORGOT_PASSWORD_API is not defined in the environment variables",
+    'FORGOT_PASSWORD_API is not defined in the environment variables'
   );
 }
 
 if (!CHANGE_PASSWORD_API) {
   throw new Error(
-    "CHANGE_PASSWORD_API is not defined in the environment variables",
+    'CHANGE_PASSWORD_API is not defined in the environment variables'
   );
 }
 
 if (!INCIDENTS_API) {
-  throw new Error("INCIDENTS_API is not defined in the environment variables");
+  throw new Error('INCIDENTS_API is not defined in the environment variables');
 }
 
 if (!LOGS_API) {
-  throw new Error("LOGS_API is not defined in the environment variables");
+  throw new Error('LOGS_API is not defined in the environment variables');
 }
 
 if (!CREATE_MONITORING_API) {
   throw new Error(
-    "CREATE_MONITORING_API is not defined in the environment variables",
+    'CREATE_MONITORING_API is not defined in the environment variables'
   );
 }
 
 if (!GET_LOGS_API) {
-  throw new Error("GET_LOGS_API is not defined in the environment variables");
+  throw new Error('GET_LOGS_API is not defined in the environment variables');
 }
 
 if (!HEALTH_API) {
-  throw new Error("HEALTH_API is not defined in the environment variables");
+  throw new Error('HEALTH_API is not defined in the environment variables');
 }
 
 if (!LOGS_API) {
-  throw new Error("LOGS_API is not defined in the environment variables");
+  throw new Error('LOGS_API is not defined in the environment variables');
 }
 // Export the environment variables as a config object
 export const env = {
@@ -98,5 +98,5 @@ export const env = {
   GET_LOGS_API,
   HEALTH_API,
   LOGS_API,
-  LOGOUT_API: "/api/auth/logout",
+  LOGOUT_API: '/api/auth/logout',
 };

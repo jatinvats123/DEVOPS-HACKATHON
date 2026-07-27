@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   logs: [],
@@ -9,7 +9,7 @@ const initialState = {
 };
 
 const logSlice = createSlice({
-  name: "log",
+  name: 'log',
   initialState,
   reducers: {
     setLogsLoading: (state, action) => {

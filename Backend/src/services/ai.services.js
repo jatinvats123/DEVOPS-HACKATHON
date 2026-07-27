@@ -88,7 +88,10 @@ Rules:
  * @param {(chunk: string) => void} onChunk - called for each streamed text chunk
  * @returns {Promise<string>} the full reply
  */
-export const streamAssistantReply = async ({ message, history = [] }, onChunk) => {
+export const streamAssistantReply = async (
+  { message, history = [] },
+  onChunk
+) => {
   const messages = [new SystemMessage(assistantSystemPrompt)];
 
   for (const h of history) {

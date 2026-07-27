@@ -1,4 +1,3 @@
-
 import { apiRequest } from '../../../lib/api/apiRequest.js';
 import { env } from '../../../config/env.js';
 
@@ -8,7 +7,7 @@ import { env } from '../../../config/env.js';
 export const getAllLogs = async () => {
   return apiRequest({
     method: 'get',
-    url: env.LOGS_API
+    url: env.LOGS_API,
   });
 };
 
@@ -19,6 +18,6 @@ export const getAllLogs = async () => {
 export const getLogsByMonitorId = async (monitorId) => {
   return apiRequest({
     method: 'get',
-    url: `${env.LOGS_API}/${monitorId}`
+    url: `${env.LOGS_API}/${monitorId}`,
   });
 };

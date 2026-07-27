@@ -9,7 +9,9 @@ function Login() {
   const navigate = useNavigate();
 
   const { handleLogin } = useAuth();
-  const { loading, error, isAuthenticated } = useSelector(state => state.auth);
+  const { loading, error, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
 
   const [formData, setFormData] = useState({
     email: '',
@@ -27,7 +29,8 @@ function Login() {
   const validateForm = () => {
     const errors = {};
     if (!formData.email.trim()) errors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      errors.email = 'Invalid email format';
     if (!formData.password) errors.password = 'Password is required';
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -35,8 +38,9 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (validationErrors[name]) setValidationErrors(prev => ({ ...prev, [name]: '' }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (validationErrors[name])
+      setValidationErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -58,7 +62,6 @@ function Login() {
 
         <h1 className="auth-title">Welcome back</h1>
 
-
         <div className="auth-divider">
           <span>OR</span>
         </div>
@@ -77,13 +80,17 @@ function Login() {
               disabled={loading}
               className={validationErrors.email ? 'input-error' : ''}
             />
-            {validationErrors.email && <span className="field-error">{validationErrors.email}</span>}
+            {validationErrors.email && (
+              <span className="field-error">{validationErrors.email}</span>
+            )}
           </div>
 
           <div className="form-group">
             <div className="password-header">
               <label className="auth-label">Password</label>
-              <Link to="/forgot-password" title="Forgot Password?">Forgot?</Link>
+              <Link to="/forgot-password" title="Forgot Password?">
+                Forgot?
+              </Link>
             </div>
             <input
               type="password"
@@ -94,10 +101,16 @@ function Login() {
               disabled={loading}
               className={validationErrors.password ? 'input-error' : ''}
             />
-            {validationErrors.password && <span className="field-error">{validationErrors.password}</span>}
+            {validationErrors.password && (
+              <span className="field-error">{validationErrors.password}</span>
+            )}
           </div>
 
-          <button type="submit" className="auth-button-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-button-primary"
+            disabled={loading}
+          >
             {loading ? 'Continuing...' : 'Continue'}
           </button>
         </form>

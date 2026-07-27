@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   statusData: {}, // key: monitorId -> { status, lastChecked, logs }
@@ -7,7 +7,7 @@ const initialState = {
 };
 
 const statusSlice = createSlice({
-  name: "status",
+  name: 'status',
   initialState,
   reducers: {
     setStatusLoading: (state, action) => {
@@ -25,7 +25,8 @@ const statusSlice = createSlice({
   },
 });
 
-export const { setStatusLoading, setStatusError, setMonitorStatus } = statusSlice.actions;
+export const { setStatusLoading, setStatusError, setMonitorStatus } =
+  statusSlice.actions;
 
 export const selectStatusData = (state) => state.status.statusData;
 export const selectStatusLoading = (state) => state.status.loading;

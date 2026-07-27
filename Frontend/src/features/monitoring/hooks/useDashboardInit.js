@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useMonitors } from "./useMonitor";
-import { useIncident } from "./useIncident";
-import { useLogs } from "./useLogs";
-import { selectMonitors } from "../state/monitor.slice";
-import { selectIncidents } from "../state/incident.slice";
-import { selectLogs } from "../state/log.slice";
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useMonitors } from './useMonitor';
+import { useIncident } from './useIncident';
+import { useLogs } from './useLogs';
+import { selectMonitors } from '../state/monitor.slice';
+import { selectIncidents } from '../state/incident.slice';
+import { selectLogs } from '../state/log.slice';
 
 export const useDashboardInit = () => {
   const { handleGetMonitors } = useMonitors();
@@ -18,7 +18,7 @@ export const useDashboardInit = () => {
 
   useEffect(() => {
     // The individual hooks will check their own `lastFetched` timestamps
-    // to avoid duplicate API calls if the data is already fresh, so we 
+    // to avoid duplicate API calls if the data is already fresh, so we
     // can safely invoke them here on mount.
     handleGetMonitors();
     handleGetAllIncidents();

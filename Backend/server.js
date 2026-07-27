@@ -8,7 +8,6 @@ import { initSocket } from './src/sockets/server.socket.js';
 
 const PORT = config.PORT || 8080;
 
-
 ConnectDB(); // Connect to the database and start the server
 startMonitorCron(); // Start the cron job to check monitors
 
