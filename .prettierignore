@@ -1,0 +1,14 @@
+# Dependencies & lockfiles
+node_modules
+**/node_modules
+**/package-lock.json
+
+# Build output
+Backend/public/dist
+Frontend/dist
+Frontend/dist-ssr
+build
+coverage
+
+# Docs are managed by hand (avoid reflow churn)
+*.md

@@ -55,7 +55,7 @@ export const getAllMonitorsController = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(new ApiResponse(200, monitors, 'Monitors retrieved successfully'));
-  } catch (error) {
+  } catch {
     throw new ApiError(500, 'Internal server error');
   }
 });
@@ -83,7 +83,7 @@ export const deleteMonitorController = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(new ApiResponse(200, null, 'Monitor deleted successfully'));
-  } catch (error) {
+  } catch {
     return res.status(500).json(new ApiError(500, 'Internal server error'));
   }
 });

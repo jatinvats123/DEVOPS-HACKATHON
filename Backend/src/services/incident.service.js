@@ -28,7 +28,6 @@ export async function createIncident(monitorId, reason) {
     // populate only what you need
     await newIncident.populate({
       path: 'monitorId',
-      select: 'title',
       select: 'userId',
     });
 

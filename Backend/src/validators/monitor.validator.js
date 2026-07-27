@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { validateRequest } from '../config/validate.js';
 
 export const createMonitorValidator = z.object({
   body: z.object({
