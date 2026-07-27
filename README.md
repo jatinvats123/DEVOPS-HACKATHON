@@ -4,16 +4,15 @@
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
 [![MongoDB](https://img.shields.io/badge/MongoDB-9-13aa52)](https://www.mongodb.com)
 [![License](https://img.shields.io/badge/License-ISC-yellow)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](https://monitoring-production-19a5.up.railway.app)
 
 A comprehensive full-stack web application for monitoring infrastructure, APIs, and services with real-time status tracking, incident management, and centralized logging.
 
 ## 🌐 Live Demo
-**➜ [https://monitoring-production-19a5.up.railway.app/](https://watchtower-monitoring.onrender.com)**
+**➜ [https://watchtower-monitoring.onrender.com](https://watchtower-monitoring.onrender.com)**
 
-> Try the live application deployed on Railway. Register a new account or login to test the monitoring features!
+> Try the live application deployed on Render. Register a new account or login to test the monitoring features. (Free-tier hosting sleeps when idle, so the first request may take ~30 seconds to wake.)
 
----S
+---
 
 ## 📋 Table of Contents
 - [Live Demo](#-live-demo)
@@ -34,7 +33,7 @@ A comprehensive full-stack web application for monitoring infrastructure, APIs, 
 ## ⚡ Quick Start
 
 ### 1. **Register/Login**
-- Visit [https://monitoring-production-19a5.up.railway.app/]([https://monitoring-production-19a5.up.railway.app/](https://watchtower-monitoring.onrender.com))
+- Visit [https://watchtower-monitoring.onrender.com](https://watchtower-monitoring.onrender.com)
 - Create a new account with your details
 - You'll be automatically logged in and redirected to the dashboard
 
