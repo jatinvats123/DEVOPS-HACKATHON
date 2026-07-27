@@ -1,6 +1,30 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment files — never commit real secrets (.env.example stays tracked)
 .env
-build
-coverage
-.vscode
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Build output — built at deploy/runtime, never committed
+build/
+coverage/
+Backend/public/dist/
+Frontend/dist/
+Frontend/dist-ssr/
+
+# Logs
+logs/
+*.log
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.sw?
+
+# Legacy local scratch file
 dns.js

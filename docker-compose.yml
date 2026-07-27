@@ -29,5 +29,7 @@ services:
 
 volumes:
   mongo_data:
-# Note: rebuild the SPA into Backend/public/dist before `docker compose up`:
-#   cd Frontend && npm run build && cp -r dist ../Backend/public/dist
+# The SPA bundle is no longer committed to git. Build it into
+# Backend/public/dist before `docker compose up` (from the repo root):
+#   npm run install:all && npm run build
+# (A self-contained multi-stage image build lands in Phase 5.)

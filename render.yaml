@@ -1,0 +1,70 @@
+# Render deployment blueprint for WatchTower.
+#
+# Topology: a single Node web service. The React SPA is built into
+# Backend/public/dist at deploy time (npm run build) and served by the Express
+# backend — so the compiled bundle is NOT committed to git.
+#
+# IMPORTANT — the existing Render service is dashboard-configured, not yet a
+# Blueprint. Until it is switched to this file, set the same values on the
+# existing service so the SPA keeps building at deploy time:
+#   Build Command:  npm run install:all && npm run build
+#   Start Command:  npm start
+# and make sure the VITE_* build-time vars below are present, or the SPA bundle
+# is baked with undefined API URLs.
+services:
+  - type: web
+    name: watchtower
+    runtime: node
+    plan: free
+    healthCheckPath: /api/health
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # --- Frontend build-time config (baked into the SPA by Vite) ---
+      - key: VITE_BACKEND_URL
+        value: https://watchtower-monitoring.onrender.com
+      - key: VITE_REGISTER_API
+        value: /api/auth/register
+      - key: VITE_LOGIN_API
+        value: /api/auth/login
+      - key: VITE_GET_USER_API
+        value: /api/auth/profile
+      - key: VITE_FORGOT_PASSWORD_API
+        value: /api/auth/forgot-password
+      - key: VITE_CHANGE_PASSWORD_API
+        value: /api/auth/change-password
+      - key: VITE_INCIDENTS_API
+        value: /api/incidents
+      - key: VITE_LOGS_API
+        value: /api/logs
+      - key: VITE_GET_LOGS_API
+        value: /api/logs
+      - key: VITE_CREATE_MONITORING_API
+        value: /api/monitor
+      - key: VITE_HEALTH_API
+        value: /api/health
+
+      # --- Backend runtime config (same-origin serving) ---
+      - key: FRONTEND_URL
+        value: https://watchtower-monitoring.onrender.com
+      - key: CORS_ORIGIN
+        value: https://watchtower-monitoring.onrender.com
+      - key: JWT_EXPIRY
+        value: 7d
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+
+      # --- Secrets — set in the Render dashboard, never in git ---
+      - key: MONGO_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
