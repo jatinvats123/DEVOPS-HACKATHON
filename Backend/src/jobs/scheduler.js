@@ -11,6 +11,8 @@ import {
 } from '../services/circuitBreaker.js';
 import { runPool } from '../utils/pool.js';
 import { schedulerConfig } from '../config/scheduler.config.js';
+import { decryptAuthHeaders } from '../utils/crypto.js';
+import { emitToUser, SocketEvent } from '../sockets/server.socket.js';
 import logger from '../config/logger.js';
 
 /**
@@ -211,13 +213,19 @@ export class MonitorScheduler {
    * impossible under a sane clock, so it is a reliable tell.
    */
   async findDueMonitors(now) {
-    return monitorModel
-      .find({
-        active: { $ne: false },
-        $or: [{ nextCheckAt: { $lte: now } }, { lastChecked: { $gt: now } }],
-      })
-      .sort({ nextCheckAt: 1 }) // most overdue first
-      .limit(MAX_BATCH);
+    return (
+      monitorModel
+        .find({
+          active: { $ne: false },
+          $or: [{ nextCheckAt: { $lte: now } }, { lastChecked: { $gt: now } }],
+        })
+        .sort({ nextCheckAt: 1 }) // most overdue first
+        .limit(MAX_BATCH)
+        // authHeaders is `select: false` so it can never be returned by accident.
+        // The scheduler is the one component that legitimately needs it, so it
+        // opts in explicitly.
+        .select('+authHeaders')
+    );
   }
 
   /**
@@ -236,6 +244,9 @@ export class MonitorScheduler {
       // precisely because this endpoint does not deserve a retry ladder.
       maxRetries: isProbe ? 0 : schedulerConfig.MAX_RETRIES,
       ignoreTlsErrors: monitor.ignoreTlsErrors === true,
+      // Decrypted only here, in memory, at the moment of use — never persisted
+      // in the clear and never returned by the API.
+      headers: decryptAuthHeaders(monitor.authHeaders),
     });
 
     this.stats.checksExecuted += 1;
@@ -303,21 +314,50 @@ export class MonitorScheduler {
       timestamp: now,
     });
 
+    // --- realtime push (tenant-scoped) --------------------------------------
+    // Emitted into the owner's room only. This is what makes the product's
+    // "live status over Socket.IO" claim true — previously the scheduler
+    // emitted nothing at all and the UI fell back to HTTP polling.
+    emitToUser(monitor.userId, SocketEvent.MONITOR_STATUS, {
+      monitorId: String(monitor._id),
+      status: update.status ?? confirmed,
+      lastCheckStatus: result.status,
+      statusCode: result.statusCode ?? null,
+      latency: result.responseTime ?? null,
+      checkedAt: now,
+    });
+
     // --- incident transitions (edge-triggered, exactly once) ----------------
     try {
       if (shouldOpen) {
-        const { opened } = await openIncident(
+        const { incident, opened } = await openIncident(
           { ...monitor.toObject?.(), ...update, _id: monitor._id },
           result.error || `Monitor ${monitor.url} is down`
         );
-        if (opened) this.stats.incidentsOpened += 1;
+        if (opened) {
+          this.stats.incidentsOpened += 1;
+          emitToUser(monitor.userId, SocketEvent.INCIDENT_OPENED, {
+            monitorId: String(monitor._id),
+            incidentId: String(incident?._id ?? ''),
+            reason: incident?.reason ?? null,
+            startedAt: incident?.startTime ?? now,
+          });
+        }
       } else if (shouldClose) {
-        const { closed } = await closeIncident({
+        const { incident, closed } = await closeIncident({
           ...monitor.toObject?.(),
           ...update,
           _id: monitor._id,
         });
-        if (closed) this.stats.incidentsClosed += 1;
+        if (closed) {
+          this.stats.incidentsClosed += 1;
+          emitToUser(monitor.userId, SocketEvent.INCIDENT_CLOSED, {
+            monitorId: String(monitor._id),
+            incidentId: String(incident?._id ?? ''),
+            durationSeconds: incident?.duration ?? 0,
+            resolvedAt: incident?.endTime ?? now,
+          });
+        }
       }
     } catch (err) {
       // The check result is already durable; a failed incident transition must

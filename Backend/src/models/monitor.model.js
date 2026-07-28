@@ -89,6 +89,17 @@ const monitorSchema = new mongoose.Schema({
     index: true,
   },
 
+  // Outbound credentials for targets behind authentication, stored as an
+  // AES-256-GCM envelope (see utils/crypto.js) — NEVER plaintext. A database
+  // dump must not hand an attacker working credentials to every customer's
+  // internal APIs. Excluded from queries by default so it cannot be returned
+  // by accident; the scheduler opts in explicitly.
+  authHeaders: {
+    type: String,
+    default: null,
+    select: false,
+  },
+
   // --- TLS ---
   // Certificate validation is ON by default: an expired or invalid certificate
   // is an outage signal, and a monitor that ignores it is blind to a whole

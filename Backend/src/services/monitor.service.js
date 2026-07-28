@@ -49,6 +49,15 @@ const RETRYABLE_CODES = new Set([
 const isRetryableStatus = (statusCode) =>
   statusCode === 408 || statusCode === 429 || statusCode >= 500;
 
+/** scheme://host:port — the unit that outbound credentials are bound to. */
+const originOf = (url) => {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * One HTTP attempt, following redirects, with genuine phase timings.
  *
@@ -67,10 +76,18 @@ const isRetryableStatus = (statusCode) =>
  */
 export function probeOnce(
   rawUrl,
-  { timeoutMs = 10_000, ignoreTlsErrors = false, maxRedirects = 5 } = {}
+  {
+    timeoutMs = 10_000,
+    ignoreTlsErrors = false,
+    maxRedirects = 5,
+    headers = {},
+  } = {}
 ) {
   return new Promise((resolve) => {
     const started = now();
+    // The origin the monitor was configured against. Credentials are bound to
+    // it and are dropped the moment a redirect leaves it.
+    const initialOrigin = originOf(rawUrl);
 
     const timings = {
       dns: null,
@@ -136,6 +153,13 @@ export function probeOnce(
       }
 
       const isHttps = parsed.protocol === 'https:';
+
+      // Credentials must never survive a cross-origin redirect. A monitored
+      // endpoint that 302s to another host would otherwise be handed the
+      // customer's Authorization header — an open redirect on their side would
+      // become credential exfiltration on ours.
+      const sameOrigin = originOf(targetUrl) === initialOrigin;
+      const outboundAuth = sameOrigin ? headers : {};
       if (!isHttps && parsed.protocol !== 'http:') {
         return finish({
           status: 'DOWN',
@@ -158,6 +182,9 @@ export function probeOnce(
             Accept: '*/*',
             // We drain and discard the body; no reason to pay for compression.
             'Accept-Encoding': 'identity',
+            // Caller-supplied last so a monitor can override defaults, but only
+            // on the origin it was configured for (see sameOrigin above).
+            ...outboundAuth,
           },
           // A fresh socket per attempt. Connection reuse would make DNS/TCP/TLS
           // read as 0ms on every check after the first — technically true, but
@@ -289,11 +316,12 @@ export async function checkMonitor(url, opts = {}) {
     timeoutMs = 10_000,
     maxRetries = schedulerConfig.MAX_RETRIES,
     ignoreTlsErrors = false,
+    headers = {},
   } = opts;
 
   let result;
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-    result = await probeOnce(url, { timeoutMs, ignoreTlsErrors });
+    result = await probeOnce(url, { timeoutMs, ignoreTlsErrors, headers });
     result.attempts = attempt + 1;
 
     if (result.status === 'UP' || !result.retryable) return result;
