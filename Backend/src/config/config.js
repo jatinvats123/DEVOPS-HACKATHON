@@ -68,4 +68,38 @@ export const config = {
   JWT_EXPIRY: process.env.JWT_EXPIRY,
   FRONTEND_URL: process.env.FRONTEND_URL,
   MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
+
+  // Encrypts outbound monitor credentials at rest. Optional: without it,
+  // monitors simply cannot store auth headers (attempting to do so errors
+  // rather than silently writing plaintext). Generate with `openssl rand -hex 32`.
+  CREDENTIALS_ENCRYPTION_KEY: process.env.CREDENTIALS_ENCRYPTION_KEY,
+
+  // Registration currently marks accounts verified immediately, bypassing the
+  // OTP flow. That was a hackathon shortcut and it is a real weakness: combined
+  // with cheap signup it allows account spam under arbitrary email addresses.
+  //
+  // Left ON by default so the existing deployment keeps working, but it is now
+  // an explicit, single-variable decision rather than a hardcoded line with a
+  // "remove in production" comment next to it. See SECURITY.md.
+  AUTO_VERIFY_USERS: process.env.AUTO_VERIFY_USERS !== 'false',
 };
+
+if (config.NODE_ENV === 'production' && config.AUTO_VERIFY_USERS) {
+  // console rather than the winston logger: config.js is imported by the logger
+  // itself, so using it here would be a circular dependency at boot.
+  console.warn(
+    '[security] AUTO_VERIFY_USERS is enabled in production: new accounts skip email verification. Set AUTO_VERIFY_USERS=false to require it.'
+  );
+}
+
+if (config.CORS_ORIGINS.includes('*')) {
+  // A wildcard cannot be combined with credentialed requests anyway, so this is
+  // a misconfiguration that would silently break auth as well as widen access.
+  throw new Error(
+    'CORS_ORIGIN must be an explicit allow-list; "*" is not permitted'
+  );
+}
+
+if (config.NODE_ENV === 'production' && config.CORS_ORIGINS.length === 0) {
+  throw new Error('CORS_ORIGIN must list at least one origin in production');
+}
