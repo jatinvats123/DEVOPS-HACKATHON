@@ -1,17 +1,18 @@
-import logModel from '../models/logs.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
-import { assertMonitorOwned, getUserMonitorIds } from '../utils/ownership.js';
+import { logDao, assertMonitorOwned } from '../dao/index.js';
 
 // Recent logs across the authenticated user's own monitors (dashboard feed)
 export const getAllLogsController = asyncHandler(async (req, res) => {
-  const monitorIds = await getUserMonitorIds(req.user?.id);
-
-  const logs = await logModel
-    .find({ monitorId: { $in: monitorIds } })
-    .sort({ timestamp: -1 })
-    .limit(10)
-    .populate('monitorId', 'url type title');
+  const logs = await logDao.find(
+    req.user?.id,
+    {},
+    {
+      sort: { timestamp: -1 },
+      limit: 10,
+      populate: { path: 'monitorId', select: 'url type title' },
+    }
+  );
 
   res
     .status(200)
@@ -21,13 +22,17 @@ export const getAllLogsController = asyncHandler(async (req, res) => {
 // Logs for one monitor — only if the requester owns it
 export const monitorLogsByIdController = asyncHandler(async (req, res) => {
   const { monitorId } = req.params;
-  await assertMonitorOwned(monitorId, req.user?.id);
+  await assertMonitorOwned(req.user?.id, monitorId);
 
-  const logs = await logModel
-    .find({ monitorId })
-    .sort({ timestamp: -1 })
-    .limit(200)
-    .populate('monitorId', 'url type title');
+  const logs = await logDao.find(
+    req.user?.id,
+    { monitorId },
+    {
+      sort: { timestamp: -1 },
+      limit: 200,
+      populate: { path: 'monitorId', select: 'url type title' },
+    }
+  );
 
   res
     .status(200)

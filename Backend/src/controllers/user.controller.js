@@ -6,7 +6,10 @@ import { sendEmail } from '../services/sendEmail.js';
 import { config } from '../config/config.js';
 
 export const registerUser = asyncHandler(async (req, res) => {
-  console.log(req.body);
+  // NOTE: a `console.log(req.body)` used to sit here, writing every new user's
+  // PLAINTEXT PASSWORD to stdout — and therefore into whatever log aggregator
+  // the platform ships to, where it is retained and searchable. Never log a
+  // request body on a credential endpoint.
   const { username, email, fullname, password } = req.body;
 
   const existedUser = await UserService.findUserByEmailOrUsername(
@@ -25,9 +28,14 @@ export const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
   });
 
-  // Auto-verify user for development (remove in production)
-  user.isVerified = true;
-  await user.save();
+  // Verification bypass is now an explicit deployment decision rather than a
+  // hardcoded line with a "remove in production" comment beside it. Defaults to
+  // on so existing deployments are unaffected; set AUTO_VERIFY_USERS=false to
+  // require the OTP flow. Documented as an accepted risk in SECURITY.md.
+  if (config.AUTO_VERIFY_USERS) {
+    user.isVerified = true;
+    await user.save();
+  }
 
   const createdUser = await UserService.findUserByIdWithoutPassword(user._id);
   if (!createdUser) {

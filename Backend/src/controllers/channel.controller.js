@@ -1,5 +1,4 @@
-import channelModel from '../models/channel.model.js';
-import notificationLogModel from '../models/notificationLog.model.js';
+import { channelDao, notificationLogDao } from '../dao/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -9,9 +8,11 @@ import logger from '../config/logger.js';
 const TYPES = ['Email', 'Slack', 'Webhook', 'SMS'];
 
 export const listChannels = asyncHandler(async (req, res) => {
-  const channels = await channelModel
-    .find({ userId: req.user.id })
-    .sort({ createdAt: 1 });
+  const channels = await channelDao.find(
+    req.user.id,
+    {},
+    { sort: { createdAt: 1 } }
+  );
   res
     .status(200)
     .json(new ApiResponse(200, channels, 'Channels retrieved successfully'));
@@ -30,15 +31,13 @@ export const createChannel = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Enter a valid email address');
   }
 
-  const exists = await channelModel.findOne({
-    userId: req.user.id,
+  const exists = await channelDao.findOne(req.user.id, {
     type: type || 'Email',
     target: String(target).trim(),
   });
   if (exists) throw new ApiError(409, 'That channel already exists');
 
-  const channel = await channelModel.create({
-    userId: req.user.id,
+  const channel = await channelDao.create(req.user.id, {
     type: type || 'Email',
     target: String(target).trim(),
   });
@@ -58,11 +57,7 @@ export const updateChannel = asyncHandler(async (req, res) => {
     update.type = req.body.type;
   }
 
-  const channel = await channelModel.findOneAndUpdate(
-    { _id: channelId, userId: req.user.id },
-    update,
-    { new: true }
-  );
+  const channel = await channelDao.updateById(req.user.id, channelId, update);
   if (!channel) throw new ApiError(404, 'Channel not found');
 
   res
@@ -72,10 +67,7 @@ export const updateChannel = asyncHandler(async (req, res) => {
 
 export const deleteChannel = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
-  const channel = await channelModel.findOneAndDelete({
-    _id: channelId,
-    userId: req.user.id,
-  });
+  const channel = await channelDao.deleteById(req.user.id, channelId);
   if (!channel) throw new ApiError(404, 'Channel not found');
 
   res
@@ -86,10 +78,7 @@ export const deleteChannel = asyncHandler(async (req, res) => {
 // Send a real test message so the user can confirm the channel works
 export const testChannel = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
-  const channel = await channelModel.findOne({
-    _id: channelId,
-    userId: req.user.id,
-  });
+  const channel = await channelDao.findById(req.user.id, channelId);
   if (!channel) throw new ApiError(404, 'Channel not found');
 
   let status = 'Delivered';
@@ -113,8 +102,7 @@ export const testChannel = asyncHandler(async (req, res) => {
     detail = err?.message || 'Dispatch failed';
   }
 
-  await notificationLogModel.create({
-    userId: req.user.id,
+  await notificationLogDao.create(req.user.id, {
     event: 'TEST_DISPATCH',
     channel: channel.type,
     target: channel.target,
@@ -129,11 +117,15 @@ export const testChannel = asyncHandler(async (req, res) => {
 
 // Transmission Log — real dispatch history for this user
 export const listNotificationLogs = asyncHandler(async (req, res) => {
-  const logs = await notificationLogModel
-    .find({ userId: req.user.id })
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .populate('monitorId', 'title url');
+  const logs = await notificationLogDao.find(
+    req.user.id,
+    {},
+    {
+      sort: { createdAt: -1 },
+      limit: 50,
+      populate: { path: 'monitorId', select: 'title url' },
+    }
+  );
 
   res
     .status(200)
