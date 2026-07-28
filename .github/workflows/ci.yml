@@ -1,0 +1,337 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# A new push to the same branch supersedes the previous run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Every job installs from the lockfile; nothing here should ever reach out
+  # for a newer version than was resolved.
+  NPM_CONFIG_FUND: 'false'
+  NPM_CONFIG_AUDIT: 'false'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci --prefix Backend
+          npm ci --prefix Frontend
+          npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier
+        # Formatting drift is cheap to prevent and tedious to review.
+        run: npm run format:check
+
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      # Do not cancel Node 22 because Node 20 failed — knowing whether a
+      # failure is version-specific is the entire point of a matrix.
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install
+        run: npm ci --prefix Backend
+
+      - name: Cache mongodb-memory-server binary
+        # Otherwise every job re-downloads a ~100MB mongod.
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+
+      - name: Test with coverage
+        # The 60% statement gate lives in jest.config.js, so this step fails on
+        # a coverage regression as well as on a failing test.
+        run: npm run test:coverage --prefix Backend
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node }}
+          path: Backend/coverage/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  security:
+    name: Dependency & filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci --prefix Backend
+          npm ci --prefix Frontend
+
+      - name: Dependency audit gate
+        # Fails on any high/critical advisory that is not explicitly
+        # allowlisted with a justification and a review date. See
+        # scripts/audit-gate.mjs.
+        run: node scripts/audit-gate.mjs Backend Frontend
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install
+        run: npm ci --prefix Frontend
+
+      - name: Build SPA
+        run: npm run build
+
+      - name: Fail if the bundle is empty
+        # A "successful" build that emitted nothing would otherwise sail
+        # through and only be noticed as a blank page in production.
+        run: |
+          test -f Backend/public/dist/index.html
+          echo "bundle size: $(du -sh Backend/public/dist | cut -f1)"
+
+  # ---------------------------------------------------------------------------
+  docker:
+    name: Build & scan images
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Backend/Dockerfile
+          tags: watchtower-backend:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Frontend
+          file: Frontend/Dockerfile
+          tags: watchtower-frontend:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Assert images do not run as root
+        # The single most common container hardening regression, and trivially
+        # cheap to assert.
+        run: |
+          for image in watchtower-backend:ci watchtower-frontend:ci; do
+            user=$(docker image inspect "$image" --format '{{.Config.User}}')
+            echo "$image runs as: ${user:-root}"
+            if [ -z "$user" ] || [ "$user" = "root" ] || [ "$user" = "0" ]; then
+              echo "::error::$image would run as root"
+              exit 1
+            fi
+          done
+
+      - name: Report image sizes
+        run: |
+          docker images --format '{{.Repository}}:{{.Tag}}  {{.Size}}' \
+            | grep watchtower | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Trivy image scan (backend)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: watchtower-backend:ci
+          severity: HIGH,CRITICAL
+          # Unfixed OS advisories are noise we cannot action; a base-image bump
+          # is Dependabot's job, not a reason to block every PR.
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+
+  # ---------------------------------------------------------------------------
+  integration:
+    name: Integration smoke test
+    runs-on: ubuntu-latest
+    needs: [docker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start the stack
+        # Exercises the real topology: compose waits for Mongo to be HEALTHY
+        # before the backend starts (depends_on: condition: service_healthy).
+        run: docker compose up -d --build
+
+      - name: Wait for /api/health
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost:8000/api/health || true)
+            if [ "$code" = "200" ]; then
+              echo "healthy after ${i}s"
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::/api/health did not return 200 within 60s"
+          docker compose ps
+          docker compose logs --tail 100
+          exit 1
+
+      - name: Assert the SPA is served
+        # The backend serves the bundle it built itself; a 200 here proves the
+        # multi-stage frontend build actually landed in the image.
+        run: |
+          code=$(curl -s -o /tmp/index.html -w '%{http_code}' http://localhost:8000/)
+          test "$code" = "200"
+          grep -qi '<div id="root"' /tmp/index.html
+          echo "SPA shell served ($(wc -c < /tmp/index.html) bytes)"
+
+      - name: Assert unauthenticated API access is rejected
+        # Cheap end-to-end proof that auth is wired in the built image, not just
+        # in the unit tests.
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/monitor)
+          echo "GET /api/monitor (no token) -> $code"
+          test "$code" = "401"
+
+      - name: Assert graceful shutdown
+        # dumb-init must forward SIGTERM so the scheduler drains and releases
+        # its lease. Without it npm swallowed the signal and every deploy left
+        # monitoring paused until the lease expired.
+        run: |
+          docker compose stop -t 30 backend
+          docker compose logs backend | tail -40
+          docker compose logs backend | grep -q 'received SIGTERM' \
+            || { echo "::error::SIGTERM never reached the app"; exit 1; }
+          docker compose logs backend | grep -q 'clean exit' \
+            || { echo "::error::shutdown did not complete cleanly"; exit 1; }
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --tail 200
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  # ---------------------------------------------------------------------------
+  coverage-badge:
+    name: Refresh coverage badge
+    runs-on: ubuntu-latest
+    needs: [test]
+    # main only: the badge should reflect what is released, not whatever a
+    # feature branch happens to be at.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-node-20
+          path: Backend/coverage
+
+      - name: Generate badge from the real summary
+        run: node scripts/coverage-badge.mjs
+
+      - name: Commit if it changed
+        # continue-on-error: a protected branch that refuses the push must not
+        # fail the build. The badge is a convenience; the coverage GATE is the
+        # thing that actually enforces anything.
+        continue-on-error: true
+        run: |
+          if git diff --quiet -- .github/badges/coverage.json; then
+            echo "badge unchanged"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .github/badges/coverage.json
+          git commit -m 'ci(badge): refresh coverage badge [skip ci]'
+          git push
+
+  # ---------------------------------------------------------------------------
+  ci-ok:
+    # Single required status check, so branch protection does not need updating
+    # every time a job is added or renamed.
+    name: CI passed
+    runs-on: ubuntu-latest
+    needs: [lint, test, security, build, docker, integration]
+    if: always()
+    steps:
+      - name: Verify every job succeeded
+        run: |
+          results='${{ join(needs.*.result, ' ') }}'
+          echo "job results: $results"
+          for r in $results; do
+            [ "$r" = "success" ] || { echo "::error::a required job did not succeed"; exit 1; }
+          done
+          echo "all jobs passed"
