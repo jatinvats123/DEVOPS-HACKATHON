@@ -31,7 +31,13 @@ import {
  * was rewritten off axios — completely untested.
  */
 describe('HTTP probe', () => {
-  afterEach(() => nock.cleanAll());
+  afterEach(() => {
+    // abortPendingRequests as well as cleanAll: an interceptor that errored can
+    // otherwise emit on its mock socket after the test that created it has
+    // finished, surfacing as an unhandled error inside an unrelated test.
+    nock.abortPendingRequests();
+    nock.cleanAll();
+  });
 
   describe('with mocked targets (nock)', () => {
     it('reports UP for a 200', async () => {

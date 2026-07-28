@@ -252,6 +252,14 @@ export function probeOnce(
       currentReq = req;
 
       req.on('socket', (socket) => {
+        // A socket can emit 'error' independently of the request — and can do
+        // so AFTER we have already settled (a late RST, or a redirect hop whose
+        // predecessor is still tearing down). An 'error' event with no listener
+        // is thrown as an uncaught exception and takes the process down, so a
+        // monitoring service must never leave one unhandled. `fail` is
+        // idempotent via the `settled` guard, so a late error is a no-op.
+        socket.on('error', fail);
+
         // `connecting === false` means a pooled socket; with agent:false that
         // should not happen, but guard rather than record misleading zeroes.
         if (!socket.connecting) return;
