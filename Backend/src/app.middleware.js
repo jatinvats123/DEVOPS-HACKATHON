@@ -16,7 +16,7 @@ const distDir = path.resolve(__dirname, '../public/dist');
 
 // General API traffic. Static assets (JS/CSS) are deliberately not counted —
 // a single page load would otherwise throttle a real user.
-const apiLimiter = rateLimit({
+export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
   standardHeaders: 'draft-7',
@@ -35,7 +35,7 @@ const apiLimiter = rateLimit({
  * indefinitely. These routes are the ones an attacker actually targets, so
  * they get their own bucket.
  */
-const authLimiter = rateLimit({
+export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: 'draft-7',
@@ -54,7 +54,7 @@ const authLimiter = rateLimit({
  * a real email, so an unthrottled endpoint is both an account-enumeration
  * oracle and a way to use our SMTP reputation to spam a third party.
  */
-const passwordResetLimiter = rateLimit({
+export const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
   standardHeaders: 'draft-7',
@@ -64,6 +64,26 @@ const passwordResetLimiter = rateLimit({
     message: 'Too many password reset requests. Please try again later.',
   },
 });
+
+/**
+ * Clear the rate-limit counters for one client key.
+ *
+ * Exported so a test suite can isolate cases from each other: the limiters are
+ * in-memory and per-process, so without this, ten failed logins in one test
+ * would leave the next test starting from a spent budget. Resetting keeps the
+ * limiters ACTIVE during tests (production behaviour is what we want to
+ * exercise) while making each case independent — the alternative, disabling
+ * them under NODE_ENV=test, would mean never testing the real middleware stack.
+ */
+export function resetRateLimits(key = '::ffff:127.0.0.1') {
+  for (const limiter of [apiLimiter, authLimiter, passwordResetLimiter]) {
+    // Keys vary by proxy/IP representation; clearing both forms is cheap and
+    // avoids a test that passes or fails based on how the socket resolved.
+    limiter.resetKey(key);
+    limiter.resetKey('127.0.0.1');
+    limiter.resetKey('::1');
+  }
+}
 
 const blockUnwantedRequests = (req, res, next) => {
   const unwantedPaths = ['.env', '.git', 'wp-admin', 'phpmyadmin'];

@@ -4,6 +4,31 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { UserService } from '../services/user.service.js';
 import { sendEmail } from '../services/sendEmail.js';
 import { config } from '../config/config.js';
+import logger from '../config/logger.js';
+
+/**
+ * Send a NON-CRITICAL notification email without letting it fail the operation
+ * that triggered it.
+ *
+ * Two bugs this replaces:
+ *  - `verifyUser` awaited sendEmail directly, so an SMTP outage returned 500 to
+ *    a user whose account had in fact just been verified — the write had
+ *    already committed. They would retry, be told they are already verified,
+ *    and reasonably conclude the product is broken.
+ *  - `forgotPassword` called sendEmail with NO await at all: a floating promise
+ *    whose rejection surfaced as an unhandled rejection, which on Node 15+
+ *    terminates the process by default. An unreachable SMTP host could take the
+ *    API down.
+ *
+ * Delivery is best effort; the state change is the contract.
+ */
+async function sendNotificationEmail(options, context) {
+  try {
+    await sendEmail(options);
+  } catch (err) {
+    logger.error(`[auth] ${context} email failed: ${err.message}`);
+  }
+}
 
 export const registerUser = asyncHandler(async (req, res) => {
   // NOTE: a `console.log(req.body)` used to sit here, writing every new user's
@@ -155,11 +180,14 @@ export const verifyUser = asyncHandler(async (req, res) => {
   user.otp = undefined;
   user.otpExpire = undefined;
   await UserService.saveUser(user, { validateBeforeSave: false });
-  await sendEmail({
-    email: user.email,
-    subject: 'User Verified',
-    message: `Your account has been verified successfully.`,
-  });
+  await sendNotificationEmail(
+    {
+      email: user.email,
+      subject: 'User Verified',
+      message: `Your account has been verified successfully.`,
+    },
+    'verification confirmation'
+  );
   return res
     .status(200)
     .json(new ApiResponse(200, {}, 'User verified successfully'));
@@ -175,11 +203,16 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   await UserService.saveUser(user, { validateBeforeSave: false });
 
   const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
-  sendEmail({
-    email: user.email,
-    subject: 'Password Reset Request',
-    message: `You requested a password reset. Please use the following token to reset your POST to: ${resetUrl}`,
-  });
+  await sendNotificationEmail(
+    {
+      email: user.email,
+      subject: 'Password Reset Request',
+      message: `You requested a password reset. Use this token to reset your password: ${resetUrl}`,
+    },
+    'password reset'
+  );
+  // Always 200, even if delivery failed: reporting the difference would turn
+  // this endpoint into an account-enumeration oracle.
   return res
     .status(200)
     .json(new ApiResponse(200, {}, 'Password reset token sent to email'));

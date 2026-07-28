@@ -10,7 +10,7 @@
  * the AI summary derives from a remote server's error string).
  */
 
-const escapeHtml = (value) =>
+export const escapeHtml = (value) =>
   String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

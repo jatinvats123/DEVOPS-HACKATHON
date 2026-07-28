@@ -233,10 +233,14 @@ Stated plainly because a threat model that claims completeness is not credible.
 
 ## 6. Security testing
 
-`tests/security/` — 55 assertions covering tenancy isolation by id and by list
+`tests/security/` — 62 assertions covering tenancy isolation by id and by list
 across monitors, incidents, logs and metrics; DAO refusal of unscoped queries;
 Socket.IO handshake auth and room isolation; NoSQL operator injection; and
 credential encryption at rest.
+
+These sit inside a wider suite of **284 tests** (auth lifecycle, scheduler,
+incident lifecycle, notification channels, uptime aggregation, HTTP probe),
+gated at 60% statement coverage in CI.
 
 Run with `npm test --prefix Backend`.
 
