@@ -1,10 +1,9 @@
-import logModel from '../models/logs.model.js';
 import validateId from '../config/validateMongoId.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import logger from '../config/logger.js';
-import { assertMonitorOwned } from '../utils/ownership.js';
+import { assertMonitorOwned, logDao } from '../dao/index.js';
 import { getUptimeWindows } from '../services/uptime.service.js';
 
 /**
@@ -16,12 +15,12 @@ import { getUptimeWindows } from '../services/uptime.service.js';
 const SERIES_LIMIT = 100;
 
 /** Newest-first from the index, then reversed so charts read left-to-right. */
-async function recentLogs(monitorId, projection) {
-  const rows = await logModel
-    .find({ monitorId })
-    .sort({ timestamp: -1 })
-    .limit(SERIES_LIMIT)
-    .select(projection);
+async function recentLogs(ownerId, monitorId, projection) {
+  const rows = await logDao.find(
+    ownerId,
+    { monitorId },
+    { sort: { timestamp: -1 }, limit: SERIES_LIMIT, select: projection }
+  );
   return rows.reverse();
 }
 
@@ -35,9 +34,13 @@ export const getLatencyMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
-    await assertMonitorOwned(monitorId, req.user?.id);
+    await assertMonitorOwned(req.user?.id, monitorId);
 
-    const logs = await recentLogs(monitorId, 'latency timings timestamp');
+    const logs = await recentLogs(
+      req.user?.id,
+      monitorId,
+      'latency timings timestamp'
+    );
 
     // `time` and `latency` are unchanged for the existing chart; the phase
     // breakdown is additive so nothing on the frontend breaks.
@@ -66,7 +69,7 @@ export const getUptimeMetrics = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
-    await assertMonitorOwned(monitorId, req.user?.id);
+    await assertMonitorOwned(req.user?.id, monitorId);
 
     const windows = await getUptimeWindows(monitorId);
 
@@ -96,9 +99,13 @@ export const getStatusTimeline = asyncHandler(async (req, res) => {
   try {
     const { monitorId } = req.params;
     if (!validateId(monitorId, res)) return;
-    await assertMonitorOwned(monitorId, req.user?.id);
+    await assertMonitorOwned(req.user?.id, monitorId);
 
-    const logs = await recentLogs(monitorId, 'status timestamp statusCode');
+    const logs = await recentLogs(
+      req.user?.id,
+      monitorId,
+      'status timestamp statusCode'
+    );
 
     const data = logs.map((l) => ({
       time: clockLabel(l.timestamp),

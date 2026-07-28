@@ -1,14 +1,15 @@
-import monitorModel from '../models/monitor.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
+import { monitorDao } from '../dao/index.js';
+import { encryptSecret, hasCredentials } from '../utils/crypto.js';
 import logger from '../config/logger.js';
 
 /**
  * Fields a user may set on their own monitor. Anything outside this list
- * (status, breaker state, consecutive counters, nextCheckAt) is owned by the
- * scheduler — accepting them from a request body would let a client forge its
- * own uptime history.
+ * (status, breaker state, consecutive counters, nextCheckAt, userId) is owned
+ * by the scheduler or the DAO — accepting them from a request body would let a
+ * client forge its own uptime history or reassign ownership.
  */
 function pickWritableFields(body = {}) {
   const patch = {};
@@ -34,11 +35,32 @@ function pickWritableFields(body = {}) {
     patch.successThreshold = Math.max(1, Number(body.successThreshold) || 1);
   }
 
+  // Outbound credentials for targets behind auth are encrypted before they ever
+  // reach the database, and are never echoed back on read.
+  if (body.authHeaders !== undefined) {
+    patch.authHeaders = hasCredentials(body.authHeaders)
+      ? encryptSecret(JSON.stringify(body.authHeaders))
+      : null;
+  }
+
   return patch;
 }
 
 const normalizeUrl = (url) =>
   /^https?:\/\//i.test(url) ? url : `https://${url}`;
+
+/**
+ * Strip encrypted credentials from anything returned to a client. The
+ * ciphertext is useless without the key, but there is no reason to ship it to
+ * the browser, and doing so would expose it to any XSS that lands.
+ */
+const present = (monitor) => {
+  if (!monitor) return monitor;
+  const obj = monitor.toObject ? monitor.toObject() : { ...monitor };
+  obj.hasAuthHeaders = Boolean(obj.authHeaders);
+  delete obj.authHeaders;
+  return obj;
+};
 
 export const createMonitorController = asyncHandler(async (req, res) => {
   const { url } = req.body;
@@ -49,8 +71,7 @@ export const createMonitorController = asyncHandler(async (req, res) => {
 
   const normalizedUrl = normalizeUrl(url);
 
-  const isAlreadyMonitored = await monitorModel.findOne({
-    userId: req.user.id,
+  const isAlreadyMonitored = await monitorDao.findOne(req.user.id, {
     url: normalizedUrl,
   });
 
@@ -59,9 +80,9 @@ export const createMonitorController = asyncHandler(async (req, res) => {
   }
 
   try {
-    const monitor = await monitorModel.create({
+    // The DAO stamps ownership; userId is never read from the request body.
+    const monitor = await monitorDao.create(req.user.id, {
       ...pickWritableFields(req.body),
-      userId: req.user.id,
       url: normalizedUrl,
       // Due immediately — a user who just added a monitor expects a result now,
       // not one interval from now.
@@ -70,7 +91,9 @@ export const createMonitorController = asyncHandler(async (req, res) => {
 
     return res
       .status(201)
-      .json(new ApiResponse(201, monitor, 'Monitor created successfully'));
+      .json(
+        new ApiResponse(201, present(monitor), 'Monitor created successfully')
+      );
   } catch (error) {
     logger.error('Error creating monitor:', error);
     throw new ApiError(500, 'Internal server error');
@@ -78,28 +101,23 @@ export const createMonitorController = asyncHandler(async (req, res) => {
 });
 
 export const getAllMonitorsController = asyncHandler(async (req, res) => {
-  const userId = req.user?.id;
-  try {
-    const monitors = await monitorModel.find({ userId });
-    return res
-      .status(200)
-      .json(new ApiResponse(200, monitors, 'Monitors retrieved successfully'));
-  } catch (error) {
-    logger.error('Error fetching monitors:', error);
-    throw new ApiError(500, 'Internal server error');
-  }
+  const monitors = await monitorDao.find(req.user?.id);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        monitors.map(present),
+        'Monitors retrieved successfully'
+      )
+    );
 });
 
 export const deleteMonitorController = asyncHandler(async (req, res) => {
-  const userId = req.user?.id;
-  const { monitorId } = req.params;
-
-  // Scoped delete: ownership is part of the query, so a monitor belonging to
-  // another user simply does not match.
-  const monitor = await monitorModel.findOneAndDelete({
-    _id: monitorId,
-    userId,
-  });
+  const monitor = await monitorDao.deleteById(
+    req.user?.id,
+    req.params.monitorId
+  );
 
   if (!monitor) {
     // 404 rather than 403 so we don't confirm the id exists.
@@ -112,20 +130,13 @@ export const deleteMonitorController = asyncHandler(async (req, res) => {
 });
 
 export const updateMonitorController = asyncHandler(async (req, res) => {
-  const userId = req.user?.id;
-  const { monitorId } = req.params;
-
   const patch = pickWritableFields(req.body);
   if (req.body.url) patch.url = normalizeUrl(req.body.url);
 
-  // Owner-scoped in the SAME query that writes. The previous version asserted
-  // ownership with a findOne and then wrote with an unscoped findByIdAndUpdate
-  // — correct in practice but a time-of-check/time-of-use gap, and exactly the
-  // pattern that caused the original data-exposure defect.
-  const updatedMonitor = await monitorModel.findOneAndUpdate(
-    { _id: monitorId, userId },
-    { $set: patch },
-    { new: true, runValidators: true }
+  const updatedMonitor = await monitorDao.updateById(
+    req.user?.id,
+    req.params.monitorId,
+    patch
   );
 
   if (!updatedMonitor) {
@@ -134,5 +145,11 @@ export const updateMonitorController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, updatedMonitor, 'Monitor updated successfully'));
+    .json(
+      new ApiResponse(
+        200,
+        present(updatedMonitor),
+        'Monitor updated successfully'
+      )
+    );
 });
