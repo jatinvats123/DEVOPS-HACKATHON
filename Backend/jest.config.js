@@ -31,26 +31,32 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'json-summary'],
 
-  // A ratchet, not a target. Set just below what the Phase 3 security suite
-  // actually achieves (34.66% statements) so it fails on a regression without
-  // failing today. Phase 4 adds the scheduler, notification and service suites
-  // and raises this to the 60% the brief asks for.
-  //
-  // The number that matters right now is not the global figure but src/dao at
-  // ~88%: that is the code enforcing tenancy.
+  // 60% statements is the contractual floor. The suite currently sits around
+  // 74%, so the gate has headroom — it exists to catch a regression, not to be
+  // scraped past. Branch coverage is held lower on purpose: much of the
+  // remaining branch surface is defensive error handling on external I/O
+  // (SMTP, Mongo, the AI provider) whose failure modes are asserted where they
+  // matter rather than exhaustively enumerated.
   coverageThreshold: {
     global: {
-      statements: 30,
-      branches: 14,
-      functions: 28,
-      lines: 30,
+      statements: 60,
+      branches: 50,
+      functions: 70,
+      lines: 60,
     },
-    // The tenancy boundary is held to a real standard from the outset.
+    // The tenancy boundary and the scheduler are the two places where a
+    // regression is expensive, so both are held well above the global floor.
     './src/dao/**/*.js': {
       statements: 85,
       branches: 70,
       functions: 90,
       lines: 90,
+    },
+    './src/jobs/scheduler.js': {
+      statements: 85,
+      branches: 70,
+      functions: 70,
+      lines: 85,
     },
   },
 
