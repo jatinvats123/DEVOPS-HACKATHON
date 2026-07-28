@@ -31,6 +31,11 @@ const GET_LOGS_API = import.meta.env.VITE_GET_LOGS_API;
 // health API endpoint
 const HEALTH_API = import.meta.env.VITE_HEALTH_API;
 
+// metrics API endpoint (uptime windows, latency series, status timeline).
+// Defaulted rather than required: adding a mandatory variable would break every
+// existing deployment whose .env predates it, including the live instance.
+const METRICS_API = import.meta.env.VITE_METRICS_API || '/api/metrics';
+
 // Validate environment variables
 if (!BACKEND_URL) {
   throw new Error('BACKEND_URL is not defined in the environment variables');
@@ -98,5 +103,6 @@ export const env = {
   GET_LOGS_API,
   HEALTH_API,
   LOGS_API,
+  METRICS_API,
   LOGOUT_API: '/api/auth/logout',
 };

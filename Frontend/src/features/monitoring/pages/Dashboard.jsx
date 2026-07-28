@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useMonitors } from '../hooks/useMonitor';
 import { selectMonitors, selectLoading } from '../state/monitor.slice';
 import { getAllIncidents } from '../services/incident.api';
+import UptimeWindows from '../components/UptimeWindows';
 import {
   AreaChart,
   Area,
@@ -232,7 +233,11 @@ const StatusDistribution = ({ monitors = [] }) => {
           <span className="text-4xl luxury-heading text-[#cc785c]">
             {uptimePct}%
           </span>
-          <span className="luxury-label mt-1">Uptime</span>
+          {/* Relabelled: this is the share of monitors currently reporting UP,
+              a point-in-time snapshot. It is NOT uptime, and calling it that
+              made the dashboard read 100% during an outage that began an hour
+              ago. Real uptime is the UptimeWindows panel. */}
+          <span className="luxury-label mt-1">Operational now</span>
         </div>
       </div>
       <div className="flex flex-col gap-4 mt-8">
@@ -429,8 +434,14 @@ const RecentIncidents = ({ incidents = [] }) => {
 
 const Dashboard = () => {
   const [incidents, setIncidents] = useState([]);
+  // Uptime windows are per monitor, so the panel needs a subject. Defaults to
+  // the first monitor once they load.
+  const [selectedMonitorId, setSelectedMonitorId] = useState('');
   const monitorsData = useSelector(selectMonitors);
-  const monitors = monitorsData || [];
+  // Memoised: `monitorsData || []` allocates a fresh array on every render when
+  // the selector returns null, which would re-fire the selection effect below
+  // in an endless loop.
+  const monitors = useMemo(() => monitorsData || [], [monitorsData]);
   const loading = useSelector(selectLoading);
   const { handleGetMonitors } = useMonitors();
 
@@ -451,6 +462,18 @@ const Dashboard = () => {
     fetchIncidents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep the selection valid as monitors load or are deleted.
+  useEffect(() => {
+    if (monitors.length === 0) {
+      if (selectedMonitorId) setSelectedMonitorId('');
+      return;
+    }
+    const stillExists = monitors.some((m) => m._id === selectedMonitorId);
+    if (!stillExists) setSelectedMonitorId(monitors[0]._id);
+  }, [monitors, selectedMonitorId]);
+
+  const selectedMonitor = monitors.find((m) => m._id === selectedMonitorId);
 
   const up = monitors.filter((m) => {
     const s = (m.status || '').toUpperCase();
@@ -479,6 +502,32 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
         {/* LEFT SIDE (8 columns) */}
         <div className="xl:col-span-8 flex flex-col gap-12">
+          {monitors.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <label
+                htmlFor="uptime-monitor-select"
+                className="luxury-label self-start"
+              >
+                Uptime for
+              </label>
+              <select
+                id="uptime-monitor-select"
+                value={selectedMonitorId}
+                onChange={(e) => setSelectedMonitorId(e.target.value)}
+                className="border border-[#e6dfd8] rounded-lg px-4 py-2 text-sm bg-white max-w-sm"
+              >
+                {monitors.map((m) => (
+                  <option key={m._id} value={m._id}>
+                    {m.title || m.url}
+                  </option>
+                ))}
+              </select>
+              <UptimeWindows
+                monitorId={selectedMonitorId}
+                monitorTitle={selectedMonitor?.url}
+              />
+            </div>
+          )}
           <UptimeOverview />
           <div className="relative">
             {loading && monitors.length === 0 && (

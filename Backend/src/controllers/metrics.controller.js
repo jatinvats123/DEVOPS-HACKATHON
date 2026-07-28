@@ -5,7 +5,31 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import logger from '../config/logger.js';
 import { assertMonitorOwned } from '../utils/ownership.js';
-import mongoose from 'mongoose';
+import { getUptimeWindows } from '../services/uptime.service.js';
+
+/**
+ * Number of points returned to the charts. These are the MOST RECENT points:
+ * the previous implementation sorted ascending and limited to 100, which meant
+ * that after the first 100 checks every chart permanently displayed the oldest
+ * 100 samples and never moved again.
+ */
+const SERIES_LIMIT = 100;
+
+/** Newest-first from the index, then reversed so charts read left-to-right. */
+async function recentLogs(monitorId, projection) {
+  const rows = await logModel
+    .find({ monitorId })
+    .sort({ timestamp: -1 })
+    .limit(SERIES_LIMIT)
+    .select(projection);
+  return rows.reverse();
+}
+
+const clockLabel = (timestamp) =>
+  new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 export const getLatencyMetrics = asyncHandler(async (req, res) => {
   try {
@@ -13,35 +37,24 @@ export const getLatencyMetrics = asyncHandler(async (req, res) => {
     if (!validateId(monitorId, res)) return;
     await assertMonitorOwned(monitorId, req.user?.id);
 
-    const logs = await logModel
-      .find({ monitorId })
-      .sort({ timestamp: 1 })
-      .limit(100)
-      .select('latency timestamp');
+    const logs = await recentLogs(monitorId, 'latency timings timestamp');
 
+    // `time` and `latency` are unchanged for the existing chart; the phase
+    // breakdown is additive so nothing on the frontend breaks.
     const data = logs.map((l) => ({
-      time: new Date(l.timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      time: clockLabel(l.timestamp),
+      timestamp: l.timestamp,
       latency: l.latency ?? 0,
+      dns: l.timings?.dns ?? null,
+      tcp: l.timings?.tcp ?? null,
+      tls: l.timings?.tls ?? null,
+      ttfb: l.timings?.ttfb ?? null,
+      total: l.timings?.total ?? l.latency ?? null,
     }));
 
     res
       .status(200)
       .json(new ApiResponse(200, data, 'Latency metrics fetched successfully'));
-    /*
-    example response:
-    {
-      "message": "Latency metrics fetched successfully",
-      "success": true,
-      "data": [
-        { "time": "10:00 AM", "latency": 120 },
-        { "time": "10:01 AM", "latency": 110 },
-        ...
-      ]
-    }
-    */
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error('Latency fetch failed', error);
@@ -55,45 +68,23 @@ export const getUptimeMetrics = asyncHandler(async (req, res) => {
     if (!validateId(monitorId, res)) return;
     await assertMonitorOwned(monitorId, req.user?.id);
 
-    const result = await logModel.aggregate([
-      { $match: { monitorId: new mongoose.Types.ObjectId(monitorId) } },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          up: {
-            $sum: { $cond: [{ $eq: ['$status', 'UP'] }, 1, 0] },
-          },
-        },
-      },
-    ]);
+    const windows = await getUptimeWindows(monitorId);
 
-    const total = result[0]?.total || 0;
-    const up = result[0]?.up || 0;
-
-    const uptime = total ? (up / total) * 100 : 0;
+    // 30d backs the legacy top-level fields: it is the closest analogue to the
+    // old all-time number and matches the log retention window, so it is the
+    // widest figure we can actually substantiate.
+    const headline = windows['30d'];
 
     const data = {
-      uptime: Number(uptime.toFixed(2)),
-      totalChecks: total,
-      upChecks: up,
+      uptime: headline.uptime ?? 0,
+      totalChecks: headline.totalChecks,
+      upChecks: headline.upChecks,
+      windows,
     };
 
     res
       .status(200)
       .json(new ApiResponse(200, data, 'Uptime metrics fetched successfully'));
-    /*
-    example response:
-    {
-      "message": "Uptime metrics fetched successfully",
-      "success": true,
-      "data": {
-        "uptime": 95.5,
-        "totalChecks": 100,
-        "upChecks": 95
-      }
-    }
-    */
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error('Uptime fetch failed', error);
@@ -107,35 +98,21 @@ export const getStatusTimeline = asyncHandler(async (req, res) => {
     if (!validateId(monitorId, res)) return;
     await assertMonitorOwned(monitorId, req.user?.id);
 
-    const logs = await logModel
-      .find({ monitorId })
-      .sort({ timestamp: 1 })
-      .limit(100)
-      .select('status timestamp');
+    const logs = await recentLogs(monitorId, 'status timestamp statusCode');
 
     const data = logs.map((l) => ({
-      time: new Date(l.timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      time: clockLabel(l.timestamp),
+      timestamp: l.timestamp,
       status: l.status === 'UP' ? 1 : 0,
+      // Text label alongside the numeric one: the status dashboard must not
+      // depend on colour alone (WCAG AA, Phase 7).
+      label: l.status,
+      statusCode: l.statusCode ?? null,
     }));
 
     res
       .status(200)
       .json(new ApiResponse(200, data, 'Status timeline fetched successfully'));
-    /*
-    example response:
-    {
-      "message": "Status timeline fetched successfully",
-      "success": true,
-      "data": [
-        { "time": "10:00 AM", "status": 1 },
-        { "time": "10:01 AM", "status": 0 },
-        ...
-      ]
-    }
-    */
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error('Status timeline fetch failed', error);
