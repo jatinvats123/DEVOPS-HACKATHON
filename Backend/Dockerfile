@@ -1,20 +1,78 @@
-# --- WatchTower backend (also serves the built SPA from public/dist) ---
-FROM node:20-alpine
+# syntax=docker/dockerfile:1
+#
+# WatchTower backend — serves the API *and* the built SPA from public/dist.
+#
+# BUILD CONTEXT IS THE REPOSITORY ROOT, not ./Backend:
+#     docker build -f Backend/Dockerfile -t watchtower-backend .
+# The image builds the frontend itself, so it is self-contained. Previously the
+# SPA had to be built on the host first and the image silently shipped whatever
+# happened to be lying in public/dist — or nothing at all.
+
+# ---------------------------------------------------------------------------
+# Stage 1 — build the SPA
+# ---------------------------------------------------------------------------
+FROM node:20-bookworm-slim AS frontend-builder
+
+WORKDIR /build
+
+# Dependencies first so the (slow) install layer is cached independently of
+# source changes.
+COPY Frontend/package.json Frontend/package-lock.json ./Frontend/
+RUN npm ci --prefix Frontend
+
+COPY Frontend ./Frontend
+# vite.config.js emits to ../Backend/public/dist, so that path must exist.
+RUN mkdir -p Backend/public && npm --prefix Frontend run build
+
+# ---------------------------------------------------------------------------
+# Stage 2 — production dependencies only
+# ---------------------------------------------------------------------------
+FROM node:20-bookworm-slim AS deps
+
+WORKDIR /app
+COPY Backend/package.json Backend/package-lock.json ./
+# `npm ci --omit=dev` against the lockfile: reproducible, and devDependencies
+# (jest, supertest, mongodb-memory-server — which downloads a mongod binary)
+# never enter the runtime image.
+RUN npm ci --omit=dev && npm cache clean --force
+
+# ---------------------------------------------------------------------------
+# Stage 3 — runtime
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS runtime
+
+# dumb-init as PID 1. The previous image ran `npm start`, which means npm was
+# PID 1 and did NOT forward SIGTERM to node — so the graceful shutdown added in
+# Phase 2 (drain in-flight checks, release the scheduler lease) never ran in a
+# container. Every deploy left monitoring paused until the lease expired.
+# dumb-init also reaps zombies, which PID 1 is responsible for.
+RUN apk add --no-cache dumb-init
+
+ENV NODE_ENV=production \
+    PORT=8000 \
+    # Node does not know about the container's memory limit by default.
+    NODE_OPTIONS=--max-old-space-size=384
 
 WORKDIR /app
 
-# Install production deps first for better layer caching
-COPY package*.json ./
-RUN npm ci --omit=dev || npm install --omit=dev
+# Copy as the unprivileged user so no chown layer is needed afterwards.
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+COPY --chown=node:node Backend/package.json ./package.json
+COPY --chown=node:node Backend/server.js ./server.js
+COPY --chown=node:node Backend/src ./src
+COPY --from=frontend-builder --chown=node:node /build/Backend/public/dist ./public/dist
 
-COPY . .
+# Drop privileges. The `node` user (uid 1000) ships with the base image.
+# Running as root means a container escape starts with root on the host kernel.
+USER node
 
-ENV NODE_ENV=production
-ENV PORT=8000
 EXPOSE 8000
 
-# Container healthcheck against the health route
+# Uses the app's own health route, so the check exercises the real stack.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://localhost:'+(process.env.PORT||8000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["npm", "start"]
+ENTRYPOINT ["dumb-init", "--"]
+# `node server.js` rather than `npm start`: one less process between the init
+# system and the signal handlers that need to receive SIGTERM.
+CMD ["node", "server.js"]

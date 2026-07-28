@@ -1,6 +1,8 @@
-# Local full-stack run.
-# The frontend is built into Backend/public/dist and served by the backend,
-# so this is a single service (same topology as the Render deployment).
+# Local full-stack run, and the integration smoke test CI executes.
+#
+# The backend image builds the SPA itself and serves it, so this is the same
+# single-service topology as the Render deployment. No host-side build step is
+# required any more.
 services:
   mongo:
     image: mongo:7
@@ -9,27 +11,50 @@ services:
       - '27017:27017'
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      # A container that is "running" is not the same as a database that is
+      # ready to accept queries. Without this, the backend starts first, fails
+      # to connect, and its retry budget is spent racing Mongo's startup.
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   backend:
-    build: ./Backend
+    build:
+      # Context is the repository root so the image can build the frontend.
+      context: .
+      dockerfile: Backend/Dockerfile
     restart: unless-stopped
     ports:
       - '8000:8000'
-    env_file:
-      - ./Backend/.env
     environment:
-      # Override so the container talks to the mongo service, not localhost
       - MONGO_URL=mongodb://mongo:27017/watchtower
       - NODE_ENV=production
       - PORT=8000
       - CORS_ORIGIN=http://localhost:8000
       - FRONTEND_URL=http://localhost:8000
+      # Placeholders: config.js requires these to be present, and nothing in the
+      # smoke test sends mail. Real values come from the environment.
+      - JWT_SECRET=${JWT_SECRET:-local-development-secret-change-me}
+      - JWT_EXPIRY=${JWT_EXPIRY:-7d}
+      - SMTP_HOST=${SMTP_HOST:-smtp.example.invalid}
+      - SMTP_USER=${SMTP_USER:-noreply@example.invalid}
+      - SMTP_PASS=${SMTP_PASS:-unset}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - CREDENTIALS_ENCRYPTION_KEY=${CREDENTIALS_ENCRYPTION_KEY:-}
     depends_on:
-      - mongo
+      mongo:
+        # Wait for Mongo to be genuinely HEALTHY, not merely started. Plain
+        # `depends_on: [mongo]` only orders container creation and guarantees
+        # nothing about readiness.
+        condition: service_healthy
+    # SIGTERM must reach node for the scheduler to drain and release its lease.
+    # dumb-init in the image handles forwarding; this bounds how long compose
+    # waits before escalating to SIGKILL.
+    stop_grace_period: 30s
 
 volumes:
   mongo_data:
-# The SPA bundle is no longer committed to git. Build it into
-# Backend/public/dist before `docker compose up` (from the repo root):
-#   npm run install:all && npm run build
-# (A self-contained multi-stage image build lands in Phase 5.)
