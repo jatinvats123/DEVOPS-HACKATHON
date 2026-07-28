@@ -5,7 +5,8 @@
  * This service uses a Mistral AI model to process incident logs and provide
  */
 
-import { mistralAiModel } from '../ai/model.ai.js';
+import { getMistralModel } from '../ai/model.ai.js';
+import logger from '../config/logger.js';
 import {
   SystemMessage,
   HumanMessage,
@@ -50,8 +51,14 @@ Rules:
  */
 
 export const analyzeIncident = async (reason) => {
+  const model = getMistralModel();
+  // AI is optional. Returning null (rather than a "failed" placeholder string)
+  // lets the caller simply omit the section instead of writing an apology into
+  // the customer's incident record and alert email.
+  if (!model) return null;
+
   try {
-    const response = await mistralAiModel.invoke([
+    const response = await model.invoke([
       new SystemMessage(systemPrompt),
       new HumanMessage(`Analyze the following incident reason:\n${reason}`),
     ]);
@@ -65,9 +72,8 @@ export const analyzeIncident = async (reason) => {
 
     return content;
   } catch (err) {
-    console.error('AI Error:', err);
-
-    return 'AI analysis failed. Please try again.';
+    logger.error(`[ai] incident analysis failed: ${err.message}`);
+    return null;
   }
 };
 
@@ -102,9 +108,17 @@ export const streamAssistantReply = async (
   }
   messages.push(new HumanMessage(message));
 
+  const model = getMistralModel();
+  if (!model) {
+    const unavailable =
+      'The AI assistant is not configured on this deployment. Monitoring, incidents and alerting are unaffected.';
+    onChunk(unavailable);
+    return unavailable;
+  }
+
   let full = '';
   try {
-    const stream = await mistralAiModel.stream(messages);
+    const stream = await model.stream(messages);
     for await (const chunk of stream) {
       const text = typeof chunk.content === 'string' ? chunk.content : '';
       if (text) {
@@ -114,8 +128,8 @@ export const streamAssistantReply = async (
     }
   } catch (err) {
     // Fall back to a single non-streamed call if streaming isn't available.
-    console.error('AI stream error, falling back to invoke:', err?.message);
-    const res = await mistralAiModel.invoke(messages);
+    logger.error(`[ai] stream failed, falling back to invoke: ${err?.message}`);
+    const res = await model.invoke(messages);
     full = typeof res.content === 'string' ? res.content : '';
     if (full) onChunk(full);
   }
