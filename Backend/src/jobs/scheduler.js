@@ -49,6 +49,10 @@ export class MonitorScheduler {
     this.shutdownGraceMs =
       options.shutdownGraceMs ?? schedulerConfig.SHUTDOWN_GRACE_MS;
     this.lock = options.lock ?? new SchedulerLock();
+    // Injectable like every other option, so a test can drive the loop while
+    // the process-wide instance stays disabled. Defaults to the env setting, so
+    // production behaviour is unchanged.
+    this.enabled = options.enabled ?? schedulerConfig.ENABLED;
 
     /** Monitor ids with a check currently in flight — the overlap guard. */
     this.inFlight = new Set();
@@ -77,7 +81,7 @@ export class MonitorScheduler {
   }
 
   start() {
-    if (!schedulerConfig.ENABLED) {
+    if (!this.enabled) {
       logger.warn('[scheduler] disabled via SCHEDULER_ENABLED=false');
       return this;
     }
