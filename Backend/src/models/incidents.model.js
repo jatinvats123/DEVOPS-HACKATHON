@@ -43,8 +43,34 @@ const incidentSchema = new mongoose.Schema(
 //Compound index to optimize queries for ongoing incidents of a monitor
 incidentSchema.index({ monitorId: 1, status: 1 }); // Index to optimize queries by monitor and time
 
-//Auto duration calculation when resolving an incident
-incidentSchema.pre('save', function (next) {
+// Owner-scoped listing ("all my incidents, newest first") without a join.
+incidentSchema.index({ userId: 1, startTime: -1 });
+
+// At most ONE ongoing incident per monitor, enforced by the database rather
+// than by a read-then-write in application code. Leader election already makes
+// concurrent opens unlikely, but "unlikely" is not a guarantee — during a
+// failover window two instances can briefly both believe they lead. This
+// partial unique index makes a duplicate open impossible instead of improbable;
+// the service catches the resulting E11000 and treats it as "already open".
+incidentSchema.index(
+  { monitorId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: 'ONGOING' },
+    name: 'one_ongoing_incident_per_monitor',
+  }
+);
+
+// Auto duration calculation when resolving an incident.
+//
+// This hook MUST NOT declare a `next` parameter. Mongoose's middleware engine
+// (kareem) switches to callback style whenever the hook function has arity > 0
+// and then waits for `next()` before continuing. A previous version declared
+// `next` and never called it, which meant every incident `create()` and
+// `save()` hung forever — and because the scheduler awaited those calls, a
+// single incident could wedge the whole monitoring tick. Zero-arity keeps the
+// hook synchronous, which is all it needs to be.
+incidentSchema.pre('save', function () {
   if (this.startTime && this.endTime) {
     this.duration = Math.floor((this.endTime - this.startTime) / 1000); // Duration in seconds
   }
