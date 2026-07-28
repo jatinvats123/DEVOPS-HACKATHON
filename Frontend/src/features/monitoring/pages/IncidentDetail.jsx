@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router';
 import { RiArrowLeftLine, RiRobot2Line, RiRefreshLine } from '@remixicon/react';
 import { getIncidentById } from '../services/incident.api';
 

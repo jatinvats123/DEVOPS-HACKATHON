@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useMonitors } from '../hooks/useMonitor';
 import { selectMonitors, selectLoading } from '../state/monitor.slice';
