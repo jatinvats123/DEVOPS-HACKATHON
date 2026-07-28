@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { RiRefreshLine, RiRobot2Line } from '@remixicon/react';
 
 const Incidents = () => {

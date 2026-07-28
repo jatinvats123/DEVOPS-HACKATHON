@@ -1,0 +1,95 @@
+version: 2
+
+# Grouped, weekly updates. Ungrouped Dependabot on a two-package repo produces
+# a dozen PRs a week, which is how teams learn to ignore it entirely — the
+# opposite of the intended effect.
+updates:
+  # --- Backend ---
+  - package-ecosystem: npm
+    directory: /Backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    labels: [dependencies, backend]
+    commit-message:
+      prefix: 'build(deps)'
+      prefix-development: 'build(deps-dev)'
+    groups:
+      # Patch and minor bumps together: CI is the gate, and reviewing them
+      # individually is not a good use of anyone's attention.
+      backend-minor-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      # Security fixes are grouped separately so they are never buried in a
+      # routine bump PR.
+      backend-security:
+        applies-to: security-updates
+        patterns: ['*']
+    ignore:
+      # Majors are deliberate migrations, not something to merge on a Monday.
+      # Phase 5 already hit this: react-router 8 requires Node >= 22.22.0, which
+      # would silently drop the Node 20 support this project targets.
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+
+  # --- Frontend ---
+  - package-ecosystem: npm
+    directory: /Frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    labels: [dependencies, frontend]
+    commit-message:
+      prefix: 'build(deps)'
+      prefix-development: 'build(deps-dev)'
+    groups:
+      frontend-minor-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      frontend-security:
+        applies-to: security-updates
+        patterns: ['*']
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+
+  # --- Root workspace tooling (prettier) ---
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    labels: [dependencies, tooling]
+    commit-message:
+      prefix: 'build(deps)'
+
+  # --- GitHub Actions ---
+  # Actions are executable code running with repository credentials. Pinning
+  # them and letting Dependabot move the pins is the whole supply-chain story.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: 'ci(deps)'
+    groups:
+      actions:
+        patterns: ['*']
+
+  # --- Base images ---
+  - package-ecosystem: docker
+    directories:
+      - /Backend
+      - /Frontend
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, docker]
+    commit-message:
+      prefix: 'build(docker)'

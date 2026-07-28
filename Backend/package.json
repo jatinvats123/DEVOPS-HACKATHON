@@ -22,7 +22,6 @@
   "dependencies": {
     "@langchain/core": "^1.1.43",
     "@langchain/mistralai": "^1.0.8",
-    "axios": "^1.15.2",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -37,8 +36,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.5.0",
     "morgan": "^1.10.1",
-    "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^9.0.3",
     "socket.io": "^4.8.3",
     "winston": "^3.19.0",
     "zod": "^4.4.2"
@@ -55,5 +53,8 @@
     "nodemon": "^3.1.14",
     "socket.io-client": "^4.8.3",
     "supertest": "^7.2.2"
+  },
+  "overrides": {
+    "brace-expansion": "^5.0.8"
   }
 }

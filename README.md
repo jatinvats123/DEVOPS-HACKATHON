@@ -1,9 +1,17 @@
 # 🚀 DevOps Infrastructure Monitor
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green)](https://nodejs.org)
+[![CI](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml/badge.svg)](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jatinvats123/watchtower-monitoring/main/.github/badges/coverage.json)](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-20%20%7C%2022-green)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
-[![MongoDB](https://img.shields.io/badge/MongoDB-9-13aa52)](https://www.mongodb.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7-13aa52)](https://www.mongodb.com)
 [![License](https://img.shields.io/badge/License-ISC-yellow)](LICENSE)
+
+> **CI** runs lint, 284 tests across Node 20 and 22 with a 60% coverage gate, a
+> dependency-audit gate, Trivy scans, both Docker image builds, and a
+> `docker compose` integration smoke test against `/api/health`.
+> **Coverage** is generated from the same run that enforces the gate — see
+> [`scripts/coverage-badge.mjs`](scripts/coverage-badge.mjs).
 
 A comprehensive full-stack web application for monitoring infrastructure, APIs, and services with real-time status tracking, incident management, and centralized logging.
 
@@ -59,7 +67,7 @@ A comprehensive full-stack web application for monitoring infrastructure, APIs, 
 ### **Clone & Setup**
 ```bash
 # Clone repository
-git clone https://github.com/jatinvats123/DEVOPS-HACKATHON.git
+git clone https://github.com/jatinvats123/watchtower-monitoring.git
 cd DEVOPS-HACKATHON
 
 # Backend
@@ -232,7 +240,7 @@ DevOps teams often struggle with monitoring multiple services, APIs, and infrast
 
 #### 1. **Clone the Repository**
 ```bash
-git clone https://github.com/jatinvats123/DEVOPS-HACKATHON.git
+git clone https://github.com/jatinvats123/watchtower-monitoring.git
 cd DEVOPS-HACKATHON
 ```
 
@@ -641,7 +649,7 @@ This project is open source and available under the ISC License.
 
 **Jatin Vats**
 - GitHub: [@jatinvats123](https://github.com/jatinvats123)
-- Repository: [DEVOPS-HACKATHON](https://github.com/jatinvats123/DEVOPS-HACKATHON)
+- Repository: [DEVOPS-HACKATHON](https://github.com/jatinvats123/watchtower-monitoring)
 - Live App: [https://monitoring-production-19a5.up.railway.app/](https://monitoring-production-19a5.up.railway.app/)
 
 ---
@@ -658,8 +666,8 @@ This project is open source and available under the ISC License.
 ## 📞 Support & Issues
 
 For support and questions:
-- 🐛 [Open an issue on GitHub](https://github.com/jatinvats123/DEVOPS-HACKATHON/issues)
-- 💬 [Discussions](https://github.com/jatinvats123/DEVOPS-HACKATHON/discussions)
+- 🐛 [Open an issue on GitHub](https://github.com/jatinvats123/watchtower-monitoring/issues)
+- 💬 [Discussions](https://github.com/jatinvats123/watchtower-monitoring/discussions)
 - 📧 Contact via GitHub Issues
 
 ---

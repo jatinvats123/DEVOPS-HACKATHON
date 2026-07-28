@@ -16,7 +16,13 @@
     "lint:fix": "npm --prefix Backend run lint:fix && npm --prefix Frontend run lint:fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm --prefix Backend test"
+    "test": "npm --prefix Backend test",
+    "test:coverage": "npm --prefix Backend run test:coverage",
+    "audit": "node scripts/audit-gate.mjs Backend Frontend",
+    "badge:coverage": "node scripts/coverage-badge.mjs",
+    "docker:build": "docker build -f Backend/Dockerfile -t watchtower-backend:local . && docker build -f Frontend/Dockerfile -t watchtower-frontend:local ./Frontend",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down -v"
   },
   "devDependencies": {
     "prettier": "^3.4.2"

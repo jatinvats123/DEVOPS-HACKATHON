@@ -1,0 +1,41 @@
+# Build context is the repository ROOT (see Backend/Dockerfile).
+#
+# Everything excluded here is either reinstalled inside the image, irrelevant to
+# it, or must never enter it. Keeping the context small matters: it is sent to
+# the daemon in full on every build.
+
+# Dependencies — reinstalled from the lockfile in the image
+**/node_modules
+
+# Secrets — must never be copied into a layer, where they persist even if a
+# later layer deletes them
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Build output — regenerated inside the image
+Backend/public/dist
+Frontend/dist
+**/coverage
+
+# Tests and tooling — devDependencies are omitted at runtime anyway
+Backend/tests
+Backend/jest.config.js
+**/*.test.js
+
+# Version control and CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# Editor / OS cruft
+.vscode
+.idea
+.DS_Store
+**/*.log
+Backend/logs
+
+# Docs — not needed to run the service
+*.md
+docs

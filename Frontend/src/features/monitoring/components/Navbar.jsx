@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { RiNotification3Line, RiMenuLine } from '@remixicon/react';
 import { getAllIncidents } from '../services/incident.api';
 
