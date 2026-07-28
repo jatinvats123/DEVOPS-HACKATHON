@@ -1,12 +1,12 @@
-import { apiRequest } from "../../../lib/api/apiRequest.js";
-import { env } from "../../../config/env.js";
+import { apiRequest } from '../../../lib/api/apiRequest.js';
+import { env } from '../../../config/env.js';
 
 /**
  * @getAllIncidents - Fetches all incidents
  */
 export const getAllIncidents = async () => {
   return apiRequest({
-    method: "get",
+    method: 'get',
     url: env.INCIDENTS_API,
   });
 };
@@ -17,12 +17,10 @@ export const getAllIncidents = async () => {
  */
 export const getIncidentsByMonitorId = async (monitorId) => {
   return apiRequest({
-    method: "get",
+    method: 'get',
     url: `${env.INCIDENTS_API}/${monitorId}`,
   });
 };
-
-
 
 /**
  * @getIncidentById - Fetches a single incident by its own id (detail page)
@@ -30,7 +28,7 @@ export const getIncidentsByMonitorId = async (monitorId) => {
  */
 export const getIncidentById = async (incidentId) => {
   return apiRequest({
-    method: "get",
+    method: 'get',
     url: `${env.INCIDENTS_API}/detail/${incidentId}`,
   });
 };

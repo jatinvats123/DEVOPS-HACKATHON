@@ -1,5 +1,5 @@
-import { useDispatch, useSelector } from "react-redux";
-import { getLogsByMonitorId } from "../services/logs.api";
+import { useDispatch, useSelector } from 'react-redux';
+import { getLogsByMonitorId } from '../services/logs.api';
 import {
   setStatusLoading,
   setStatusError,
@@ -7,7 +7,7 @@ import {
   selectStatusData,
   selectStatusLoading,
   selectStatusError,
-} from "../state/status.slice";
+} from '../state/status.slice';
 
 export const useStatus = () => {
   const dispatch = useDispatch();
@@ -39,30 +39,34 @@ export const useStatus = () => {
         return dateB - dateA;
       });
 
-      let status = "UP"; // default to UP
+      let status = 'UP'; // default to UP
       let lastChecked = null;
 
       if (sortedLogs.length > 0) {
         const latestLog = sortedLogs[0];
         lastChecked = latestLog.createdAt || latestLog.timestamp;
 
-        const logStatus = (latestLog.status || "").toUpperCase();
-        const logMessage = (latestLog.message || latestLog.reason || "").toUpperCase();
+        const logStatus = (latestLog.status || '').toUpperCase();
+        const logMessage = (
+          latestLog.message ||
+          latestLog.reason ||
+          ''
+        ).toUpperCase();
 
         if (
-          logStatus === "DOWN" ||
-          logStatus === "ERROR" ||
-          logStatus === "FAILING" ||
-          logMessage.includes("FAIL") ||
-          logMessage.includes("ERROR") ||
-          logMessage.includes("DOWN") ||
-          logMessage.includes("TIMEOUT")
+          logStatus === 'DOWN' ||
+          logStatus === 'ERROR' ||
+          logStatus === 'FAILING' ||
+          logMessage.includes('FAIL') ||
+          logMessage.includes('ERROR') ||
+          logMessage.includes('DOWN') ||
+          logMessage.includes('TIMEOUT')
         ) {
-          status = "DOWN";
+          status = 'DOWN';
         }
       } else {
         // If there are no logs, we assume it's pending or hasn't run yet
-        status = "PENDING";
+        status = 'PENDING';
       }
 
       dispatch(
@@ -74,7 +78,7 @@ export const useStatus = () => {
         })
       );
     } catch (err) {
-      dispatch(setStatusError(err.message || "Failed to fetch monitor status"));
+      dispatch(setStatusError(err.message || 'Failed to fetch monitor status'));
     } finally {
       dispatch(setStatusLoading(false));
     }

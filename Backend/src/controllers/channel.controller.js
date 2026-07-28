@@ -137,5 +137,7 @@ export const listNotificationLogs = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, logs, 'Notification logs retrieved successfully'));
+    .json(
+      new ApiResponse(200, logs, 'Notification logs retrieved successfully')
+    );
 });

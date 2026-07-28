@@ -1,8 +1,8 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { verifyOtp } from "../services/asyncThunk.api";
+import { createSlice } from '@reduxjs/toolkit';
+import { verifyOtp } from '../services/asyncThunk.api';
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState: {
     user: null,
     loading: false,
@@ -50,22 +50,21 @@ const authSlice = createSlice({
     },
   },
 
-
-  extraReducers:(builder) => {
+  extraReducers: (builder) => {
     builder.addCase(verifyOtp.pending, (state) => {
       state.otp.verifying = true;
       state.otp.error = null;
     });
     builder.addCase(verifyOtp.fulfilled, (state) => {
       state.otp.verifying = false;
-        state.otp.success = true;
-          state.otp.error = null;
+      state.otp.success = true;
+      state.otp.error = null;
     });
     builder.addCase(verifyOtp.rejected, (state, action) => {
       state.otp.verifying = false;
-      state.otp.error = action.payload || "OTP verification failed";
+      state.otp.error = action.payload || 'OTP verification failed';
     });
-  }
+  },
 });
 
 export const {
@@ -75,7 +74,7 @@ export const {
   setAuthenticated,
   setUserId,
   clearAuthState,
-    setOtpSent
+  setOtpSent,
 } = authSlice.actions;
 
 export default authSlice.reducer;

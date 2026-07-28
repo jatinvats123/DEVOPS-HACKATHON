@@ -1,5 +1,5 @@
-import express from "express";
-import { HealthController } from "../controllers/health.controller.js";
+import express from 'express';
+import { HealthController } from '../controllers/health.controller.js';
 
 const HealthRouter = express.Router();
 
@@ -8,6 +8,6 @@ const HealthRouter = express.Router();
 @desc Check the health of the application
 @access Public
 */
-HealthRouter.get("/", HealthController);
+HealthRouter.get('/', HealthController);
 
 export default HealthRouter;

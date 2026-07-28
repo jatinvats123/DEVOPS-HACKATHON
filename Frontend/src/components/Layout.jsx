@@ -13,11 +13,14 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen luxury-container font-sans overflow-hidden relative">
-      <Sidebar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+      <Sidebar
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden w-full relative">
-        <Navbar 
-          onAddMonitorClick={() => setIsAddOpen(true)} 
-          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+        <Navbar
+          onAddMonitorClick={() => setIsAddOpen(true)}
+          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         />
         <div className="flex-1 overflow-y-auto relative w-full h-full">
           <Outlet />

@@ -5,9 +5,14 @@ import { useSelector } from 'react-redux';
 import { useState } from 'react';
 
 const AddMonitoring = ({ isOpen, onClose }) => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
   const { handleCreateMonitor } = useMonitors();
-  const { isAuthenticated } = useSelector(state => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [submitError, setSubmitError] = useState(null);
 
   if (!isOpen) return null;
@@ -25,8 +30,12 @@ const AddMonitoring = ({ isOpen, onClose }) => {
       reset();
       onClose();
     } catch (error) {
-      console.error("Error creating monitor:", error);
-      setSubmitError(error.response?.data?.message || error.message || 'Failed to create monitor');
+      console.error('Error creating monitor:', error);
+      setSubmitError(
+        error.response?.data?.message ||
+          error.message ||
+          'Failed to create monitor'
+      );
     }
   };
 
@@ -35,7 +44,10 @@ const AddMonitoring = ({ isOpen, onClose }) => {
       <div className="bg-[#faf9f5] rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300 border border-[#e6dfd8]">
         <div className="flex items-center justify-between px-10 py-8 border-b border-[#e6dfd8]">
           <h2 className="luxury-heading text-2xl">New Asset</h2>
-          <button onClick={onClose} className="p-2 text-[#6c6a64] hover:text-[#cc785c] hover:bg-white rounded-full transition-all">
+          <button
+            onClick={onClose}
+            className="p-2 text-[#6c6a64] hover:text-[#cc785c] hover:bg-white rounded-full transition-all"
+          >
             <RiCloseLine className="w-6 h-6" />
           </button>
         </div>
@@ -46,19 +58,27 @@ const AddMonitoring = ({ isOpen, onClose }) => {
               {submitError}
             </div>
           )}
-          <form id="add-monitor-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+          <form
+            id="add-monitor-form"
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-10"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="form-group">
                 <label className="luxury-label">Asset Type</label>
                 <select
-                  {...register("type", { required: "Type is required" })}
+                  {...register('type', { required: 'Type is required' })}
                   className="luxury-input bg-transparent"
                 >
                   <option value="http">HTTP / HTTPS</option>
                   <option value="tcp">TCP Protocol</option>
                   <option value="ping">ICMP Ping</option>
                 </select>
-                {errors.type && <span className="text-xs text-red-400 mt-2">{errors.type.message}</span>}
+                {errors.type && (
+                  <span className="text-xs text-red-400 mt-2">
+                    {errors.type.message}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -66,10 +86,14 @@ const AddMonitoring = ({ isOpen, onClose }) => {
                 <input
                   type="text"
                   placeholder="e.g. Production Cluster"
-                  {...register("title", { required: "Title is required" })}
+                  {...register('title', { required: 'Title is required' })}
                   className="luxury-input"
                 />
-                {errors.title && <span className="text-xs text-red-400 mt-2">{errors.title.message}</span>}
+                {errors.title && (
+                  <span className="text-xs text-red-400 mt-2">
+                    {errors.title.message}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -78,10 +102,14 @@ const AddMonitoring = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 placeholder="e.g. api-server-v1"
-                {...register("name", { required: "Name is required" })}
+                {...register('name', { required: 'Name is required' })}
                 className="luxury-input"
               />
-              {errors.name && <span className="text-xs text-red-400 mt-2">{errors.name.message}</span>}
+              {errors.name && (
+                <span className="text-xs text-red-400 mt-2">
+                  {errors.name.message}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -89,33 +117,55 @@ const AddMonitoring = ({ isOpen, onClose }) => {
               <input
                 type="url"
                 placeholder="https://api.acme.com/health"
-                {...register("url", { required: "URL is required" })}
+                {...register('url', { required: 'URL is required' })}
                 className="luxury-input"
               />
-              {errors.url && <span className="text-xs text-red-400 mt-2">{errors.url.message}</span>}
+              {errors.url && (
+                <span className="text-xs text-red-400 mt-2">
+                  {errors.url.message}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="form-group">
-                <label className="luxury-label">Check Frequency (Seconds)</label>
+                <label className="luxury-label">
+                  Check Frequency (Seconds)
+                </label>
                 <input
                   type="number"
                   defaultValue={60}
-                  {...register("interval", { required: "Interval is required", min: 10 })}
+                  {...register('interval', {
+                    required: 'Interval is required',
+                    min: 10,
+                  })}
                   className="luxury-input"
                 />
-                {errors.interval && <span className="text-xs text-red-400 mt-2">{errors.interval.message}</span>}
+                {errors.interval && (
+                  <span className="text-xs text-red-400 mt-2">
+                    {errors.interval.message}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
-                <label className="luxury-label">Latency Timeout (Seconds)</label>
+                <label className="luxury-label">
+                  Latency Timeout (Seconds)
+                </label>
                 <input
                   type="number"
                   defaultValue={10}
-                  {...register("timeout", { required: "Timeout is required", min: 1 })}
+                  {...register('timeout', {
+                    required: 'Timeout is required',
+                    min: 1,
+                  })}
                   className="luxury-input"
                 />
-                {errors.timeout && <span className="text-xs text-red-400 mt-2">{errors.timeout.message}</span>}
+                {errors.timeout && (
+                  <span className="text-xs text-red-400 mt-2">
+                    {errors.timeout.message}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -124,7 +174,7 @@ const AddMonitoring = ({ isOpen, onClose }) => {
               <textarea
                 rows="3"
                 placeholder="Technical details or maintenance context..."
-                {...register("description")}
+                {...register('description')}
                 className="luxury-input resize-none"
               ></textarea>
             </div>

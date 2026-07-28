@@ -1,5 +1,9 @@
 import express from 'express';
-import { getIncidentsByMonitorIdController, getIncidentByIdController, getAllIncidentsController } from '../controllers/incident.controller.js';
+import {
+  getIncidentsByMonitorIdController,
+  getIncidentByIdController,
+  getAllIncidentsController,
+} from '../controllers/incident.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 const IncidentRouter = express.Router();
 

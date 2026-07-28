@@ -1,40 +1,40 @@
-import { User } from "../models/user.model.js";
+import { User } from '../models/user.model.js';
 
 export const UserService = {
-    findUserByEmailOrUsername: async (email, username) => {
-        return await User.findOne({
-            $or: [{ username }, { email }]
-        }).select("+password");
-    },
+  findUserByEmailOrUsername: async (email, username) => {
+    return await User.findOne({
+      $or: [{ username }, { email }],
+    }).select('+password');
+  },
 
-    createUser: async (payload) => {
-        return await User.create(payload);
-    },
+  createUser: async (payload) => {
+    return await User.create(payload);
+  },
 
-    findUserByIdWithoutPassword: async (id) => {
-        return await User.findById(id);
-    },
+  findUserByIdWithoutPassword: async (id) => {
+    return await User.findById(id);
+  },
 
-    findUserByIdWithPassword: async (id) => {
-        return await User.findById(id).select("+password");
-    },
+  findUserByIdWithPassword: async (id) => {
+    return await User.findById(id).select('+password');
+  },
 
-    findUserById: async (id) => {
-        return await User.findById(id);
-    },
+  findUserById: async (id) => {
+    return await User.findById(id);
+  },
 
-    findUserByEmail: async (email) => {
-        return await User.findOne({ email });
-    },
+  findUserByEmail: async (email) => {
+    return await User.findOne({ email });
+  },
 
-    findUserByForgotToken: async (token) => {
-        return await User.findOne({
-            forgotPasswordToken: token,
-            forgotPasswordExpire: { $gt: Date.now() }
-        });
-    },
+  findUserByForgotToken: async (token) => {
+    return await User.findOne({
+      forgotPasswordToken: token,
+      forgotPasswordExpire: { $gt: Date.now() },
+    });
+  },
 
-    saveUser: async (user, options = {}) => {
-        return await user.save(options);
-    }
+  saveUser: async (user, options = {}) => {
+    return await user.save(options);
+  },
 };

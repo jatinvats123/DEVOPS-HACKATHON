@@ -10,7 +10,9 @@ function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { handleRegister, handleVerifyOtp } = useAuth();
-  const { loading, error, otp, userId, isAuthenticated } = useSelector(state => state.auth);
+  const { loading, error, otp, userId, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
 
   const [step, setStep] = useState('register'); // 'register', 'otp'
   const [formData, setFormData] = useState({
@@ -35,9 +37,11 @@ function Register() {
     if (!formData.fullname.trim()) errors.fullname = 'Full name is required';
     if (!formData.username.trim()) errors.username = 'Username is required';
     if (!formData.email.trim()) errors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      errors.email = 'Invalid email format';
     if (!formData.password) errors.password = 'Password is required';
-    if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+    if (formData.password !== formData.confirmPassword)
+      errors.confirmPassword = 'Passwords do not match';
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -45,8 +49,9 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (validationErrors[name]) setValidationErrors(prev => ({ ...prev, [name]: '' }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (validationErrors[name])
+      setValidationErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -62,7 +67,10 @@ function Register() {
 
       if (response && response.data && response.data.token) {
         navigate('/dashboard', { replace: true });
-      } else if (otp.sent || (response && response.data && response.data.otpSent)) {
+      } else if (
+        otp.sent ||
+        (response && response.data && response.data.otpSent)
+      ) {
         setStep('otp');
       }
     } catch (err) {
@@ -96,13 +104,19 @@ function Register() {
     return (
       <div className="auth-container">
         <div className="auth-card">
-          <button onClick={() => setStep('register')} className="auth-back-button">
+          <button
+            onClick={() => setStep('register')}
+            className="auth-back-button"
+          >
             <RiArrowLeftLine className="w-5 h-5" />
             Back
           </button>
 
           <h1 className="auth-title">Verify your email</h1>
-          <p className="auth-subtitle">We sent a 6-digit code to <span className="font-medium text-[#141413]">{formData.email}</span></p>
+          <p className="auth-subtitle">
+            We sent a 6-digit code to{' '}
+            <span className="font-medium text-[#141413]">{formData.email}</span>
+          </p>
 
           {error && <div className="error-message">{error}</div>}
 
@@ -118,16 +132,23 @@ function Register() {
                 className={`auth-otp-input ${validationErrors.otp ? 'input-error' : ''}`}
                 disabled={loading}
               />
-              {validationErrors.otp && <span className="field-error">{validationErrors.otp}</span>}
+              {validationErrors.otp && (
+                <span className="field-error">{validationErrors.otp}</span>
+              )}
             </div>
 
-            <button type="submit" className="auth-button-primary" disabled={loading || otpValue.length !== 6}>
+            <button
+              type="submit"
+              className="auth-button-primary"
+              disabled={loading || otpValue.length !== 6}
+            >
               {loading ? 'Verifying...' : 'Verify code'}
             </button>
           </form>
 
           <p className="auth-footer mt-8">
-            Didn't receive a code? <button className="text-[#cc785c] hover:underline">Resend</button>
+            Didn't receive a code?{' '}
+            <button className="text-[#cc785c] hover:underline">Resend</button>
           </p>
         </div>
       </div>
@@ -142,8 +163,6 @@ function Register() {
         </div>
 
         <h1 className="auth-title">Create your account</h1>
-
-
 
         <div className="auth-divider">
           <span>OR</span>
@@ -164,7 +183,9 @@ function Register() {
                 disabled={loading}
                 className={validationErrors.fullname ? 'input-error' : ''}
               />
-              {validationErrors.fullname && <span className="field-error">{validationErrors.fullname}</span>}
+              {validationErrors.fullname && (
+                <span className="field-error">{validationErrors.fullname}</span>
+              )}
             </div>
             <div className="form-group">
               <label className="auth-label">Username</label>
@@ -177,7 +198,9 @@ function Register() {
                 disabled={loading}
                 className={validationErrors.username ? 'input-error' : ''}
               />
-              {validationErrors.username && <span className="field-error">{validationErrors.username}</span>}
+              {validationErrors.username && (
+                <span className="field-error">{validationErrors.username}</span>
+              )}
             </div>
           </div>
 
@@ -192,7 +215,9 @@ function Register() {
               disabled={loading}
               className={validationErrors.email ? 'input-error' : ''}
             />
-            {validationErrors.email && <span className="field-error">{validationErrors.email}</span>}
+            {validationErrors.email && (
+              <span className="field-error">{validationErrors.email}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -206,7 +231,9 @@ function Register() {
               disabled={loading}
               className={validationErrors.password ? 'input-error' : ''}
             />
-            {validationErrors.password && <span className="field-error">{validationErrors.password}</span>}
+            {validationErrors.password && (
+              <span className="field-error">{validationErrors.password}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -220,10 +247,18 @@ function Register() {
               disabled={loading}
               className={validationErrors.confirmPassword ? 'input-error' : ''}
             />
-            {validationErrors.confirmPassword && <span className="field-error">{validationErrors.confirmPassword}</span>}
+            {validationErrors.confirmPassword && (
+              <span className="field-error">
+                {validationErrors.confirmPassword}
+              </span>
+            )}
           </div>
 
-          <button type="submit" className="auth-button-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-button-primary"
+            disabled={loading}
+          >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
@@ -233,7 +268,15 @@ function Register() {
         </p>
 
         <p className="text-[11px] text-[#6c6a64] text-center mt-10 leading-relaxed">
-          By creating an account, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+          By creating an account, you agree to our{' '}
+          <a href="#" className="underline">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="#" className="underline">
+            Privacy Policy
+          </a>
+          .
         </p>
       </div>
     </div>

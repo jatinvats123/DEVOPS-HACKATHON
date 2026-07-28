@@ -40,7 +40,12 @@ export function useChat() {
       setTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: `err-${Date.now()}`, role: 'assistant', content: msg, error: true },
+        {
+          id: `err-${Date.now()}`,
+          role: 'assistant',
+          content: msg,
+          error: true,
+        },
       ]);
     };
 
