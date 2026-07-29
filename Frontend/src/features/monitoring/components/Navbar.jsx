@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { RiNotification3Line, RiMenuLine } from '@remixicon/react';
 import { getAllIncidents } from '../services/incident.api';
+import ConnectionStatus from '../../../components/ui/ConnectionStatus';
+import { useRealtime } from '../../../lib/socket/useRealtime';
 
 const TITLES = {
   '/dashboard': 'Overview',
@@ -53,6 +55,12 @@ const Navbar = ({ onMobileMenuToggle }) => {
     load();
   }, [load]);
 
+  // Realtime lives here because the navbar is present on every authenticated
+  // screen. Reconnecting refetches incidents: socket events are NOT queued
+  // while disconnected, so without this resync the badge silently keeps the
+  // count it had when the connection dropped.
+  const realtime = useRealtime(load);
+
   useEffect(() => {
     if (open) load();
   }, [open, load]);
@@ -93,7 +101,16 @@ const Navbar = ({ onMobileMenuToggle }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 sm:gap-6">
+        {/* Live-connection indicator. Without it a dropped socket is
+            indistinguishable from a calm period, and the dashboard keeps
+            confidently displaying state frozen at the moment it disconnected. */}
+        <ConnectionStatus
+          state={realtime.state}
+          reconnectAttempt={realtime.reconnectAttempt}
+          onRetry={realtime.retryNow}
+        />
+
         <div className="relative" ref={panelRef}>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -116,7 +133,7 @@ const Navbar = ({ onMobileMenuToggle }) => {
                   Notifications
                 </p>
                 {ongoing > 0 && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#cc785c]">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#a8543a]">
                     {ongoing} active
                   </span>
                 )}
@@ -148,8 +165,8 @@ const Navbar = ({ onMobileMenuToggle }) => {
                         <span
                           className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${
                             inc.status === 'ONGOING'
-                              ? 'text-[#cc785c]'
-                              : 'text-[#6c6a64]'
+                              ? 'text-[#a8543a]'
+                              : 'text-[#5a5750]'
                           }`}
                         >
                           {inc.status}
@@ -169,7 +186,7 @@ const Navbar = ({ onMobileMenuToggle }) => {
               <Link
                 to="/incidents"
                 onClick={() => setOpen(false)}
-                className="block px-5 py-3 text-center text-xs font-semibold text-[#cc785c] hover:bg-[#faf9f5] transition-colors"
+                className="block px-5 py-3 text-center text-xs font-semibold text-[#a8543a] hover:bg-[#faf9f5] transition-colors"
               >
                 View all incidents
               </Link>
