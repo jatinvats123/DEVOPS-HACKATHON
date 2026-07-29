@@ -29,6 +29,10 @@
  */
 
 import notificationLogModel from '../models/notificationLog.model.js';
+import {
+  notificationsTotal,
+  notificationFailuresTotal,
+} from '../observability/metrics.js';
 import logger from '../config/logger.js';
 
 export const IncidentEvent = {
@@ -136,6 +140,18 @@ export class NotifierRegistry {
         });
       }
     });
+
+    // A failed notification is the most consequential thing that can go wrong
+    // here: the incident is recorded correctly, the dashboard looks right, and
+    // the customer is simply never told. Counted separately so it can be
+    // alerted on directly rather than inferred from log volume.
+    for (const result of results) {
+      const channel = result.channel || 'unknown';
+      notificationsTotal.inc({ channel, status: result.status });
+      if (result.status === 'Failed') {
+        notificationFailuresTotal.inc({ channel });
+      }
+    }
 
     await Promise.all(results.map((r) => this.#record(payload, eventLabel, r)));
 

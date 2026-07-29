@@ -13,6 +13,14 @@ import { runPool } from '../utils/pool.js';
 import { schedulerConfig } from '../config/scheduler.config.js';
 import { decryptAuthHeaders } from '../utils/crypto.js';
 import { emitToUser, SocketEvent } from '../sockets/server.socket.js';
+import {
+  checksExecutedTotal,
+  checkDurationSeconds,
+  checksSkippedTotal,
+  incidentsOpenedTotal,
+  incidentsClosedTotal,
+  schedulerTickDurationSeconds,
+} from '../observability/metrics.js';
 import logger from '../config/logger.js';
 
 /**
@@ -172,6 +180,7 @@ export class MonitorScheduler {
         // and do not cancel (throws away the measurement in progress).
         if (this.inFlight.has(id)) {
           this.stats.skippedOverlap += 1;
+          checksSkippedTotal.inc({ reason: 'overlap' });
           continue;
         }
 
@@ -179,6 +188,7 @@ export class MonitorScheduler {
         const breaker = evaluateBreaker(monitor, now.getTime());
         if (!breaker.allowed) {
           this.stats.skippedBreaker += 1;
+          checksSkippedTotal.inc({ reason: 'breaker_open' });
           continue;
         }
 
@@ -203,6 +213,9 @@ export class MonitorScheduler {
       this.stats.lastTickAt = new Date();
       this.stats.lastTickDurationMs = Number(
         (process.hrtime.bigint() - startedAt) / 1_000_000n
+      );
+      schedulerTickDurationSeconds.observe(
+        this.stats.lastTickDurationMs / 1000
       );
       this.ticking = false;
     }
@@ -241,6 +254,7 @@ export class MonitorScheduler {
     breaker = { mode: BreakerState.CLOSED, patch: null }
   ) {
     const isProbe = breaker.mode === BreakerState.HALF_OPEN;
+    const checkStartedAt = process.hrtime.bigint();
 
     const result = await checkMonitor(monitor.url, {
       timeoutMs: (monitor.timeout || 10) * 1000,
@@ -257,6 +271,14 @@ export class MonitorScheduler {
     const up = result.status === 'UP';
     if (up) this.stats.checksSucceeded += 1;
     else this.stats.checksFailed += 1;
+
+    // Labelled by outcome only — never by monitor id, which would create one
+    // time series per monitor and grow without bound as customers are added.
+    checksExecutedTotal.inc({ status: result.status });
+    checkDurationSeconds.observe(
+      { status: result.status },
+      Number(process.hrtime.bigint() - checkStartedAt) / 1e9
+    );
 
     const now = new Date();
 
@@ -340,6 +362,7 @@ export class MonitorScheduler {
         );
         if (opened) {
           this.stats.incidentsOpened += 1;
+          incidentsOpenedTotal.inc();
           emitToUser(monitor.userId, SocketEvent.INCIDENT_OPENED, {
             monitorId: String(monitor._id),
             incidentId: String(incident?._id ?? ''),
@@ -355,6 +378,7 @@ export class MonitorScheduler {
         });
         if (closed) {
           this.stats.incidentsClosed += 1;
+          incidentsClosedTotal.inc();
           emitToUser(monitor.userId, SocketEvent.INCIDENT_CLOSED, {
             monitorId: String(monitor._id),
             incidentId: String(incident?._id ?? ''),
