@@ -3,8 +3,12 @@ import cors from 'cors';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import morgan from 'morgan';
 import compression from 'compression';
+import {
+  requestContextMiddleware,
+  httpLogger,
+  httpMetricsMiddleware,
+} from './middlewares/requestLogger.middleware.js';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
@@ -117,6 +121,14 @@ const Middleware = (app) => {
   // see the real client IP and protocol.
   app.set('trust proxy', 1);
 
+  // Correlation and observability run FIRST — before helmet, before CORS,
+  // before the path blocklist. Every request must be traceable, including the
+  // ones rejected early: a 403 with no request id is a log line nobody can tie
+  // to anything.
+  app.use(requestContextMiddleware);
+  app.use(httpLogger);
+  app.use(httpMetricsMiddleware);
+
   app.use(
     helmet({
       // The SPA is served from this same origin; the default CORP policy
@@ -151,7 +163,6 @@ const Middleware = (app) => {
   // array into somewhere a single value was expected.
   app.use(hpp());
 
-  app.use(morgan(config.NODE_ENV === 'production' ? 'combined' : 'dev'));
   app.use(compression());
 
   // Strictest limiter first — Express runs matching middleware in order, so

@@ -60,7 +60,7 @@ export const getLatencyMetrics = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, data, 'Latency metrics fetched successfully'));
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    logger.error('Latency fetch failed', error);
+    logger.error({ err: error }, 'Latency fetch failed');
     throw new ApiError(500, 'Latency fetch failed');
   }
 });
@@ -90,7 +90,7 @@ export const getUptimeMetrics = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, data, 'Uptime metrics fetched successfully'));
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    logger.error('Uptime fetch failed', error);
+    logger.error({ err: error }, 'Uptime fetch failed');
     throw new ApiError(500, 'Uptime fetch failed');
   }
 });
@@ -122,7 +122,7 @@ export const getStatusTimeline = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, data, 'Status timeline fetched successfully'));
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    logger.error('Status timeline fetch failed', error);
+    logger.error({ err: error }, 'Status timeline fetch failed');
     throw new ApiError(500, 'Status timeline fetch failed');
   }
 });

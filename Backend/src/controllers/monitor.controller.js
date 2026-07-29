@@ -95,7 +95,7 @@ export const createMonitorController = asyncHandler(async (req, res) => {
         new ApiResponse(201, present(monitor), 'Monitor created successfully')
       );
   } catch (error) {
-    logger.error('Error creating monitor:', error);
+    logger.error({ err: error }, 'Error creating monitor');
     throw new ApiError(500, 'Internal server error');
   }
 });

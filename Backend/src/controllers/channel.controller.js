@@ -97,7 +97,7 @@ export const testChannel = asyncHandler(async (req, res) => {
       detail = `${channel.type} delivery is not configured on this deployment`;
     }
   } catch (err) {
-    logger.error('Test dispatch failed:', err);
+    logger.error({ err }, 'Test dispatch failed');
     status = 'Failed';
     detail = err?.message || 'Dispatch failed';
   }

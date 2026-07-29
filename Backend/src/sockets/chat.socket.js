@@ -32,7 +32,7 @@ export const handleSocketChat = (socket) => {
       socket.emit('chat:reply', { id, message: full });
       if (typeof ack === 'function') ack({ ok: true, id });
     } catch (err) {
-      logger.error('AI chat error:', err);
+      logger.error({ err }, 'AI chat error');
       socket.emit('chat:error', 'The assistant is unavailable right now.');
       if (typeof ack === 'function') ack({ ok: false, error: 'AI error' });
     } finally {
