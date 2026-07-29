@@ -9,6 +9,7 @@ import LogsRouter from './routes/logs.route.js';
 import IncidentRouter from './routes/incident.route.js';
 import metricsRouter from './routes/metrics.route.js';
 import ChannelRouter from './routes/channel.route.js';
+import observabilityRouter from './routes/observability.route.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
 
@@ -18,6 +19,12 @@ const distDir = path.resolve(__dirname, '../public/dist');
 const app = express();
 
 Middleware(app);
+
+// Prometheus scrape target. Mounted at the root rather than under /api: it is
+// where scrapers look by convention, and it is an operational surface rather
+// than part of the product API (which is also why the SPA fallback below must
+// not swallow it).
+app.use('/', observabilityRouter);
 
 app.use('/api/health', HealthRouter);
 app.use('/api/auth', UserRouter);
