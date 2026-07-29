@@ -151,9 +151,11 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-12 luxury-container">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
       <div className="mb-16">
-        <h1 className="luxury-heading text-4xl">Account Settings</h1>
+        <h1 className="luxury-heading text-2xl sm:text-3xl lg:text-4xl">
+          Account Settings
+        </h1>
         <p className="luxury-subtext mt-3">
           Manage your personal preferences, security settings, and notification
           delivery.
@@ -454,7 +456,7 @@ const Settings = () => {
                     </button>
                     <button
                       type="button"
-                      className="text-sm font-medium text-[#cc785c] hover:underline"
+                      className="text-sm font-medium text-[#a8543a] hover:underline"
                     >
                       Enable Multi-Factor Auth
                     </button>

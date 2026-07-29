@@ -5,6 +5,9 @@ import { useMonitors } from '../hooks/useMonitor';
 import { selectMonitors, selectLoading } from '../state/monitor.slice';
 import { getAllIncidents } from '../services/incident.api';
 import UptimeWindows from '../components/UptimeWindows';
+import { getLatencyMetrics } from '../services/metrics.api';
+import ChartDataTable from '../../../components/ui/ChartDataTable';
+import { LoadingRegion, SkeletonChart } from '../../../components/ui/Skeleton';
 import {
   AreaChart,
   Area,
@@ -37,15 +40,6 @@ import {
 } from '@remixicon/react';
 
 // ─── SAMPLE DATA & ICONS ───────────────────────────────────────────────────
-const uptimeData = [
-  { time: 'May 12', val: 99.5 },
-  { time: 'May 13', val: 99.2 },
-  { time: 'May 14', val: 97.8 },
-  { time: 'May 15', val: 98.0 },
-  { time: 'May 16', val: 99.3 },
-  { time: 'May 17', val: 99.5 },
-  { time: 'May 18', val: 99.7 },
-];
 
 const Icons = {
   Logo: () => <RiPulseLine className="w-5 h-5 text-indigo-600" />,
@@ -124,64 +118,123 @@ const StatsCards = ({ stats }) => {
   );
 };
 
-const UptimeOverview = () => {
+/**
+ * Response-time history for the selected monitor.
+ *
+ * This panel previously rendered a hardcoded array of invented uptime
+ * percentages — seven made-up values that never changed and had no relationship
+ * to anything being monitored. On a product whose entire purpose is reporting
+ * real measurements, a fabricated chart is worse than no chart.
+ *
+ * It now plots the genuine per-check latency series from /api/metrics/latency,
+ * and is wrapped in ChartDataTable so the same numbers are available as a real
+ * table to screen readers and to anyone who would rather read than estimate.
+ */
+const ResponseTimeHistory = ({ monitorId, monitorTitle }) => {
+  const [series, setSeries] = useState([]);
+  const [state, setState] = useState('idle');
+
+  useEffect(() => {
+    if (!monitorId) return undefined;
+    let cancelled = false;
+
+    const load = async () => {
+      setState('loading');
+      try {
+        const res = await getLatencyMetrics(monitorId);
+        if (cancelled) return;
+        setSeries(res?.data ?? []);
+        setState('ready');
+      } catch {
+        if (!cancelled) setState('error');
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [monitorId]);
+
+  const latencies = series.map((p) => p.latency).filter((n) => n > 0);
+  const summary = latencies.length
+    ? `${latencies.length} checks. Fastest ${Math.min(...latencies)}ms, slowest ${Math.max(...latencies)}ms, latest ${latencies[latencies.length - 1]}ms.`
+    : undefined;
+
+  if (state === 'loading') {
+    return (
+      <div className="bg-white border border-[#e6dfd8] p-4 sm:p-8 rounded-xl shadow-sm">
+        <LoadingRegion label="Loading response time history">
+          <SkeletonChart />
+        </LoadingRegion>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm">
-      <div className="flex items-center justify-between mb-10">
-        <h2 className="luxury-heading text-xl">Performance History</h2>
-        <select className="luxury-label bg-transparent border border-[#e6dfd8] rounded-md px-2 py-1 outline-none cursor-pointer">
-          <option>Last 7 Days</option>
-          <option>Last 30 Days</option>
-        </select>
-      </div>
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={uptimeData}
-            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="0"
-              vertical={false}
-              stroke="#e6dfd8"
-            />
-            <XAxis
-              dataKey="time"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
-              dy={15}
-            />
-            <YAxis
-              domain={['dataMin - 1', 100]}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
-              tickFormatter={(val) => `${val}%`}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: '8px',
-                border: '1px solid #e6dfd8',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                backgroundColor: '#fff',
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="val"
-              stroke="#cc785c"
-              strokeWidth={2}
-              fillOpacity={0.1}
-              fill="#cc785c"
-              activeDot={{ r: 5, fill: '#cc785c', strokeWidth: 0 }}
-              dot={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="bg-white border border-[#e6dfd8] p-4 sm:p-8 rounded-xl shadow-sm">
+      <ChartDataTable
+        title="Response time"
+        summary={summary ?? monitorTitle}
+        emptyMessage="No checks recorded yet for this monitor."
+        columns={[
+          { key: 'time', label: 'Time' },
+          { key: 'latency', label: 'Total (ms)' },
+          { key: 'ttfb', label: 'TTFB (ms)', render: (r) => r.ttfb ?? '—' },
+          { key: 'dns', label: 'DNS (ms)', render: (r) => r.dns ?? '—' },
+        ]}
+        rows={series}
+      >
+        <div className="h-56 sm:h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={series}
+              margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="0"
+                vertical={false}
+                stroke="#e6dfd8"
+              />
+              <XAxis
+                dataKey="time"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
+                dy={15}
+              />
+              <YAxis
+                // Milliseconds now, not a percentage — the series is real latency.
+                domain={[0, 'dataMax + 50']}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#6c6a64', fontSize: 11, fontFamily: 'Inter' }}
+                tickFormatter={(val) => `${val}ms`}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid #e6dfd8',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  fontFamily: 'Inter',
+                  fontSize: '12px',
+                  backgroundColor: '#fff',
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="latency"
+                stroke="#cc785c"
+                strokeWidth={2}
+                fillOpacity={0.1}
+                fill="#cc785c"
+                activeDot={{ r: 5, fill: '#cc785c', strokeWidth: 0 }}
+                dot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartDataTable>
     </div>
   );
 };
@@ -496,7 +549,7 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-12 luxury-container">
+    <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
       <StatsCards stats={stats} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
@@ -528,7 +581,10 @@ const Dashboard = () => {
               />
             </div>
           )}
-          <UptimeOverview />
+          <ResponseTimeHistory
+            monitorId={selectedMonitorId}
+            monitorTitle={selectedMonitor?.url}
+          />
           <div className="relative">
             {loading && monitors.length === 0 && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { getAllIncidents } from '../services/incident.api';
 import { Link } from 'react-router';
 import { RiRefreshLine, RiRobot2Line } from '@remixicon/react';
+import EmptyState from '../../../components/ui/EmptyState';
+import { LoadingRegion, SkeletonRows } from '../../../components/ui/Skeleton';
+import { RiShieldCheckLine } from '@remixicon/react';
 
 const Incidents = () => {
   const [incidents, setIncidents] = useState([]);
@@ -31,10 +34,12 @@ const Incidents = () => {
   }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto p-12 luxury-container">
-      <div className="flex items-center justify-between mb-16">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12 lg:mb-16">
         <div>
-          <h1 className="luxury-heading text-4xl">Journal</h1>
+          <h1 className="luxury-heading text-2xl sm:text-3xl lg:text-4xl">
+            Journal
+          </h1>
           <p className="luxury-subtext mt-3 max-w-md">
             A chronological record of system events, outages, and resolutions.
           </p>
@@ -57,22 +62,27 @@ const Incidents = () => {
         </div>
       )}
 
-      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-10 overflow-hidden mb-16">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="luxury-heading text-2xl">System Events</h2>
+      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-4 sm:p-6 lg:p-10 overflow-hidden mb-16">
+        <div className="flex items-center justify-between gap-4 mb-6 sm:mb-10 lg:mb-12">
+          <h2 className="luxury-heading text-xl sm:text-2xl">System Events</h2>
         </div>
 
         <div className="overflow-x-auto min-h-[400px] relative">
           {loading && incidents.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#faf9f5]/60 z-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
-            </div>
+            <LoadingRegion label="Loading incidents">
+              <div className="p-4">
+                <SkeletonRows rows={4} />
+              </div>
+            </LoadingRegion>
           ) : incidents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[400px] text-center p-8">
-              <p className="luxury-subtext text-lg">
-                No events recorded in the current period
-              </p>
-            </div>
+            // Positive tone: an empty incident list is GOOD NEWS on a
+            // monitoring dashboard, and must not read as a broken feature.
+            <EmptyState
+              icon={RiShieldCheckLine}
+              tone="positive"
+              title="No incidents recorded"
+              description="Every monitored endpoint has been responding normally. Incidents appear here automatically when one fails its configured threshold."
+            />
           ) : (
             <table className="luxury-table">
               <thead>
@@ -122,7 +132,7 @@ const Incidents = () => {
                     <td className="text-right">
                       <Link
                         to={`/incidents/${inc._id}`}
-                        className="text-xs font-semibold text-[#cc785c] hover:underline"
+                        className="text-xs font-semibold text-[#a8543a] hover:underline"
                       >
                         Details
                       </Link>
@@ -145,14 +155,14 @@ const Incidents = () => {
               className="bg-white border border-[#cc785c]/20 p-12 rounded-2xl shadow-sm relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 p-4">
-                <div className="bg-[#cc785c]/10 text-[#cc785c] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                <div className="bg-[#cc785c]/10 text-[#a8543a] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
                   AI Diagnosis
                 </div>
               </div>
 
               <div className="flex items-center gap-6 mb-12 pb-6 border-b border-[#e6dfd8]">
                 <RiRobot2Line className="w-8 h-8 text-[#cc785c]" />
-                <h3 className="luxury-heading text-2xl">
+                <h3 className="luxury-heading text-xl sm:text-2xl">
                   Intelligence Summary
                 </h3>
               </div>

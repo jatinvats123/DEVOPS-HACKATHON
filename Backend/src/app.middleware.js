@@ -175,8 +175,35 @@ const Middleware = (app) => {
   app.use('/api/auth/reset-password', passwordResetLimiter);
   app.use('/api', apiLimiter);
 
-  // Serve the built SPA (absolute path so it works from any cwd)
-  app.use(express.static(distDir, { maxAge: '1h' }));
+  /**
+   * Serve the built SPA.
+   *
+   * A flat 1h max-age was wrong in both directions. Vite emits content-hashed
+   * filenames (`index-CB2zv4G8.js`), so those files are immutable by
+   * construction and can be cached for a year — an hour meant every returning
+   * visitor re-downloaded the whole bundle. Meanwhile index.html must NOT be
+   * cached at all: a stale shell references asset hashes that no longer exist
+   * after a deploy, which is a blank page for anyone holding a cached copy.
+   */
+  app.use(
+    express.static(distDir, {
+      // No implicit max-age; set per file below.
+      setHeaders: (res, filePath) => {
+        if (/index\.html$/i.test(filePath)) {
+          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+          return;
+        }
+        if (/\/assets\//.test(filePath.replace(/\\/g, '/'))) {
+          // Content-hashed: a change produces a new filename, so this copy can
+          // never go stale.
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          return;
+        }
+        // Everything else (favicon, robots.txt) — short, revalidated.
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      },
+    })
+  );
 };
 
 export default Middleware;

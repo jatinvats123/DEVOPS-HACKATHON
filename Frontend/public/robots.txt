@@ -1,0 +1,18 @@
+# WatchTower
+#
+# The application itself is behind authentication and has nothing worth
+# indexing; the marketing/login entry point does. Crawling the API or the
+# authenticated routes only wastes crawl budget on redirects to /login.
+
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /register
+Disallow: /api/
+Disallow: /metrics
+Disallow: /dashboard
+Disallow: /monitors
+Disallow: /incidents
+Disallow: /alerts
+Disallow: /settings
+Disallow: /status-pages

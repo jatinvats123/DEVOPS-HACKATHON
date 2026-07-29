@@ -1,7 +1,5 @@
 /* Luxury Minimal Authentication UI */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
 * {
   box-sizing: border-box;
 }
@@ -83,7 +81,7 @@
 .form-group label {
   font-size: 11px;
   font-weight: 500;
-  color: #999999;
+  color: #6b6862;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 12px;
@@ -136,7 +134,7 @@
   border: none;
   cursor: pointer;
   padding: 8px 0;
-  color: #999999;
+  color: #6b6862;
   transition: color 0.3s ease;
   font-size: 18px;
   outline: none;
@@ -224,7 +222,7 @@
 
 .auth-divider span {
   font-size: 12px;
-  color: #999999;
+  color: #6b6862;
   text-transform: uppercase;
   letter-spacing: 1px;
   background: #ffffff;
@@ -326,7 +324,7 @@
 }
 
 .auth-footer a {
-  color: #667eea;
+  color: #4338ca;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
@@ -361,7 +359,7 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.2s;
-  color: #999;
+  color: #6b6862;
 }
 
 .toggle-password:hover {
@@ -393,7 +391,7 @@
   padding: 12px 16px;
   text-align: center;
   background-color: #f5f5f5;
-  color: #667eea;
+  color: #4338ca;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 15px;
@@ -406,7 +404,7 @@
 
 .auth-link-button:hover {
   background-color: #efefef;
-  border-color: #667eea;
+  border-color: #4338ca;
   color: #764ba2;
 }
 
@@ -428,7 +426,7 @@
 
 .auth-divider span {
   font-size: 13px;
-  color: #999;
+  color: #6b6862;
   white-space: nowrap;
 }
 

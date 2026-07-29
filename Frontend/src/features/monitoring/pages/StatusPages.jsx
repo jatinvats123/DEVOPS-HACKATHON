@@ -28,10 +28,12 @@ const StatusPages = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-12 luxury-container">
-      <div className="flex items-center justify-between mb-16">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12 lg:mb-16">
         <div>
-          <h1 className="luxury-heading text-4xl">Status Pages</h1>
+          <h1 className="luxury-heading text-2xl sm:text-3xl lg:text-4xl">
+            Status Pages
+          </h1>
           <p className="luxury-subtext mt-3 max-w-md">
             Public-facing communication channels for service health and incident
             reporting.
@@ -93,7 +95,7 @@ const StatusPages = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#cc785c] rounded-full blur-[120px] opacity-20 -mr-32 -mt-32"></div>
 
             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-16">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12 lg:mb-16">
                 <h4 className="luxury-heading text-white text-xl tracking-wide">
                   Public Preview
                 </h4>
@@ -125,7 +127,7 @@ const StatusPages = () => {
                       <span className="text-sm font-medium opacity-80">
                         {service}
                       </span>
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-[#cc785c]">
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-[#a8543a]">
                         Operational
                       </span>
                     </div>

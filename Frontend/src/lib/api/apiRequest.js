@@ -40,7 +40,13 @@ export const apiRequest = async (
     const response = await API[method](requestUrl, requestData, config);
     return response.data;
   } catch (error) {
-    console.error(`API Request Error: ${error.message}`, error);
+    // A 401 is an ANSWER, not a fault: it is what the session-restore probe on
+    // every page load gets for a signed-out visitor. Logging it as an error put
+    // two red entries in the console of the login page, which Lighthouse counts
+    // against Best Practices and which trains everyone to ignore the console.
+    if (error?.response?.status !== 401) {
+      console.error(`API Request Error: ${error.message}`, error);
+    }
     throw error;
   }
 };

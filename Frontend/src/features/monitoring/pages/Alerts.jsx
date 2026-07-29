@@ -221,7 +221,7 @@ const Alerts = () => {
                 <button
                   onClick={() => onTest(ch)}
                   disabled={busyId === ch._id}
-                  className="text-xs font-semibold text-[#cc785c] hover:underline disabled:opacity-50"
+                  className="text-xs font-semibold text-[#a8543a] hover:underline disabled:opacity-50"
                 >
                   {busyId === ch._id ? 'Working…' : 'Test Dispatch'}
                 </button>

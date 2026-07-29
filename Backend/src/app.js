@@ -42,6 +42,10 @@ app.use('/api', (req, _res, next) => {
 // SPA fallback: let React Router handle client-side routes on direct
 // navigation / refresh (e.g. /dashboard) instead of returning 404.
 app.get(/^(?!\/api\/).*/, (req, res, next) => {
+  // Same rule as the static handler: the shell must never be cached, or a
+  // returning visitor loads an old index.html referencing asset hashes that no
+  // longer exist and sees a blank page.
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(path.join(distDir, 'index.html'), (err) => {
     if (err) next();
   });

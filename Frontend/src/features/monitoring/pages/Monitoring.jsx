@@ -8,6 +8,9 @@ import {
 } from '../state/monitor.slice';
 import AddMonitoring from '../components/AddMonitoring';
 import { RiAddLine, RiDeleteBinLine, RiRefreshLine } from '@remixicon/react';
+import EmptyState from '../../../components/ui/EmptyState';
+import { LoadingRegion, SkeletonRows } from '../../../components/ui/Skeleton';
+import { RiRadarLine } from '@remixicon/react';
 
 const ConfirmDeleteModal = ({
   isOpen,
@@ -123,10 +126,12 @@ const Monitoring = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-12 luxury-container">
-      <div className="flex items-center justify-between mb-16">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12 lg:mb-16">
         <div>
-          <h1 className="luxury-heading text-4xl">Registry</h1>
+          <h1 className="luxury-heading text-2xl sm:text-3xl lg:text-4xl">
+            Registry
+          </h1>
           <p className="luxury-subtext mt-3 max-w-md">
             Manage your infrastructure monitoring assets and service endpoints.
           </p>
@@ -145,9 +150,9 @@ const Monitoring = () => {
         </div>
       )}
 
-      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-10 overflow-hidden">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="luxury-heading text-2xl">Current Assets</h2>
+      <div className="bg-white border border-[#e6dfd8] rounded-2xl shadow-sm p-4 sm:p-6 lg:p-10 overflow-hidden">
+        <div className="flex items-center justify-between gap-4 mb-6 sm:mb-10 lg:mb-12">
+          <h2 className="luxury-heading text-xl sm:text-2xl">Current Assets</h2>
           <button
             onClick={() => handleGetMonitors()}
             className="text-[#6c6a64] hover:text-[#cc785c] transition-colors"
@@ -161,21 +166,25 @@ const Monitoring = () => {
 
         <div className="overflow-x-auto min-h-[400px] relative">
           {loading && (!monitors || monitors.length === 0) ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#faf9f5]/60 z-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#cc785c]"></div>
-            </div>
+            <LoadingRegion label="Loading monitors">
+              <div className="p-4">
+                <SkeletonRows rows={5} />
+              </div>
+            </LoadingRegion>
           ) : !monitors || monitors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[300px] text-center">
-              <p className="luxury-subtext mb-10 text-lg">
-                Registry is currently empty
-              </p>
-              <button
-                onClick={() => setIsAddOpen(true)}
-                className="luxury-button-outline px-10"
-              >
-                Create First Entry
-              </button>
-            </div>
+            <EmptyState
+              icon={RiRadarLine}
+              title="No monitors yet"
+              description="Add an HTTP or API endpoint and WatchTower will check it on your schedule, open incidents when it fails, and alert you."
+              action={
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="luxury-button-primary px-8 py-2.5"
+                >
+                  Add your first monitor
+                </button>
+              }
+            />
           ) : (
             <table className="luxury-table">
               <thead>
