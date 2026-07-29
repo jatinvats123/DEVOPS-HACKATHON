@@ -10,6 +10,7 @@ import IncidentRouter from './routes/incident.route.js';
 import metricsRouter from './routes/metrics.route.js';
 import ChannelRouter from './routes/channel.route.js';
 import observabilityRouter from './routes/observability.route.js';
+import docsRouter from './routes/docs.route.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { ApiError } from './utils/ApiError.js';
 
@@ -25,6 +26,10 @@ Middleware(app);
 // than part of the product API (which is also why the SPA fallback below must
 // not swallow it).
 app.use('/', observabilityRouter);
+
+// Mounted before the other /api routes so /api/docs cannot be shadowed, and
+// before the /api 404 handler so it is not swallowed by it.
+app.use('/api', docsRouter);
 
 app.use('/api/health', HealthRouter);
 app.use('/api/auth', UserRouter);

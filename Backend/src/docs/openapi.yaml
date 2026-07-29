@@ -1,0 +1,964 @@
+openapi: 3.1.0
+
+info:
+  title: WatchTower API
+  version: 1.0.0
+  summary: Uptime and incident monitoring for HTTP and API endpoints.
+  description: |
+    WatchTower polls registered endpoints at configurable intervals, records
+    latency and status for every check, opens an incident when a target fails
+    consistently, and closes it when the target recovers.
+
+    ## Authentication
+
+    Every route except `/api/health`, `/api/health/ready` and the public auth
+    endpoints requires a JWT, sent as an **httpOnly cookie** named
+    `uptimeaitoken`. Logging in sets it; browsers send it automatically.
+
+    Because the cookie is `httpOnly`, JavaScript cannot read it — which is the
+    point. "Try it out" in this page works from a browser session that has
+    already logged in.
+
+    ## Tenancy
+
+    Every resource is scoped to its owner at the data-access layer. A request
+    for another tenant's monitor, incident or log returns **404, not 403** —
+    a 403 would confirm the id exists, which is itself a disclosure.
+
+    ## Errors
+
+    All errors share one envelope. `success` is always `false` on failure.
+  license:
+    name: ISC
+    url: https://opensource.org/license/isc-license-txt
+  contact:
+    name: Jatin Vats
+    url: https://github.com/jatinvats123/watchtower-monitoring
+
+servers:
+  - url: https://watchtower-monitoring.onrender.com
+    description: Production
+  - url: http://localhost:8000
+    description: Local (docker compose)
+
+tags:
+  - name: Authentication
+    description: Registration, sessions, and password management.
+  - name: Monitors
+    description: The endpoints being watched.
+  - name: Incidents
+    description: Outages, opened and closed by the scheduler.
+  - name: Logs
+    description: Individual check results.
+  - name: Metrics
+    description: Uptime, latency and status history for a monitor.
+  - name: Channels
+    description: Where alerts are delivered.
+  - name: Operations
+    description: Health and Prometheus endpoints. Not part of the product API.
+
+security:
+  - cookieAuth: []
+
+paths:
+  # ─── Authentication ──────────────────────────────────────────────────────
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Create an account
+      security: []
+      description: |
+        Sets the auth cookie on success, so registration also signs the user in.
+
+        Rate limited to 10 requests / 15 minutes per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, fullname, email, password]
+              properties:
+                username: { type: string, example: alice }
+                fullname: { type: string, example: Alice Smith }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 6, format: password }
+      responses:
+        '201':
+          description: Created and signed in.
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: '`uptimeaitoken=<jwt>; HttpOnly; SameSite=Strict`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Sign in
+      security: []
+      description: |
+        Rate limited to 10 requests / 15 minutes per IP. Successful logins do
+        **not** consume the budget, so a legitimate user behind NAT cannot be
+        locked out by their own activity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                email: { type: string, format: email }
+                username: { type: string }
+                password: { type: string, format: password }
+              description: One of `email` or `username` is required.
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: Invalid credentials, or the account is not verified.
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Sign out
+      description: Clears the auth cookie.
+      responses:
+        '200': { $ref: '#/components/responses/Empty' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/auth/verify/{id}:
+    post:
+      tags: [Authentication]
+      summary: Verify an account with an OTP
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [otp]
+              properties:
+                otp: { type: string, example: '482913' }
+      responses:
+        '200': { $ref: '#/components/responses/Empty' }
+        '400':
+          description: The OTP is wrong, expired, or the account is already verified.
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request a password reset
+      security: []
+      description: |
+        Rate limited to 5 requests / hour per IP: each one sends real email, so
+        an unthrottled endpoint is both an account-enumeration oracle and a way
+        to spend our sending reputation on a third party.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { $ref: '#/components/responses/Empty' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/reset-password/{token}:
+    post:
+      tags: [Authentication]
+      summary: Reset a password using an emailed token
+      security: []
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPassword]
+              properties:
+                newPassword: { type: string, minLength: 6, format: password }
+      responses:
+        '200':
+          description: Password reset. The token is single-use.
+        '400':
+          description: The token is invalid or expired.
+
+  /api/auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change the signed-in user's password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oldPassword, newPassword]
+              properties:
+                oldPassword: { type: string, format: password }
+                newPassword: { type: string, minLength: 6, format: password }
+      responses:
+        '200': { $ref: '#/components/responses/Empty' }
+        '401':
+          description: The old password is wrong.
+
+  /api/auth/profile:
+    get:
+      tags: [Authentication]
+      summary: Get the signed-in user
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Authentication]
+      summary: Update avatar or notification preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  description: A data URL. PNG/JPG/WEBP/GIF, max ~800KB.
+                preferences:
+                  type: object
+                  properties:
+                    incidentAlerts: { type: boolean }
+                    weeklyDigest: { type: boolean }
+                    securityAlerts: { type: boolean }
+      responses:
+        '200':
+          description: Updated.
+        '400':
+          description: Nothing to update, or the avatar is invalid.
+
+  # ─── Monitors ────────────────────────────────────────────────────────────
+  /api/monitor:
+    get:
+      tags: [Monitors]
+      summary: List your monitors
+      responses:
+        '200':
+          description: Monitors owned by the caller. Never anyone else's.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Monitor' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Monitors]
+      summary: Create a monitor
+      description: |
+        Only `url` is required. Ownership is stamped from the session — a
+        `userId` in the body is ignored.
+
+        The monitor is checked immediately rather than one interval from now.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonitorInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data: { $ref: '#/components/schemas/Monitor' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: This URL is already monitored by you.
+
+  /api/monitor/{monitorId}:
+    parameters:
+      - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    put:
+      tags: [Monitors]
+      summary: Update a monitor
+      description: A partial patch — send only the fields you are changing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonitorInput' }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data: { $ref: '#/components/schemas/Monitor' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Monitors]
+      summary: Delete a monitor
+      responses:
+        '200': { $ref: '#/components/responses/Empty' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Incidents ───────────────────────────────────────────────────────────
+  /api/incidents:
+    get:
+      tags: [Incidents]
+      summary: Recent incidents across your monitors
+      responses:
+        '200':
+          description: The ten most recent incidents.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Incident' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/incidents/detail/{incidentId}:
+    get:
+      tags: [Incidents]
+      summary: One incident by id
+      parameters:
+        - { name: incidentId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: The incident.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data: { $ref: '#/components/schemas/Incident' }
+        '404':
+          description: |
+            Not found — returned identically whether the incident does not
+            exist or belongs to someone else.
+
+  /api/incidents/{monitorId}:
+    get:
+      tags: [Incidents]
+      summary: Incidents for one monitor
+      parameters:
+        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: Incidents, newest first.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Incident' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Logs ────────────────────────────────────────────────────────────────
+  /api/logs:
+    get:
+      tags: [Logs]
+      summary: Recent check results across your monitors
+      responses:
+        '200':
+          description: The ten most recent checks.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/CheckLog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/logs/{monitorId}:
+    get:
+      tags: [Logs]
+      summary: Check results for one monitor
+      parameters:
+        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: Up to 200 checks, newest first.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/CheckLog' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Metrics ─────────────────────────────────────────────────────────────
+  /api/metrics/uptime/{monitorId}:
+    get:
+      tags: [Metrics]
+      summary: Uptime over 24h / 7d / 30d
+      description: |
+        Computed by a single MongoDB aggregation.
+
+        A window with no checks reports `uptime: null`, **not** `100`. "We never
+        checked" and "it was perfectly healthy" are different claims.
+      parameters:
+        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: Uptime windows.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          uptime:
+                            type: number
+                            description: The 30d figure, for backward compatibility.
+                          totalChecks: { type: integer }
+                          upChecks: { type: integer }
+                          windows:
+                            type: object
+                            properties:
+                              '24h': { $ref: '#/components/schemas/UptimeWindow' }
+                              '7d': { $ref: '#/components/schemas/UptimeWindow' }
+                              '30d': { $ref: '#/components/schemas/UptimeWindow' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/metrics/latency/{monitorId}:
+    get:
+      tags: [Metrics]
+      summary: Recent latency, with connection-phase breakdown
+      parameters:
+        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: The 100 most recent checks, oldest first for charting.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            time: { type: string, example: '14:32' }
+                            timestamp: { type: string, format: date-time }
+                            latency: { type: integer, description: Total round trip, ms. }
+                            dns: { type: [integer, 'null'] }
+                            tcp: { type: [integer, 'null'] }
+                            tls: { type: [integer, 'null'], description: Null on plain HTTP. }
+                            ttfb: { type: [integer, 'null'] }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/metrics/status-timeline/{monitorId}:
+    get:
+      tags: [Metrics]
+      summary: Recent up/down history
+      parameters:
+        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: The 100 most recent checks.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            time: { type: string }
+                            timestamp: { type: string, format: date-time }
+                            status: { type: integer, enum: [0, 1] }
+                            label: { type: string, enum: [UP, DOWN] }
+                            statusCode: { type: [integer, 'null'] }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Channels ────────────────────────────────────────────────────────────
+  /api/channels:
+    get:
+      tags: [Channels]
+      summary: List your alert channels
+      responses:
+        '200':
+          description: Channels.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Channel' }
+    post:
+      tags: [Channels]
+      summary: Add an alert channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                type: { type: string, enum: [Email, Slack, Webhook, SMS], default: Email }
+                target:
+                  type: string
+                  description: An email address, or a webhook URL for Slack/Webhook.
+      responses:
+        '201':
+          description: Created.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: That channel already exists.
+
+  /api/channels/{channelId}:
+    parameters:
+      - { name: channelId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    patch:
+      tags: [Channels]
+      summary: Update a channel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type: { type: string, enum: [Email, Slack, Webhook, SMS] }
+                target: { type: string }
+                active: { type: boolean }
+      responses:
+        '200': { description: Updated. }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Channels]
+      summary: Delete a channel
+      responses:
+        '200': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/channels/{channelId}/test:
+    post:
+      tags: [Channels]
+      summary: Send a test notification
+      parameters:
+        - { name: channelId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      responses:
+        '200':
+          description: Dispatched, or skipped for an unconfigured channel type.
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502':
+          description: Delivery failed. The reason is recorded in the dispatch log.
+
+  /api/channels/logs:
+    get:
+      tags: [Channels]
+      summary: Notification dispatch history
+      description: |
+        Every delivery attempt, including failures and skips — the audit trail
+        that answers "was the customer actually told?".
+      responses:
+        '200':
+          description: The 50 most recent dispatches.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/NotificationLog' }
+
+  # ─── Operations ──────────────────────────────────────────────────────────
+  /api/health:
+    get:
+      tags: [Operations]
+      summary: Liveness
+      security: []
+      description: |
+        Is the process alive? Touches no dependencies, deliberately.
+
+        A liveness probe that checks the database would make the orchestrator
+        restart every replica during a database outage, turning a recoverable
+        dependency failure into a crash loop.
+      responses:
+        '200':
+          description: Alive.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, const: ok }
+                          uptimeSeconds: { type: integer }
+                          timestamp: { type: string, format: date-time }
+
+  /api/health/ready:
+    get:
+      tags: [Operations]
+      summary: Readiness
+      security: []
+      description: |
+        Can this instance do useful work? Checks MongoDB with a real ping and
+        the scheduler heartbeat. Returns 503 when it cannot, so a broken replica
+        leaves the load balancer while staying alive to recover.
+      responses:
+        '200':
+          description: Ready.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Readiness' }
+        '503':
+          description: Not ready — a dependency is unavailable.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Readiness' }
+
+  /metrics:
+    get:
+      tags: [Operations]
+      summary: Prometheus metrics
+      security: []
+      description: |
+        Prometheus text exposition. Mounted at the root, not under `/api`.
+
+        Requires `Authorization: Bearer <token>` when `METRICS_TOKEN` is set.
+      responses:
+        '200':
+          description: Metrics.
+          content:
+            text/plain:
+              schema: { type: string }
+        '401':
+          description: METRICS_TOKEN is set and the bearer token did not match.
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: uptimeaitoken
+      description: |
+        JWT in an httpOnly, SameSite=Strict cookie, set by login or
+        registration. `SameSite=Strict` is the primary CSRF control.
+
+  schemas:
+    ObjectId:
+      type: string
+      pattern: '^[0-9a-fA-F]{24}$'
+      example: 64b7f9f9f9f9f9f9f9f9f9f9
+
+    ApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data: {}
+        message: { type: string }
+        success: { type: boolean, const: true }
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode: { type: integer }
+        message: { type: string }
+        success: { type: boolean, const: false }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    User:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        username: { type: string }
+        fullname: { type: string }
+        email: { type: string, format: email }
+        isVerified: { type: boolean }
+        avatar: { type: string }
+        preferences:
+          type: object
+          properties:
+            incidentAlerts: { type: boolean }
+            weeklyDigest: { type: boolean }
+            securityAlerts: { type: boolean }
+
+    AuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - properties:
+            data:
+              type: object
+              properties:
+                user: { $ref: '#/components/schemas/User' }
+                token: { type: string, description: Also set as the auth cookie. }
+
+    MonitorInput:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Scheme is added if omitted.
+          example: https://api.example.com/health
+        title: { type: string }
+        type: { type: string, enum: [website, api, http, ping, tcp, dns] }
+        description: { type: string }
+        interval:
+          type: integer
+          default: 60
+          description: Seconds between checks. Clamped to a 5s floor.
+        timeout: { type: integer, default: 10, description: Per-attempt timeout, seconds. }
+        active: { type: boolean, default: true }
+        ignoreTlsErrors:
+          type: boolean
+          default: false
+          description: |
+            Certificate validation is ON by default — an expired certificate is
+            an outage. Opt out only for internal self-signed targets.
+        failureThreshold:
+          type: integer
+          default: 3
+          description: Consecutive failures before an incident opens.
+        successThreshold:
+          type: integer
+          default: 2
+          description: Consecutive successes before it closes.
+        authHeaders:
+          type: object
+          additionalProperties: { type: string }
+          description: |
+            Headers for a target behind auth. Encrypted at rest with
+            AES-256-GCM and never returned on read.
+          example: { Authorization: 'Bearer ...' }
+
+    Monitor:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        userId: { $ref: '#/components/schemas/ObjectId' }
+        title: { type: string }
+        url: { type: string }
+        type: { type: string }
+        interval: { type: integer }
+        timeout: { type: integer }
+        active: { type: boolean }
+        status:
+          type: string
+          enum: [UP, DOWN]
+          description: |
+            The CONFIRMED state, debounced by the flap thresholds. Flips only
+            when an incident opens or closes, so status and incidents can never
+            disagree.
+        lastCheckStatus:
+          type: string
+          enum: [UP, DOWN]
+          description: The raw result of the most recent check, undebounced.
+        lastChecked: { type: string, format: date-time }
+        lastStatusCode: { type: [integer, 'null'] }
+        nextCheckAt: { type: string, format: date-time }
+        failureThreshold: { type: integer }
+        successThreshold: { type: integer }
+        consecutiveFailures: { type: integer }
+        consecutiveSuccesses: { type: integer }
+        breakerState: { type: string, enum: [CLOSED, OPEN, HALF_OPEN] }
+        hasAuthHeaders:
+          type: boolean
+          description: Whether credentials are stored. The values are never returned.
+
+    Incident:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        monitorId: {}
+        userId: { $ref: '#/components/schemas/ObjectId' }
+        status: { type: string, enum: [ONGOING, RESOLVED] }
+        startTime: { type: string, format: date-time }
+        endTime: { type: [string, 'null'], format: date-time }
+        duration: { type: integer, description: Seconds. }
+        reason: { type: string, example: HTTP 503 }
+        aiSummary:
+          type: [string, 'null']
+          description: Optional AI analysis. Null when unavailable.
+
+    CheckLog:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        monitorId: {}
+        status: { type: string, enum: [UP, DOWN, DEGRADED] }
+        latency: { type: [integer, 'null'] }
+        statusCode: { type: [integer, 'null'] }
+        error: { type: [string, 'null'] }
+        attempts: { type: integer, description: HTTP attempts this check consumed. }
+        timings:
+          type: object
+          description: |
+            Real connection phases in ms, measured from the socket. Any phase is
+            null when not applicable or not reached.
+          properties:
+            dns: { type: [integer, 'null'] }
+            tcp: { type: [integer, 'null'] }
+            tls: { type: [integer, 'null'] }
+            ttfb: { type: [integer, 'null'] }
+            total: { type: [integer, 'null'] }
+        timestamp: { type: string, format: date-time }
+
+    UptimeWindow:
+      type: object
+      properties:
+        uptime:
+          type: [number, 'null']
+          description: Percentage, or null when the window contains no checks.
+          example: 99.876
+        totalChecks: { type: integer }
+        upChecks: { type: integer }
+        downChecks: { type: integer }
+        avgLatencyMs:
+          type: [integer, 'null']
+          description: Averaged over successful checks only.
+        lastCheckAt: { type: [string, 'null'], format: date-time }
+        windowStart: { type: string, format: date-time }
+
+    Channel:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        userId: { $ref: '#/components/schemas/ObjectId' }
+        type: { type: string, enum: [Email, Slack, Webhook, SMS] }
+        target: { type: string }
+        active: { type: boolean }
+
+    NotificationLog:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        event: { type: string, enum: [CRITICAL_OUTAGE, HEALTH_RECOVERY, TEST_DISPATCH] }
+        channel: { type: string }
+        target: { type: string }
+        status: { type: string, enum: [Delivered, Failed, Skipped] }
+        detail: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    Readiness:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - properties:
+            data:
+              type: object
+              properties:
+                status: { type: string, enum: [ready, not_ready] }
+                checks:
+                  type: object
+                  properties:
+                    mongodb:
+                      type: object
+                      properties:
+                        status: { type: string, enum: [up, down] }
+                        latencyMs: { type: integer }
+                        detail: { type: string }
+                    scheduler:
+                      type: object
+                      properties:
+                        status: { type: string, enum: [up, stale, starting, disabled] }
+                        lastTickAgeSeconds: { type: integer }
+                        isLeader: { type: boolean }
+                        inFlight: { type: integer }
+
+  responses:
+    Empty:
+      description: Success.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponse' }
+    BadRequest:
+      description: The request was malformed or failed validation.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unauthorized:
+      description: Missing, expired or invalid session cookie.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: |
+        Not found. Also returned when the resource exists but belongs to another
+        tenant — a 403 would confirm the id is real.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: The resource already exists.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    RateLimited:
+      description: Too many requests.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
