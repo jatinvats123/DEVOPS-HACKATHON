@@ -26,7 +26,7 @@ const Notification = ({ message, type = 'success', onClose }) => {
         <p className="text-sm font-medium tracking-tight">{message}</p>
         <button
           onClick={onClose}
-          className={`ml-4 text-xs font-bold uppercase tracking-widest ${isError ? 'text-red-400' : 'text-[#6c6a64]'} hover:text-[#cc785c] transition-colors`}
+          className={`ml-4 text-xs font-bold uppercase tracking-widest ${isError ? 'text-red-400' : 'text-[#6c6a64]'} hover:text-[#a8543a] transition-colors`}
         >
           Dismiss
         </button>

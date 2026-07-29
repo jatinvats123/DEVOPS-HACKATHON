@@ -20,12 +20,14 @@ const WINDOW_LABELS = [
  * Status is never conveyed by colour alone — each tier carries a text label
  * too (WCAG AA; this matters especially on a status dashboard).
  */
+// Colours are all >= 4.5:1 on the card background, and each tier carries a text
+// label so the tier is legible without perceiving colour at all.
 const tierFor = (uptime) => {
   if (uptime === null || uptime === undefined)
-    return { label: 'No data', className: 'text-[#6c6a64]' };
-  if (uptime >= 99.9) return { label: 'Healthy', className: 'text-[#2f7a4d]' };
-  if (uptime >= 99) return { label: 'Degraded', className: 'text-[#cc785c]' };
-  return { label: 'Unhealthy', className: 'text-[#a33a2a]' };
+    return { label: 'No data', className: 'text-[#5a5750]' };
+  if (uptime >= 99.9) return { label: 'Healthy', className: 'text-[#1c6b3f]' };
+  if (uptime >= 99) return { label: 'Degraded', className: 'text-[#8a5a00]' };
+  return { label: 'Unhealthy', className: 'text-[#96271a]' };
 };
 
 const UptimeWindows = ({ monitorId, monitorTitle }) => {

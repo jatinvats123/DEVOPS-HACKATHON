@@ -4,11 +4,60 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+
+    <title>WatchTower — Uptime & Incident Monitoring</title>
+    <meta
+      name="description"
+      content="WatchTower monitors your HTTP and API endpoints, detects outages with configurable thresholds, and alerts you the moment something breaks."
+    />
+    <meta name="theme-color" content="#141413" />
+
+    <!--
+      Fonts were loaded with @import inside a CSS file, which is the slowest
+      possible way: the browser must download and parse the stylesheet before it
+      even discovers the font request, serialising two round trips on the
+      critical path. Lighthouse attributed 855ms of render blocking to it.
+
+      Loading here instead lets the preload scanner start both immediately, and
+      preconnect opens the TLS connections while the HTML is still parsing.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      media="print" makes this non-render-blocking: the browser downloads it
+      immediately but does not wait for it to paint. `main.jsx` flips it to
+      media="all" once loaded.
+      The swap is done from the BUNDLE rather than the usual
+      onload="this.media='all'" attribute, because that is an inline event
+      handler and helmet's CSP (script-src-attr 'none') correctly refuses to
+      execute it. Weakening the CSP to speed up a font would be a bad trade;
+      moving four lines into a module costs nothing.
+      Fonts were previously loaded via @import inside a CSS file — the slowest
+      possible way, since the browser must fetch and parse that stylesheet
+      before it can even discover the font request. Lighthouse attributed 855ms
+      of render blocking to it.
+    -->
+    <link
+      rel="stylesheet"
+      data-font-stylesheet
+      media="print"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@200;300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@200;300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
   </head>
 
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; padding: 2rem">
+        WatchTower requires JavaScript to display live monitoring data.
+      </p>
+    </noscript>
     <script type="module" src="/src/app/main.jsx"></script>
   </body>
 </html>
