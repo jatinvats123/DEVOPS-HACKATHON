@@ -1,701 +1,335 @@
-# 🚀 DevOps Infrastructure Monitor
+# WatchTower
+
+Uptime and incident monitoring for HTTP and API endpoints, with live status over
+WebSockets.
 
 [![CI](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml/badge.svg)](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jatinvats123/watchtower-monitoring/main/.github/badges/coverage.json)](https://github.com/jatinvats123/watchtower-monitoring/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-20%20%7C%2022-green)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7-13aa52)](https://www.mongodb.com)
 [![License](https://img.shields.io/badge/License-ISC-yellow)](LICENSE)
 
-> **CI** runs lint, 284 tests across Node 20 and 22 with a 60% coverage gate, a
-> dependency-audit gate, Trivy scans, both Docker image builds, and a
-> `docker compose` integration smoke test against `/api/health`.
-> **Coverage** is generated from the same run that enforces the gate — see
-> [`scripts/coverage-badge.mjs`](scripts/coverage-badge.mjs).
+**[Live demo →](https://watchtower-monitoring.onrender.com)**
+ · [API docs](https://watchtower-monitoring.onrender.com/api/docs)
 
-A comprehensive full-stack web application for monitoring infrastructure, APIs, and services with real-time status tracking, incident management, and centralized logging.
+> Free-tier hosting sleeps when idle, so the first request may take ~30 seconds
+> to wake.
 
-## 🌐 Live Demo
-**➜ [https://watchtower-monitoring.onrender.com](https://watchtower-monitoring.onrender.com)**
-
-> Try the live application deployed on Render. Register a new account or login to test the monitoring features. (Free-tier hosting sleeps when idle, so the first request may take ~30 seconds to wake.)
+> **Origin:** WatchTower began as a hackathon project built by a team of four.
+> It has since been rebuilt for production. See
+> [CONTRIBUTORS.md](CONTRIBUTORS.md) for who owned what — the split is derived
+> from the git history, not from memory.
 
 ---
 
-## 📋 Table of Contents
-- [Live Demo](#-live-demo)
-- [Quick Start](#-quick-start)
-- [Problem Statement](#problem-statement)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Usage Guide](#usage-guide)
-- [Deployment](#deployment)
-- [Future Enhancements](#future-enhancements)
+## Overview
+
+WatchTower polls the endpoints you register at configurable intervals, records
+latency and status for each check, opens an incident when a target fails
+consistently, and closes it when the target recovers. Live status changes stream
+to connected dashboards over Socket.IO.
+
+The interesting engineering is in the scheduler rather than the CRUD. It skips
+overlapping checks when a target responds more slowly than its own interval,
+survives process restarts without losing schedule state, uses a TTL-based
+distributed lock so multiple instances do not double-poll, and applies flap
+detection so a single blip does not page anyone.
+
+Design decisions and their costs are recorded in [`docs/adr/`](docs/adr/).
 
 ---
 
-## ⚡ Quick Start
+## Features
 
-### 1. **Register/Login**
-- Visit [https://watchtower-monitoring.onrender.com](https://watchtower-monitoring.onrender.com)
-- Create a new account with your details
-- You'll be automatically logged in and redirected to the dashboard
+**Monitoring**
 
-### 2. **Create Your First Monitor**
-- Click "Add Monitor" on the dashboard
-- Enter the service details (URL, type, interval)
-- Start monitoring in real-time!
+- HTTP and API endpoint checks at configurable intervals
+- Per-check timeouts, retry with jittered exponential backoff, and a circuit
+  breaker per target
+- Real connection-phase latency recorded per check — DNS, TCP, TLS, TTFB, total
+  — measured from the socket, with a TTL index bounding storage growth
+- Uptime over 24h / 7d / 30d computed by a single MongoDB aggregation
+- TLS certificate validation on by default, because an expired certificate is an
+  outage
 
-### 3. **View Dashboard**
-- See all monitors and their current status
-- Track incidents and logs
-- Monitor performance metrics
+**Incidents**
 
----
+- Flap detection: an incident opens only after N consecutive failures and closes
+  after M consecutive successes, both configurable per monitor
+- Incident timeline with the check history that triggered it
+- Email notification on open and close, behind a pluggable notifier interface
+  (a webhook/Slack notifier was added without touching incident logic)
 
-## 🎬 Getting Started Locally
+**Platform**
 
-### **Prerequisites**
-- Node.js v18+
-- MongoDB
-- Git
+- Real-time status over Socket.IO with JWT-authorised, room-scoped delivery
+- Centralised log views and dashboard analytics
+- Prometheus metrics at `/metrics` — the monitoring service monitors itself
+- Liveness and readiness endpoints, including a scheduler heartbeat
+- OpenAPI 3.1 spec with Swagger UI at `/api/docs`
 
-### **Clone & Setup**
-```bash
-# Clone repository
-git clone https://github.com/jatinvats123/watchtower-monitoring.git
-cd DEVOPS-HACKATHON
+**Security**
 
-# Backend
-cd Backend
-npm install
-npm run dev
-
-# Frontend (new terminal)
-cd Frontend
-npm install
-npm run dev
-```
-
-Visit `http://localhost:5173` to access the application!
+- JWT authentication, bcrypt hashing, email verification, password reset
+- Every query owner-scoped at the data-access layer — an unscoped query throws
+  rather than returning every tenant's data
+- Helmet, tiered rate limiting, request sanitisation, CORS allow-list
+- Outbound monitor credentials encrypted at rest (AES-256-GCM)
+- Threat model in [SECURITY.md](SECURITY.md), including accepted risks
 
 ---
 
-## 🎯 Problem Statement
+## Tech stack
 
-DevOps teams often struggle with monitoring multiple services, APIs, and infrastructure endpoints across different environments. Existing solutions are either too complex, expensive, or difficult to set up. There's a critical need for a lightweight, user-friendly monitoring platform that provides:
-
-- ✅ Real-time status monitoring
-- ✅ Incident tracking and logging
-- ✅ Easy setup and deployment
-- ✅ Secure authentication
-- ✅ Scalable architecture
-
-**DevOps Infrastructure Monitor** solves these challenges with an intuitive, modern platform.
-
----
-
-## ✨ Key Features
-
-### 🔐 Authentication & Security
-- User registration with email verification
-- Secure login/logout with JWT tokens
-- Password reset and change functionality
-- Bcryptjs password hashing
-- Protected routes and API endpoints
-- Auto-verification for development ease
-- Minimal, luxury-style authentication UI
-
-### 📊 Infrastructure Monitoring
-- Create and manage multiple monitors
-- Support for multiple protocols:
-  - Website/HTTP(S) monitoring
-  - API endpoint monitoring
-  - Ping (ICMP) monitoring
-  - TCP port monitoring
-  - DNS resolution monitoring
-- Configurable monitoring intervals (default: 60 seconds)
-- Real-time status tracking (UP/DOWN)
-- Automatic monitoring with cron jobs
-- Custom timeout configuration
-- Last checked timestamp
-
-### 📈 Dashboard & Analytics
-- Centralized monitoring dashboard
-- Real-time status visualization
-- Monitor management (create, view, delete)
-- Incident tracking and history
-- Comprehensive logging system
-- Health metrics collection
-- Historical data for analytics
-
-### 🎨 User Interface
-- Modern, clean design with React
-- Responsive mobile-friendly layout
-- Protected authenticated routes
-- Real-time notifications
-- Form validation and error handling
-- Tailwind CSS styling
-- Hot module replacement during development
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, Vite, React Router 7, Redux Toolkit, Socket.IO client, Recharts |
+| Backend | Node.js 20, Express 5, MongoDB 7, Mongoose, Socket.IO |
+| Auth | JWT, bcryptjs, Nodemailer |
+| Testing | Jest, Supertest, nock, mongodb-memory-server |
+| Ops | Docker, Docker Compose, GitHub Actions, Pino, prom-client, Trivy |
+| Hosting | Render |
 
 ---
 
-## 🛠️ Tech Stack
-
-### **Frontend**
-| Technology | Purpose |
-|-----------|---------|
-| React 19 | UI framework |
-| Vite 8 | Build tool & dev server |
-| Redux Toolkit | State management |
-| React Router 7 | Client-side routing |
-| Axios | HTTP client |
-| Tailwind CSS | Styling |
-| React Hot Toast | Notifications |
-
-### **Backend**
-| Technology | Purpose |
-|-----------|---------|
-| Node.js | Runtime environment |
-| Express.js 5 | Web framework |
-| MongoDB 9 | Database |
-| Mongoose | ODM for MongoDB |
-| JWT | Authentication |
-| Bcryptjs | Password hashing |
-| Node-cron | Job scheduling |
-| Morgan | HTTP logging |
-| Helmet | Security headers |
-
-### **DevOps & Deployment**
-| Tool | Purpose |
-|------|---------|
-| Docker | Containerization |
-| Docker Compose | Multi-container orchestration |
-| Git | Version control |
-| Environment Variables | Configuration management |
-
----
-
-## 🏗️ Architecture
-
-### **System Design**
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Client Browser                       │
-│         (React + Redux + React Router)                  │
-└─────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────┐
-│                   Frontend (Vite)                       │
-│  - Authentication Pages (Login/Register)               │
-│  - Dashboard (Monitor Status)                          │
-│  - Monitor Management                                  │
-│  - Protected Routes                                    │
-└─────────────────────────────────────────────────────────┘
-                           ↓
-                    (REST API/HTTP)
-                           ↓
-┌─────────────────────────────────────────────────────────┐
-│                Backend (Express.js)                     │
-│  - Auth Routes (/api/auth/*)                           │
-│  - Monitor Routes (/api/monitor/*)                     │
-│  - Incident Routes (/api/incidents/*)                 │
-│  - Logs Routes (/api/logs/*)                          │
-│  - Health Routes (/api/health)                        │
-└─────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────┐
-│              Database (MongoDB)                        │
-│  - Users Collection                                    │
-│  - Monitors Collection                                 │
-│  - Incidents Collection                                │
-│  - Logs Collection                                     │
-└─────────────────────────────────────────────────────────┘
-```
-
-### **Data Flow**
-1. User registers/logs in → JWT token issued
-2. Token stored in localStorage & Redux store
-3. Protected routes verify token & authentication state
-4. User creates monitors → Stored in MongoDB
-5. Backend cron jobs run scheduled checks
-6. Status updates → API response → Redux state → UI update
-7. Incidents logged → Dashboard displays real-time status
-
----
-
-## 🚀 Getting Started
-
-### **Prerequisites**
-- Node.js v18 or higher
-- npm or yarn package manager
-- MongoDB (local or Atlas)
-- Git
-
-### **Installation & Setup**
-
-#### 1. **Clone the Repository**
-```bash
-git clone https://github.com/jatinvats123/watchtower-monitoring.git
-cd DEVOPS-HACKATHON
-```
-
-#### 2. **Backend Setup**
-```bash
-cd Backend
-
-# Install dependencies
-npm install
-
-# Create .env file
-cat > .env << EOF
-PORT=8000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/devops-monitor
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRE=7d
-MAIL_HOST=smtp.gmail.com
-MAIL_USER=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-FRONTEND_URL=http://localhost:5173
-EOF
-
-# Start backend server
-npm run dev
-```
-
-Backend runs on: `http://localhost:8000`
-
-#### 3. **Frontend Setup** (New Terminal)
-```bash
-cd Frontend
-
-# Install dependencies
-npm install
-
-# Create .env.local file
-cat > .env.local << EOF
-VITE_BACKEND_URL=http://localhost:8000
-VITE_REGISTER_API=/api/auth/register
-VITE_LOGIN_API=/api/auth/login
-VITE_GET_USER_API=/api/auth/profile
-VITE_FORGOT_PASSWORD_API=/api/auth/forgot-password
-VITE_CHANGE_PASSWORD_API=/api/auth/change-password
-VITE_INCIDENTS_API=/api/incidents
-VITE_LOGS_API=/api/logs
-VITE_CREATE_MONITORING_API=/api/monitor
-VITE_GET_LOGS_API=/api/logs
-VITE_HEALTH_API=/api/health
-EOF
-
-# Start frontend dev server
-npm run dev
-```
-
-Frontend runs on: `http://localhost:5173`
-
-#### 4. **Docker Setup** (Optional)
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Access the application
-# Frontend: http://localhost:3000
-# Backend: http://localhost:8000
-```
-
----
-
-## 📁 Project Structure
+## Architecture
 
 ```
-DEVOPS-HACKATHON/
-├── Frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── App.jsx                 # Main app component
-│   │   │   ├── app.routes.jsx          # Route configuration
-│   │   │   ├── app.store.js            # Redux store
-│   │   │   └── ProtectedRoute.jsx      # Auth-protected routes
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   │   ├── pages/
-│   │   │   │   │   ├── Login.jsx
-│   │   │   │   │   └── Register.jsx
-│   │   │   │   ├── services/
-│   │   │   │   │   ├── auth.api.js
-│   │   │   │   │   └── asyncThunk.api.js
-│   │   │   │   ├── hooks/
-│   │   │   │   │   └── useAuth.js
-│   │   │   │   └── state/
-│   │   │   │       └── authSlice.js
-│   │   │   └── monitoring/
-│   │   │       ├── pages/
-│   │   │       ├── services/
-│   │   │       ├── hooks/
-│   │   │       └── state/
-│   │   ├── pages/
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   ├── DashboardPage.jsx
-│   │   │   └── AddMonitorPage.jsx
-│   │   ├── lib/
-│   │   │   └── api/
-│   │   │       ├── axios.js            # Axios config
-│   │   │       └── apiRequest.js       # API wrapper
-│   │   ├── config/
-│   │   │   └── env.js                  # Environment config
-│   │   └── styles/
-│   │       ├── auth.css
-│   │       ├── dashboard.css
-│   │       └── add-monitor.css
-│   ├── .env.local                       # Environment variables
-│   └── package.json
-│
+                       ┌──────────────────┐
+   Browser ──────────► │   React SPA      │
+                       └────┬─────────┬───┘
+                     REST   │         │  Socket.IO (JWT handshake,
+                            │         │            user-scoped rooms)
+                            ▼         ▼
+                       ┌──────────────────┐
+                       │   Express API    │
+                       │   + DAO layer    │
+                       └────┬─────────┬───┘
+                            │         │
+              ┌─────────────┘         └──────────────┐
+              ▼                                      ▼
+      ┌────────────────┐                    ┌─────────────────┐
+      │   Scheduler    │                    │  Notifiers      │
+      │ · TTL lock     │                    │  (email/webhook)│
+      │ · backoff      │                    └─────────────────┘
+      │ · circuit brkr │
+      │ · flap detect  │
+      └───────┬────────┘
+              │ checks
+              ▼
+   ┌─────────────────────┐        ┌──────────────┐
+   │  Monitored targets  │        │   MongoDB    │
+   │  (external HTTP)    │        │ monitors     │
+   └─────────────────────┘        │ logs (TTL)   │
+                                  │ incidents    │
+                                  │ users        │
+                                  └──────────────┘
+```
+
+The SPA is built into `Backend/public/dist` and served by the same Express
+process, so production is a single service and a single origin.
+
+Detailed request-flow and scheduler-execution diagrams:
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+---
+
+## Folder structure
+
+```
+watchtower-monitoring/
 ├── Backend/
-│   ├── src/
-│   │   ├── app.js                      # Express app setup
-│   │   ├── server.js                   # Server entry point
-│   │   ├── config/
-│   │   │   ├── config.js              # Configuration
-│   │   │   ├── database.js            # MongoDB connection
-│   │   │   └── logger.js              # Logging setup
-│   │   ├── controllers/
-│   │   │   ├── user.controller.js
-│   │   │   ├── monitor.controller.js
-│   │   │   ├── incident.controller.js
-│   │   │   └── logs.controller.js
-│   │   ├── models/
-│   │   │   ├── user.model.js
-│   │   │   ├── monitor.model.js
-│   │   │   ├── incidents.model.js
-│   │   │   └── logs.model.js
-│   │   ├── routes/
-│   │   │   ├── user.routes.js
-│   │   │   ├── monitor.route.js
-│   │   │   ├── incident.route.js
-│   │   │   └── health.route.js
-│   │   ├── services/
-│   │   │   ├── user.service.js
-│   │   │   ├── monitor.service.js
-│   │   │   └── incident.service.js
-│   │   ├── middlewares/
-│   │   │   ├── auth.middleware.js
-│   │   │   ├── error.middleware.js
-│   │   │   └── logger.middleware.js
-│   │   ├── jobs/
-│   │   │   └── monitorCron.js         # Background monitoring
-│   │   ├── validators/
-│   │   │   └── monitor.validator.js
-│   │   └── utils/
-│   │       ├── ApiError.js
-│   │       ├── ApiResponse.js
-│   │       └── asyncHandler.js
-│   ├── .env                            # Environment variables
-│   └── package.json
+│   ├── server.js
+│   └── src/
+│       ├── app.js
+│       ├── config/          # env validation, db, logger, scheduler config
+│       ├── routes/
+│       ├── middlewares/     # auth, sanitisation, rate limits, error handler
+│       ├── controllers/
+│       ├── dao/             # owner-scoped data access
+│       ├── services/        # probe, incidents, uptime, lock, circuit breaker
+│       ├── models/
+│       ├── jobs/            # scheduler
+│       ├── notifications/   # registry, email, webhook, templates
+│       ├── observability/   # metrics, request context
+│       ├── sockets/         # authorised rooms + event emission
+│       └── docs/            # openapi.yaml
+│   └── tests/               # 323 tests
 │
+├── Frontend/
+│   └── src/
+│       ├── app/             # routes (lazy), store, shell
+│       ├── components/ui/   # error boundary, skeletons, status, empty states
+│       ├── features/
+│       │   ├── auth/
+│       │   └── monitoring/
+│       └── lib/             # api client, socket + reconnection
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── SCHEDULER.md
+│   ├── RUNBOOK.md
+│   ├── PRODUCTION-READINESS.md
+│   └── adr/
+├── scripts/                 # audit gate, coverage badge, lockfile sync
+├── .github/workflows/
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## 📡 API Documentation
+## Setup
 
-### **Authentication Routes**
+**Prerequisites:** Node.js 20 or 22, Docker (recommended) or MongoDB 7+
 
-#### Register User
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "fullname": "John Doe",
-  "username": "johndoe",
-  "email": "john@example.com",
-  "password": "secure_password"
-}
-
-Response: 201 Created
-{
-  "success": true,
-  "data": {
-    "user": { ... },
-    "token": "jwt_token_here"
-  },
-  "message": "User registered successfully"
-}
-```
-
-#### Login User
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "secure_password"
-}
-
-Response: 200 OK
-{
-  "success": true,
-  "data": {
-    "user": { ... },
-    "token": "jwt_token_here"
-  },
-  "message": "User logged in successfully"
-}
-```
-
-### **Monitor Routes** (Protected)
-
-#### Create Monitor
-```http
-POST /api/monitor
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "title": "My API Monitor",
-  "description": "Monitor my production API",
-  "type": "http",
-  "url": "https://api.example.com/health",
-  "interval": 60,
-  "timeout": 5000
-}
-
-Response: 201 Created
-```
-
-#### Get All Monitors
-```http
-GET /api/monitor
-Authorization: Bearer {token}
-
-Response: 200 OK
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "...",
-      "title": "My API Monitor",
-      "status": "UP",
-      "lastChecked": "2024-05-04T10:30:00Z",
-      ...
-    }
-  ]
-}
-```
-
-#### Delete Monitor
-```http
-DELETE /api/monitor/{monitorId}
-Authorization: Bearer {token}
-
-Response: 200 OK
-```
-
-### **Health Route**
-```http
-GET /api/health
-
-Response: 200 OK
-{
-  "success": true,
-  "message": "Server is running successfully"
-}
-```
-
----
-
-## 💡 Usage Guide
-
-### **1. Create an Account**
-- Navigate to `http://localhost:5173/register`
-- Enter your details (Full name, Username, Email, Password)
-- Click "Create Account" → Auto-redirect to Dashboard
-
-### **2. Login**
-- Go to `http://localhost:5173/login`
-- Enter your credentials
-- Click "Login" → Auto-redirect to Dashboard
-
-### **3. Create a Monitor**
-- Click "Add Monitor" on the dashboard
-- Fill in monitor details:
-  - **Title**: Name of the service
-  - **Type**: Protocol (HTTP, Ping, TCP, DNS)
-  - **URL**: Endpoint to monitor
-  - **Interval**: Check frequency (seconds)
-  - **Timeout**: Request timeout (ms)
-- Click "Create Monitor"
-
-### **4. Monitor Dashboard**
-- View all monitors with real-time status
-- See last checked timestamp
-- Delete monitors you no longer need
-- Automatic periodic status checks
-
-### **5. View Incidents**
-- Check incident history
-- Review detailed logs
-- Track uptime/downtime patterns
-
----
-
-## 🚀 Deployment
-
-### **Live Deployment**
-The application is deployed and running on **Railway** at:  
-**➜ [https://monitoring-production-19a5.up.railway.app/](https://monitoring-production-19a5.up.railway.app/)**
-
-### **Deployment Stack**
-- **Frontend**: Deployed on Railway (Vite + React)
-- **Backend**: Deployed on Railway (Node.js + Express)
-- **Database**: MongoDB Atlas (Cloud)
-- **Platform**: Railway.app
-
-### **Deploy Your Own**
-
-#### **Using Railway**
-1. Fork this repository
-2. Connect your GitHub account to Railway
-3. Create new Railway projects for Frontend and Backend
-4. Configure environment variables:
-   - Backend: `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV`, `FRONTEND_URL`
-   - Frontend: `VITE_BACKEND_URL`, `VITE_LOGIN_API`, etc.
-5. Deploy from Railway dashboard
-
-#### **Using Docker Compose (Local)**
 ```bash
-docker-compose up --build
+git clone https://github.com/jatinvats123/watchtower-monitoring.git
+cd watchtower-monitoring
+
+cp Backend/.env.example Backend/.env
+# Set JWT_SECRET at minimum. See the table below.
+
+docker compose up --build        # app :8000 · mongo :27017
 ```
 
-#### **Using Vercel (Frontend Only)**
+The backend image builds the SPA itself, so there is no separate frontend build
+step. Open <http://localhost:8000>.
+
+### Local without Docker
+
 ```bash
-# Frontend directory
-vercel deploy
+npm run install:all
+npm run dev:backend       # :8000
+npm run dev:frontend      # :5173, proxied to the backend
 ```
 
-### **Environment Variables**
+### Scripts
 
-**Backend (.env)**
-```env
-PORT=8000
-NODE_ENV=production
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/devops-monitor
-JWT_SECRET=your_secure_jwt_secret
-JWT_EXPIRE=7d
-FRONTEND_URL=https://monitoring-production-19a5.up.railway.app
+```bash
+npm run lint              # both packages
+npm run format            # prettier
+npm test                  # full backend suite
+npm run test:coverage     # with the 60% gate
+npm run audit             # dependency gate with documented allowlist
+npm run docker:up         # compose up --build
+npm run lockfiles:sync    # regenerate lockfiles on Linux (see note below)
 ```
 
-**Frontend (.env.production)**
-```env
-VITE_BACKEND_URL=https://your-backend-url.railway.app
-VITE_LOGIN_API=/api/auth/login
-VITE_REGISTER_API=/api/auth/register
+> **Lockfiles.** npm resolves optional native dependencies differently per
+> platform, so an `npm install` on Windows or macOS can desync the lockfile for
+> the Docker build and CI. Run `npm run lockfiles:sync` after changing
+> dependencies on a non-Linux machine.
+
+---
+
+## Environment variables
+
+### `Backend/.env`
+
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | no | API port. Defaults to `8000` |
+| `NODE_ENV` | yes | `development` \| `production` \| `test` |
+| `MONGO_URL` | yes | MongoDB connection string |
+| `JWT_SECRET` | yes | Signing secret, 32+ random bytes |
+| `JWT_EXPIRY` | yes | e.g. `7d` |
+| `CORS_ORIGIN` | yes | Comma-separated allow-list. `*` is rejected at boot |
+| `FRONTEND_URL` | yes | Used in emailed links |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | yes | Mail transport for verification and alerts |
+| `CREDENTIALS_ENCRYPTION_KEY` | no | 32 bytes hex. Required only to store outbound monitor credentials |
+| `MISTRAL_API_KEY` | no | AI incident summaries. Degrades gracefully if unset |
+| `AUTO_VERIFY_USERS` | no | Skips email verification. Defaults `true` — see SECURITY.md §5 |
+| `SCHEDULER_ENABLED` | no | Set `false` on replicas that should not poll |
+| `SCHEDULER_TICK_MS` | no | Scheduler wake-up. Defaults `5000` |
+| `SCHEDULER_CONCURRENCY` | no | Max concurrent checks. Defaults `10` |
+| `SCHEDULER_LOCK_TTL_MS` | no | Leader lease TTL. Defaults `30000` |
+| `CHECK_MAX_RETRIES` | no | Retries per check. Defaults `2` |
+| `BREAKER_FAILURE_THRESHOLD` | no | Consecutive failures before the breaker opens. Defaults `5` |
+| `LOG_RETENTION_DAYS` | no | TTL on check history. Defaults `30` |
+| `LOG_LEVEL` | no | Pino level |
+| `METRICS_TOKEN` | no | Requires a bearer token on `/metrics` when set |
+
+Per-monitor `interval`, `timeout`, `failureThreshold` and `successThreshold`
+override the global defaults.
+
+### `Frontend/.env`
+
+Every value defaults to same-origin and **nothing is required** — the SPA is
+served by the API, so relative paths are correct out of the box.
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_BACKEND_URL` | no | Only for split-origin deployments |
+
+---
+
+## Testing
+
+```bash
+npm run test:coverage --prefix Backend
 ```
 
----
+323 tests across 19 suites: auth lifecycle, tenancy isolation, the DAO's refusal
+of unscoped queries, Socket.IO room isolation, scheduler behaviour (fake timers
+for cadence, real timers for behaviour), incident lifecycle, notification
+channels, uptime aggregation, the HTTP probe, health/metrics, and the OpenAPI
+spec.
 
-## 🎯 Future Enhancements
-
-### **Phase 2 Features**
-- [ ] Email alerts for downtime incidents
-- [ ] Slack/Discord webhook notifications
-- [ ] SMS alerts for critical services
-- [ ] Performance metrics dashboard
-- [ ] SLA tracking and reporting
-- [ ] Team collaboration features
-- [ ] Advanced analytics and charts
-- [ ] Custom dashboards
-- [ ] API rate limiting
-
-### **Phase 3 Features**
-- [ ] Mobile app (iOS/Android)
-- [ ] Machine learning for anomaly detection
-- [ ] Integration with AWS CloudWatch
-- [ ] Terraform automation
-- [ ] Kubernetes support
-- [ ] Multi-region monitoring
-- [ ] Geographic heat maps
+Coverage is gated at 60% statements in CI; the DAO and scheduler carry stricter
+per-file gates because a regression there is expensive.
 
 ---
 
-## 🤝 Contributing
+## Deployment
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+CI runs lint, tests across Node 20 and 22, a dependency-audit gate, Trivy scans,
+both Docker builds, and a `docker compose` integration smoke test that asserts
+health, readiness, the served SPA, a rejected unauthenticated request, and a
+clean SIGTERM drain.
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/improvement`)
-3. Commit your changes (`git commit -m 'Add improvement'`)
-4. Push to the branch (`git push origin feature/improvement`)
-5. Open a Pull Request
+On merge to `main`, images are published to GHCR tagged with both `latest` and
+the commit SHA, the Render deploy is triggered via API, and a post-deploy health
+check runs. **If it fails, the previously-live deploy is restored automatically**
+and the run still reports failure — a rollback is not a successful deploy.
 
----
-
-## 📝 License
-
-This project is open source and available under the ISC License.
-
----
-
-## 👨‍💻 Developer
-
-**Jatin Vats**
-- GitHub: [@jatinvats123](https://github.com/jatinvats123)
-- Repository: [DEVOPS-HACKATHON](https://github.com/jatinvats123/watchtower-monitoring)
-- Live App: [https://monitoring-production-19a5.up.railway.app/](https://monitoring-production-19a5.up.railway.app/)
+Deploy requires `RENDER_API_KEY` and `RENDER_SERVICE_ID` as GitHub repository
+secrets (Settings → Secrets and variables → Actions).
 
 ---
 
-## 🙏 Acknowledgments
+## Operations
 
-- Built for **DevOps Hackathon**
-- Inspired by modern monitoring solutions like Uptime Robot, UptimeKuma
-- Thanks to the open-source community
-- Special thanks to Railway for hosting
-
----
-
-## 📞 Support & Issues
-
-For support and questions:
-- 🐛 [Open an issue on GitHub](https://github.com/jatinvats123/watchtower-monitoring/issues)
-- 💬 [Discussions](https://github.com/jatinvats123/watchtower-monitoring/discussions)
-- 📧 Contact via GitHub Issues
+- [`docs/RUNBOOK.md`](docs/RUNBOOK.md) — seven alerts with diagnosis and recovery
+- [`docs/SCHEDULER.md`](docs/SCHEDULER.md) — the scheduler's behavioural contract
+- [`docs/PRODUCTION-READINESS.md`](docs/PRODUCTION-READINESS.md) — before/after
+  measurements and honest remaining limitations
+- `/api/health` · `/api/health/ready` · `/metrics` · `/api/docs`
 
 ---
 
-## 🔐 Security Notice
+## Future improvements
 
-- Never commit `.env` files to version control
-- Always use strong, unique passwords
-- Keep all dependencies updated regularly
-- Review security advisories from npm audit
-- Rotate JWT secrets in production
-- Use HTTPS in production environments
-
----
-
-## 📊 Project Stats
-
-- **Language**: JavaScript (Frontend + Backend)
-- **Frontend Repo**: React + Vite
-- **Backend Repo**: Node.js + Express
-- **Database**: MongoDB
-- **Hosting**: Railway
-- **Status**: ✅ Active & Maintained
-- **License**: ISC
+- Additional check types: TCP port, DNS resolution, SSL expiry, keyword assertion
+- Public per-tenant status pages with subscriber notifications
+- Escalation policies and on-call rotations
+- Move time-series storage to TimescaleDB
+  ([ADR 0002](docs/adr/0002-mongodb-for-time-series.md) describes the trigger)
+- Multi-region checking, to distinguish "target is down" from "our region cannot
+  reach it"
+- Partitioned scheduling, so replicas scale checking and not just the API
+- SSRF allow-list on monitor URLs (`SECURITY.md` T9)
+- Anomaly detection on latency rather than fixed thresholds
 
 ---
 
-**Last Updated**: May 16, 2026  
-**Status**: 🚀 Production Ready  
-**Version**: 1.0.0  
-**Deployed**: [monitoring-production-19a5.up.railway.app](https://monitoring-production-19a5.up.railway.app/)
+## License
+
+Released under the ISC License. See [LICENSE](LICENSE).
+
+---
+
+## Contact
+
+**Jatin Vats** — Full Stack Developer, Delhi, India
+[Email](mailto:jatinvats653@gmail.com) · [GitHub](https://github.com/jatinvats123)
