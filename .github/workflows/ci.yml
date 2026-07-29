@@ -244,6 +244,53 @@ jobs:
           docker compose logs --tail 100
           exit 1
 
+      - name: Assert readiness reports its dependencies
+        # Readiness must actually check MongoDB, not just return 200 — the whole
+        # point is that it fails when a dependency does.
+        run: |
+          body=$(curl -s http://localhost:8000/api/health/ready)
+          echo "$body" | jq .
+          echo "$body" | jq -e '.data.status == "ready"' > /dev/null
+          echo "$body" | jq -e '.data.checks.mongodb.status == "up"' > /dev/null
+          echo "$body" | jq -e '.data.checks.scheduler' > /dev/null
+
+      - name: Assert Prometheus metrics are exposed
+        # Proves the scrape endpoint survives the SPA fallback and that the
+        # metrics the runbook alerts on actually exist.
+        run: |
+          curl -sf http://localhost:8000/metrics -o /tmp/metrics.txt
+          for metric in \
+            watchtower_checks_executed_total \
+            watchtower_check_duration_seconds \
+            watchtower_incidents_opened_total \
+            watchtower_notification_failures_total \
+            watchtower_scheduler_lag_seconds \
+            watchtower_http_requests_total; do
+            grep -q "$metric" /tmp/metrics.txt \
+              || { echo "::error::$metric missing from /metrics"; exit 1; }
+          done
+          echo "all runbook metrics present ($(wc -l < /tmp/metrics.txt) lines)"
+
+      - name: Assert requests are correlatable
+        # Every response must carry an id that also appears in the logs;
+        # without it a 500 in the log stream is an orphan.
+        run: |
+          id=$(curl -sI http://localhost:8000/api/health | tr -d '\r' \
+                | awk -F': ' 'tolower($1)=="x-request-id"{print $2}')
+          echo "X-Request-Id: ${id:-<none>}"
+          test -n "$id"
+
+      - name: Assert logs are structured JSON on stdout
+        # Regression guard: the console transport was previously disabled in
+        # production, so the deployed service logged nowhere the platform could
+        # see.
+        run: |
+          docker compose logs backend --no-log-prefix 2>/dev/null \
+            | grep -c '"level":' > /tmp/jsonlines || true
+          count=$(cat /tmp/jsonlines)
+          echo "structured log lines: $count"
+          test "$count" -gt 0
+
       - name: Assert the SPA is served
         # The backend serves the bundle it built itself; a 200 here proves the
         # multi-stage frontend build actually landed in the image.

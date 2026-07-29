@@ -22,7 +22,8 @@
     "badge:coverage": "node scripts/coverage-badge.mjs",
     "docker:build": "docker build -f Backend/Dockerfile -t watchtower-backend:local . && docker build -f Frontend/Dockerfile -t watchtower-frontend:local ./Frontend",
     "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down -v"
+    "docker:down": "docker compose down -v",
+    "lockfiles:sync": "bash scripts/sync-lockfiles.sh"
   },
   "devDependencies": {
     "prettier": "^3.4.2"
