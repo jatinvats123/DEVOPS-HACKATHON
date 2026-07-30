@@ -11,7 +11,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1 — build the SPA
 # ---------------------------------------------------------------------------
-FROM node:20-bookworm-slim AS frontend-builder
+FROM node:26-bookworm-slim AS frontend-builder
 
 WORKDIR /build
 
@@ -27,7 +27,7 @@ RUN mkdir -p Backend/public && npm --prefix Frontend run build
 # ---------------------------------------------------------------------------
 # Stage 2 — production dependencies only
 # ---------------------------------------------------------------------------
-FROM node:20-bookworm-slim AS deps
+FROM node:26-bookworm-slim AS deps
 
 WORKDIR /app
 COPY Backend/package.json Backend/package-lock.json ./
@@ -39,7 +39,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 # ---------------------------------------------------------------------------
 # Stage 3 — runtime
 # ---------------------------------------------------------------------------
-FROM node:20-alpine AS runtime
+FROM node:26-alpine AS runtime
 
 # dumb-init as PID 1. The previous image ran `npm start`, which means npm was
 # PID 1 and did NOT forward SIGTERM to node — so the graceful shutdown added in
