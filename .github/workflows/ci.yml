@@ -120,30 +120,51 @@ jobs:
         run: node scripts/audit-gate.mjs Backend Frontend
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v0.33.1
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: '1'
-          format: table
-          # Same single exception the dependency audit gate carries, expressed
-          # where Trivy can read it. Two scanners disagreeing about the same
-          # tree is how a team learns to ignore both. Entries carry an expiry,
-          # so the exception cannot quietly become permanent.
-          trivyignores: .trivyignore
-          scanners: vuln
-          cache: true
+        # Run through the official container rather than the marketplace action.
+        #
+        # The action wraps the same binary but adds input plumbing that behaved
+        # differently here than locally — the ignore file silently did not
+        # apply, so a scan that was clean on a laptop failed on the runner. A
+        # gate whose behaviour depends on where it runs is not a gate. This is
+        # byte-for-byte the command used in development.
+        #
+        # The findings are also echoed into the job summary and as annotations,
+        # so a failure is legible without opening the raw log.
         env:
-          # Trivy's default vulnerability DB lives on ghcr.io, which rate-limits
+          # Trivy's default database lives on ghcr.io, which rate-limits
           # anonymous pulls. On a busy runner that surfaces as a scan failure
-          # with nothing wrong in the code — the worst kind of red build,
-          # because the obvious response is to re-run rather than investigate.
-          # The AWS ECR mirror is the documented alternative and is not rate
-          # limited.
+          # with nothing wrong in the code, and the natural response to that is
+          # to re-run rather than read it. The ECR mirror is not rate limited.
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
-          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+        run: |
+          set +e
+          docker run --rm \
+            -e TRIVY_DB_REPOSITORY \
+            -v "$PWD:/repo" -w /repo \
+            aquasec/trivy:latest fs . \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --scanners vuln \
+              --ignorefile .trivyignore \
+              --exit-code 1 \
+              --format table 2>&1 | tee /tmp/trivy-fs.txt
+          status=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo "### Trivy — filesystem"
+            echo ''
+            echo '```'
+            tail -60 /tmp/trivy-fs.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" -ne 0 ]; then
+            grep -E 'CVE-|GHSA-' /tmp/trivy-fs.txt | head -20 \
+              | while read -r line; do echo "::error title=Trivy (filesystem)::$line"; done
+            exit 1
+          fi
+          echo "no blocking vulnerabilities"
 
   # ---------------------------------------------------------------------------
   build:
@@ -221,27 +242,50 @@ jobs:
             | grep watchtower | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Trivy image scan (backend)
-        uses: aquasecurity/trivy-action@v0.33.1
-        with:
-          image-ref: watchtower-backend:ci
-          severity: HIGH,CRITICAL
-          # Unfixed OS advisories are noise we cannot action; a base-image bump
-          # is Dependabot's job, not a reason to block every PR.
-          ignore-unfixed: true
-          exit-code: '1'
-          format: table
-          trivyignores: .trivyignore
-          scanners: vuln
-          cache: true
+        # Same reasoning as the filesystem scan: the official container, the
+        # exact command used in development.
+        #
+        # The image is exported to a tar and scanned with --input rather than
+        # scanned by name. That avoids mounting the Docker socket into the
+        # scanner — a container with the host socket can do anything to the
+        # host, which is a large privilege to hand a tool for no benefit.
+        #
+        # `--ignore-unfixed` because an OS advisory with no published fix is not
+        # actionable here; bumping the base image is Dependabot's job, not a
+        # reason to block every pull request.
         env:
-          # Trivy's default vulnerability DB lives on ghcr.io, which rate-limits
-          # anonymous pulls. On a busy runner that surfaces as a scan failure
-          # with nothing wrong in the code — the worst kind of red build,
-          # because the obvious response is to re-run rather than investigate.
-          # The AWS ECR mirror is the documented alternative and is not rate
-          # limited.
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
-          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+        run: |
+          docker save watchtower-backend:ci -o /tmp/backend-image.tar
+
+          set +e
+          docker run --rm \
+            -e TRIVY_DB_REPOSITORY \
+            -v /tmp:/scan -v "$PWD:/repo" -w /repo \
+            aquasec/trivy:latest image --input /scan/backend-image.tar \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --scanners vuln \
+              --ignorefile .trivyignore \
+              --exit-code 1 \
+              --format table 2>&1 | tee /tmp/trivy-image.txt
+          status=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo "### Trivy — backend image"
+            echo ''
+            echo '```'
+            tail -60 /tmp/trivy-image.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" -ne 0 ]; then
+            grep -E 'CVE-|GHSA-' /tmp/trivy-image.txt | head -20 \
+              | while read -r line; do echo "::error title=Trivy (image)::$line"; done
+            exit 1
+          fi
+          echo "no blocking vulnerabilities"
 
   # ---------------------------------------------------------------------------
   integration:
