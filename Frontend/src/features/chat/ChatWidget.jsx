@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useChat } from './useChat';
+import AssistantMark from './AssistantMark';
 
 const SUGGESTIONS = [
   'What causes ECONNREFUSED?',
@@ -62,19 +63,10 @@ const ChatPanel = () => {
             />
           </svg>
         ) : (
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.8}
-              d="M8 10h8M8 14h5m-9 6l3.5-2.5A9 9 0 1121 12a8.96 8.96 0 01-1 4"
-            />
-          </svg>
+          // Larger than the close icon it swaps with: the mark carries internal
+          // detail where a plain glyph does not, so matching their box sizes
+          // would make it read as the smaller of the two.
+          <AssistantMark className="h-8 w-8" />
         )}
       </button>
 
@@ -84,8 +76,8 @@ const ChatPanel = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-sm text-black">
-                ▲
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-black">
+                <AssistantMark className="h-5 w-5" />
               </span>
               <div className="leading-tight">
                 <p className="text-sm font-medium text-white">AI assistant</p>
