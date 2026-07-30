@@ -46,7 +46,31 @@ FROM node:20-alpine AS runtime
 # Phase 2 (drain in-flight checks, release the scheduler lease) never ran in a
 # container. Every deploy left monitoring paused until the lease expired.
 # dumb-init also reaps zombies, which PID 1 is responsible for.
-RUN apk add --no-cache dumb-init
+#
+# `apk upgrade` pulls security fixes published for the base image's OS packages
+# since the tag was built. Without it the image ships whatever libssl/libcrypto
+# was current when node:20-alpine was last pushed, and Trivy flags it.
+RUN apk upgrade --no-cache \
+ && apk add --no-cache dumb-init \
+ # Remove npm and corepack from the RUNTIME image.
+ #
+ # The container's command is `node server.js` — it never invokes a package
+ # manager. But npm ships its own vendored dependency tree (tar, minimatch,
+ # glob, cross-spawn, sigstore …), and those account for the large majority of
+ # CVEs reported against a plain Node base image. Deleting a tool we do not use
+ # removes that entire attack surface rather than suppressing the findings, and
+ # takes ~30 MB with it.
+ #
+ # Dependencies are installed in the `deps` stage and copied in, so nothing in
+ # the build needs npm to be present here.
+ && rm -rf /usr/local/lib/node_modules/npm \
+           /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm \
+           /usr/local/bin/npx \
+           /usr/local/bin/corepack \
+           /opt/yarn-* \
+           /usr/local/bin/yarn \
+           /usr/local/bin/yarnpkg
 
 ENV NODE_ENV=production \
     PORT=8000 \
