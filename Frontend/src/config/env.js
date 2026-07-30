@@ -53,6 +53,26 @@ export const env = {
     import.meta.env.VITE_CHANGE_PASSWORD_API,
     '/api/auth/change-password'
   ),
+  RESET_PASSWORD_API: fromEnv(
+    import.meta.env.VITE_RESET_PASSWORD_API,
+    '/api/auth/reset-password'
+  ),
+  GOOGLE_AUTH_API: fromEnv(
+    import.meta.env.VITE_GOOGLE_AUTH_API,
+    '/api/auth/google'
+  ),
+
+  /**
+   * Google OAuth client ID.
+   *
+   * Empty by default and NOT required — a public identifier, safe to ship in
+   * the bundle, but absent until Google sign-in is configured for the
+   * deployment. The sign-in button renders only when this has a value, so a
+   * deployment without Google configured shows email/password sign-in with no
+   * dead control and no console errors, rather than a button that fails when
+   * clicked.
+   */
+  GOOGLE_CLIENT_ID: fromEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID, ''),
 
   // --- monitoring ---
   CREATE_MONITORING_API: fromEnv(

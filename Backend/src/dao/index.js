@@ -4,6 +4,7 @@ import incidentModel from '../models/incidents.model.js';
 import logModel from '../models/logs.model.js';
 import channelModel from '../models/channel.model.js';
 import notificationLogModel from '../models/notificationLog.model.js';
+import statusPageModel from '../models/statusPage.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ScopedDao } from './scopedDao.js';
 
@@ -42,6 +43,17 @@ export const channelDao = new ScopedDao(channelModel, {
 });
 
 export const notificationLogDao = new ScopedDao(notificationLogModel, {
+  ownerField: 'userId',
+});
+
+/**
+ * Status pages are owner-scoped for every MANAGEMENT operation.
+ *
+ * The public read path deliberately does not go through this DAO — it has no
+ * owner to scope by. It looks pages up by slug directly and projects a
+ * hand-picked subset of fields; see status.controller.js.
+ */
+export const statusPageDao = new ScopedDao(statusPageModel, {
   ownerField: 'userId',
 });
 

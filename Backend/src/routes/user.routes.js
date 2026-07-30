@@ -9,6 +9,7 @@ import {
   changePassword,
   resetPassword,
 } from '../controllers/user.controller.js';
+import { googleAuth } from '../controllers/googleAuth.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 import express from 'express';
@@ -28,6 +29,13 @@ authRouter.post('/register', registerUser);
 @access Private
 */
 authRouter.post('/login', loginUser);
+
+/*
+@route POST /api/auth/google
+@desc Exchange a Google Identity Services ID token for a session
+@access Public
+*/
+authRouter.post('/google', googleAuth);
 
 /*
 @route POST /api/auth/logout

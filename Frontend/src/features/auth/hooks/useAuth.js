@@ -5,6 +5,7 @@ import {
   forgotPassword,
   changePassword,
   logout,
+  googleSignIn,
 } from '../services/auth.api';
 import { verifyOtp } from '../services/asyncThunk.api';
 import { useDispatch } from 'react-redux';
@@ -70,6 +71,35 @@ export const useAuth = () => {
     } catch (error) {
       const message =
         error.response?.data?.message || error.message || 'Login failed';
+      dispatch(setError(message));
+      throw error;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  /**
+   * Google sign-in handler.
+   *
+   * Ends in exactly the same state as handleLogin — same cookie, same slice
+   * updates — because it is the same session. The only difference is how
+   * identity was proven. Anything that diverged here would mean two subtly
+   * different notions of "signed in" to keep in step forever.
+   */
+  const handleGoogleSignIn = async (credential) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await googleSignIn(credential);
+      if (response.data?.token) {
+        dispatch(setUser(response.data?.user));
+        dispatch(setAuthenticated(true));
+      }
+      return response;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Google sign-in failed';
       dispatch(setError(message));
       throw error;
     } finally {
@@ -151,6 +181,7 @@ export const useAuth = () => {
     handleRegister,
     handleVerifyOtp,
     handleLogin,
+    handleGoogleSignIn,
     handleGetUserProfile,
     handleForgotPassword,
     handleChangePassword,

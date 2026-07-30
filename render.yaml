@@ -46,6 +46,16 @@ services:
         value: /api/monitor
       - key: VITE_HEALTH_API
         value: /api/health
+      - key: VITE_RESET_PASSWORD_API
+        value: /api/auth/reset-password
+
+      # Google sign-in. Both must be set to the SAME client id, or left unset
+      # to disable the feature. VITE_ is baked into the bundle at build time,
+      # so changing it needs a rebuild rather than only a restart.
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
 
       # --- Backend runtime config (same-origin serving) ---
       - key: FRONTEND_URL

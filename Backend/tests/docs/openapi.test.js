@@ -48,6 +48,7 @@ describe('OpenAPI specification', () => {
     const mounted = [
       '/api/auth/register',
       '/api/auth/login',
+      '/api/auth/google',
       '/api/auth/logout',
       '/api/auth/verify/{id}',
       '/api/auth/forgot-password',
@@ -68,6 +69,9 @@ describe('OpenAPI specification', () => {
       '/api/channels/{channelId}',
       '/api/channels/{channelId}/test',
       '/api/channels/logs',
+      '/api/status-pages',
+      '/api/status-pages/{pageId}',
+      '/api/status/{slug}',
       '/api/health',
       '/api/health/ready',
       '/metrics',
@@ -102,10 +106,14 @@ describe('OpenAPI specification', () => {
     expect(publicPaths.sort()).toEqual(
       [
         '/api/auth/forgot-password',
+        '/api/auth/google',
         '/api/auth/login',
         '/api/auth/register',
         '/api/auth/reset-password/{token}',
         '/api/auth/verify/{id}',
+        // The one genuinely public READ in the product. Everything it returns
+        // is an explicit allow-list; see the schema.
+        '/api/status/{slug}',
         '/api/health',
         '/api/health/ready',
         '/metrics',

@@ -3,12 +3,14 @@ import { useNavigate, Link } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
 import { RiPulseLine } from '@remixicon/react';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import { env } from '../../../config/env';
 import '../../../styles/auth.css';
 
 function Login() {
   const navigate = useNavigate();
 
-  const { handleLogin } = useAuth();
+  const { handleLogin, handleGoogleSignIn } = useAuth();
   const { loading, error, isAuthenticated } = useSelector(
     (state) => state.auth
   );
@@ -62,9 +64,20 @@ function Login() {
 
         <h1 className="auth-title">Welcome back</h1>
 
-        <div className="auth-divider">
-          <span>OR</span>
-        </div>
+        {/* The divider below was already here, dividing nothing — this is the
+            slot it was always meant to separate. GoogleSignInButton renders
+            null when no client id is configured, and the divider follows it,
+            so an unconfigured deployment shows neither. */}
+        <GoogleSignInButton
+          onCredential={handleGoogleSignIn}
+          disabled={loading}
+        />
+
+        {env.GOOGLE_CLIENT_ID && (
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 

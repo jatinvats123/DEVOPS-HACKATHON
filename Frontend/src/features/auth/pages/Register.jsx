@@ -4,12 +4,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
 import { setUser, setAuthenticated } from '../state/authSlice';
 import { RiPulseLine, RiArrowLeftLine } from '@remixicon/react';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import { env } from '../../../config/env';
 import '../../../styles/auth.css';
 
 function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { handleRegister, handleVerifyOtp } = useAuth();
+  const { handleRegister, handleVerifyOtp, handleGoogleSignIn } = useAuth();
   const { loading, error, otp, userId, isAuthenticated } = useSelector(
     (state) => state.auth
   );
@@ -164,9 +166,21 @@ function Register() {
 
         <h1 className="auth-title">Create your account</h1>
 
-        <div className="auth-divider">
-          <span>OR</span>
-        </div>
+        {/* Same control as the login screen. Signing up with Google and signing
+            in with Google are the same call — the backend creates the account
+            on first use — so there is no separate "register with Google" path
+            to keep in step. */}
+        <GoogleSignInButton
+          onCredential={handleGoogleSignIn}
+          disabled={loading}
+          label="Continue with Google"
+        />
+
+        {env.GOOGLE_CLIENT_ID && (
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 

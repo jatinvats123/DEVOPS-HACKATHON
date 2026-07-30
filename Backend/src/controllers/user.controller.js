@@ -195,27 +195,73 @@ export const verifyUser = asyncHandler(async (req, res) => {
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await UserService.findUserByEmail(email);
-  if (!user) {
-    throw new ApiError(404, 'User not found');
-  }
-  const resetToken = user.generateForgotToken();
-  await UserService.saveUser(user, { validateBeforeSave: false });
 
-  const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
-  await sendNotificationEmail(
-    {
-      email: user.email,
-      subject: 'Password Reset Request',
-      message: `You requested a password reset. Use this token to reset your password: ${resetUrl}`,
-    },
-    'password reset'
-  );
+  if (!email || !String(email).trim()) {
+    throw new ApiError(400, 'Email is required');
+  }
+
+  const user = await UserService.findUserByEmail(String(email).trim());
+
+  /**
+   * A missing account is NOT an error here.
+   *
+   * This used to throw 404 "User not found" directly beneath a comment saying
+   * the endpoint always returns 200 — the comment described the intent, the
+   * code did the opposite. The 404 made the endpoint an account-enumeration
+   * oracle: post an address, learn from the status code whether it is
+   * registered, repeat down a breach list to find which of your users have
+   * accounts here.
+   *
+   * The response is now identical either way. Work that only makes sense for a
+   * real account simply does not happen.
+   */
+  if (user) {
+    const resetToken = user.generateForgotToken();
+    await UserService.saveUser(user, { validateBeforeSave: false });
+
+    /**
+     * The link must point at the SPA, not at this API.
+     *
+     * It previously pointed to `/api/auth/reset-password/:token`, which exists
+     * only as a POST route. Clicking it in a mail client issues a GET, which
+     * matched no API route and fell through to the SPA shell — so the flow was
+     * unusable from the one place it is ever used from. The token now travels
+     * to a real page that can collect a new password and POST it back.
+     *
+     * Built from configured FRONTEND_URL rather than the request's Host header:
+     * Host is attacker-controlled, and reflecting it into a password-reset link
+     * lets someone request a reset for your address and have the token
+     * delivered to a host they chose.
+     */
+    const resetUrl = `${config.FRONTEND_URL.replace(/\/+$/, '')}/reset-password/${resetToken}`;
+
+    await sendNotificationEmail(
+      {
+        email: user.email,
+        subject: 'Reset your WatchTower password',
+        message: `You requested a password reset. Open this link to choose a new password (valid for 15 minutes): ${resetUrl}\n\nIf you did not request this, you can ignore this email — your password has not changed.`,
+        html: `
+          <p>You requested a password reset for your WatchTower account.</p>
+          <p><a href="${resetUrl}">Choose a new password</a></p>
+          <p>This link is valid for <strong>15 minutes</strong> and can be used once.</p>
+          <p>If you did not request this, you can ignore this email — your password has not changed.</p>
+          <p style="color:#6c6a64;font-size:12px">If the link does not open, paste this into your browser:<br>${resetUrl}</p>`,
+      },
+      'password reset'
+    );
+  }
+
   // Always 200, even if delivery failed: reporting the difference would turn
   // this endpoint into an account-enumeration oracle.
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, 'Password reset token sent to email'));
+    .json(
+      new ApiResponse(
+        200,
+        {},
+        'If an account exists for that email, a reset link has been sent.'
+      )
+    );
 });
 
 export const changePassword = asyncHandler(async (req, res) => {
@@ -245,20 +291,54 @@ export const resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'New password is required');
   }
 
+  // Same floor the registration validator enforces. Without it this endpoint
+  // was a way to set a one-character password on an existing account, quietly
+  // undoing the rule applied at sign-up.
+  if (String(newPassword).length < 6) {
+    throw new ApiError(400, 'New password must be at least 6 characters');
+  }
+
   const user = await UserService.findUserByForgotToken(token);
 
+  // One message for "no such token" and "expired token" alike: distinguishing
+  // them tells someone probing tokens which guesses were structurally right.
   if (!user) {
-    throw new ApiError(400, 'Invalid or expired reset token');
+    throw new ApiError(400, 'This reset link is invalid or has expired');
   }
 
   user.password = newPassword;
+
+  // Consume the token. `$unset` via undefined leaves nothing to match, and
+  // clearing the expiry means even a stored-hash collision could not satisfy
+  // the `expire > now` half of the lookup. A reset link must work exactly once
+  // — it has travelled through email and may sit in an inbox indefinitely.
   user.forgotPasswordToken = undefined;
   user.forgotPasswordExpire = undefined;
   await UserService.saveUser(user);
 
+  // Tell the account holder out of band. If they did not do this, this mail is
+  // the only signal that someone else holds their mailbox.
+  await sendNotificationEmail(
+    {
+      email: user.email,
+      subject: 'Your WatchTower password was changed',
+      message:
+        'Your WatchTower password was just reset. If this was not you, contact support immediately.',
+      html: `<p>Your WatchTower password was just reset.</p>
+             <p>If this was not you, someone else may have access to your email account — contact support immediately.</p>`,
+    },
+    'password reset confirmation'
+  );
+
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, 'Password reset successfully'));
+    .json(
+      new ApiResponse(
+        200,
+        {},
+        'Password reset successfully. You can now sign in with your new password.'
+      )
+    );
 });
 // Update avatar and/or notification preferences for the signed-in user
 export const updateProfile = asyncHandler(async (req, res) => {

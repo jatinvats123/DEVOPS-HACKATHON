@@ -43,6 +43,34 @@ export const forgotPassword = async (email) => {
 };
 
 /*
+ * @resetPassword - Completes a password reset using the single-use token from
+ * the emailed link.
+ * @param {string} token - The raw token taken from the /reset-password/:token URL.
+ * @param {string} newPassword - The replacement password.
+ */
+
+export const resetPassword = async (token, newPassword) => {
+  return apiRequest({
+    method: 'post',
+    url: `${env.RESET_PASSWORD_API}/${encodeURIComponent(token)}`,
+    data: { newPassword },
+  });
+};
+
+/*
+ * @googleSignIn - Exchanges a Google ID token for a WatchTower session cookie.
+ * @param {string} credential - The JWT credential issued by Google Identity Services.
+ */
+
+export const googleSignIn = async (credential) => {
+  return apiRequest({
+    method: 'post',
+    url: env.GOOGLE_AUTH_API,
+    data: { credential },
+  });
+};
+
+/*
  *@changePassword - Changes the password of the currently authenticated user.
  * @param {Object} passwordData - An object containing the current and new password details
  * (e.g., currentPassword, newPassword).

@@ -25,6 +25,18 @@ export const apiLimiter = rateLimit({
   limit: 300,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  /**
+   * Public status pages carry their own, separately-tuned limiter (see
+   * routes/statusPage.route.js) and must not also draw on this budget.
+   *
+   * 300 per 15 minutes is ~20 requests a minute — sensible for one signed-in
+   * dashboard, far too low for a page that is linked publicly and gets its
+   * heaviest traffic during exactly the incident it exists to report. Without
+   * this skip the tighter-looking per-minute limit downstream would never be
+   * the binding constraint, and the page would start refusing customers at the
+   * worst possible moment.
+   */
+  skip: (req) => req.path.startsWith('/status/'),
   message: {
     success: false,
     message: 'Too many requests, please try again later.',
@@ -129,11 +141,53 @@ const Middleware = (app) => {
   app.use(httpLogger);
   app.use(httpMetricsMiddleware);
 
+  /**
+   * Google Sign-In needs three holes in the default policy, and it fails
+   * SILENTLY without them — the button simply never appears and the only clue
+   * is a CSP violation in the console.
+   *
+   *   script-src   load https://accounts.google.com/gsi/client
+   *   frame-src    GIS renders its consent flow in an iframe
+   *   connect-src  the library calls back to Google to mint the credential
+   *
+   * Each is pinned to Google's exact origins rather than widened to `https:`,
+   * and the whole relaxation is conditional: a deployment without Google
+   * configured keeps the strict default. The point of a CSP is lost if it is
+   * loosened for a feature that is not switched on.
+   */
+  const googleEnabled = Boolean(config.GOOGLE_CLIENT_ID);
+  const GOOGLE_ORIGINS = ['https://accounts.google.com'];
+
+  const directives = googleEnabled
+    ? {
+        scriptSrc: ["'self'", ...GOOGLE_ORIGINS, 'https://apis.google.com'],
+        frameSrc: ["'self'", ...GOOGLE_ORIGINS],
+        connectSrc: ["'self'", ...GOOGLE_ORIGINS],
+        imgSrc: ["'self'", 'data:', 'https://lh3.googleusercontent.com'],
+      }
+    : {};
+
   app.use(
     helmet({
       // The SPA is served from this same origin; the default CORP policy
       // would block its own assets in some browsers.
       crossOriginResourcePolicy: { policy: 'same-origin' },
+
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives,
+      },
+
+      /**
+       * `same-origin` (helmet's default) severs the opener relationship that
+       * the Google popup uses to hand the credential back, so sign-in hangs on
+       * a popup that never closes. `same-origin-allow-popups` keeps the
+       * cross-origin isolation this header exists for while permitting exactly
+       * that case.
+       */
+      crossOriginOpenerPolicy: {
+        policy: googleEnabled ? 'same-origin-allow-popups' : 'same-origin',
+      },
     })
   );
 
@@ -169,6 +223,9 @@ const Middleware = (app) => {
   // these must be registered before the general /api limiter.
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
+  // Google sign-in is a credential endpoint like any other: unthrottled, it is
+  // a free oracle for testing stolen or forged ID tokens.
+  app.use('/api/auth/google', authLimiter);
   app.use('/api/auth/verify', authLimiter);
   app.use('/api/auth/change-password', authLimiter);
   app.use('/api/auth/forgot-password', passwordResetLimiter);
