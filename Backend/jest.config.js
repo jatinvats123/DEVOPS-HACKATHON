@@ -21,6 +21,12 @@ export default {
 
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
 
+  // One MongoDB instance for the whole run, shared by every suite. Nineteen
+  // suites each launching their own mongod raced each other into startup
+  // timeouts on loaded machines and small CI runners.
+  globalSetup: '<rootDir>/tests/globalSetup.js',
+  globalTeardown: '<rootDir>/tests/globalTeardown.js',
+
   collectCoverageFrom: [
     'src/**/*.js',
     // Prompt strings and the model client are external-service glue with no
