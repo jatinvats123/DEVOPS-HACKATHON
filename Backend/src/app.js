@@ -11,6 +11,10 @@ import LogsRouter from './routes/logs.route.js';
 import IncidentRouter from './routes/incident.route.js';
 import metricsRouter from './routes/metrics.route.js';
 import ChannelRouter from './routes/channel.route.js';
+import {
+  StatusPageRouter,
+  PublicStatusRouter,
+} from './routes/statusPage.route.js';
 import observabilityRouter from './routes/observability.route.js';
 import docsRouter from './routes/docs.route.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
@@ -40,6 +44,13 @@ app.use('/api/logs', LogsRouter);
 app.use('/api/incidents', IncidentRouter);
 app.use('/api/metrics', metricsRouter);
 app.use('/api/channels', ChannelRouter);
+app.use('/api/status-pages', StatusPageRouter);
+
+// Public, unauthenticated status pages. Mounted under /api/status (not
+// /api/status-pages) so the authenticated management surface and the world-
+// readable one never share a path prefix — it should be impossible to add a
+// route to one and accidentally expose it through the other.
+app.use('/api/status', PublicStatusRouter);
 
 // Unknown API routes must return JSON, never the SPA shell
 app.use('/api', (req, _res, next) => {

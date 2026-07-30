@@ -463,3 +463,164 @@
     font-size: 16px;
   }
 }
+
+/* ==========================================================================
+   Classes referenced by the auth pages but never defined.
+   ==========================================================================
+   Login.jsx and Register.jsx use `auth-button-primary`, `auth-label`,
+   `auth-logo` and `password-header`; none existed in any stylesheet, so the
+   primary submit button on both pages rendered as an unstyled browser default
+   while `.auth-button` — the intended style — went unused.
+
+   Defined at the end of the file deliberately: the rules above are two
+   generations of appended styles that already override each other, and these
+   need to win without disturbing that order.
+   ========================================================================== */
+
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.auth-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b6862;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: block;
+}
+
+.password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.password-header a {
+  font-size: 11px;
+  color: #888888;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.password-header a:hover {
+  color: #000000;
+}
+
+.auth-button-primary {
+  padding: 18px 0;
+  width: 100%;
+  margin-top: 8px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.auth-button-primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.auth-button-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Visible keyboard focus. The inputs below use a border-colour change, which
+   is invisible on a black button, so these get a real focus ring. */
+.auth-button-primary:focus-visible,
+.google-button:focus-visible,
+.password-header a:focus-visible,
+.auth-footer a:focus-visible {
+  outline: 2px solid #cc785c;
+  outline-offset: 3px;
+}
+
+/* --- Continue with Google -------------------------------------------------
+   Rendered as our own button rather than Google's iframe widget so it matches
+   the black/uppercase/letter-spaced language of the form it sits above. The
+   iframe cannot be restyled, and a Google-branded pill above a minimal
+   monochrome form looked like a third-party advert dropped into the page.
+   Google's branding requirements are still met: unmodified official mark,
+   "Continue with Google" wording, adequate contrast and touch target. */
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 17px 0;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #d0d0d0;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.google-button:hover:not(:disabled) {
+  border-color: #000000;
+  background: #fafafa;
+}
+
+.google-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.google-button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* --- Status / feedback ---------------------------------------------------- */
+
+.auth-success {
+  color: #1c6b3f;
+  padding: 16px 0;
+  font-size: 13px;
+  margin-bottom: 32px;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.auth-note {
+  font-size: 13px;
+  color: #6b6862;
+  line-height: 1.7;
+  text-align: center;
+  margin: 0 0 32px 0;
+  font-weight: 300;
+}
+
+/* Password rule text: shown before submission, so the requirement is known
+   rather than discovered by having the form rejected. */
+.auth-hint {
+  font-size: 11px;
+  color: #888888;
+  margin-top: 8px;
+  letter-spacing: 0.3px;
+}

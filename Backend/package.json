@@ -31,6 +31,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^8.4.1",
     "express-validator": "^7.3.2",
+    "google-auth-library": "^10.9.1",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "js-yaml": "^5.2.2",

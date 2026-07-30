@@ -21,6 +21,22 @@ import { LoadingRegion, SkeletonStatCards } from '../components/ui/Skeleton';
 import Login from '../features/auth/pages/Login';
 import Register from '../features/auth/pages/Register';
 
+/**
+ * The password-reset pair is lazy where Login/Register are eager: they are
+ * reached rarely and never as a first paint, so they cost nothing to defer.
+ */
+const ForgotPassword = lazy(
+  () => import('../features/auth/pages/ForgotPassword')
+);
+const ResetPassword = lazy(
+  () => import('../features/auth/pages/ResetPassword')
+);
+
+/** The public status page — no session, no Layout, no ProtectedRoute. */
+const PublicStatus = lazy(
+  () => import('../features/monitoring/pages/PublicStatus')
+);
+
 const Layout = lazy(() => import('../components/Layout'));
 const Dashboard = lazy(() => import('../features/monitoring/pages/Dashboard'));
 const Monitoring = lazy(
@@ -85,6 +101,39 @@ export const router = createBrowserRouter([
   { path: '/', element: <Home /> },
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
+  {
+    // Linked from the login screen. Without this route the link resolved to the
+    // catch-all and rendered the 404 page.
+    path: '/forgot-password',
+    element: (
+      <RouteShell label="password reset">
+        <ForgotPassword />
+      </RouteShell>
+    ),
+  },
+  {
+    // Destination of the emailed reset link.
+    path: '/reset-password/:token',
+    element: (
+      <RouteShell label="password reset">
+        <ResetPassword />
+      </RouteShell>
+    ),
+  },
+  {
+    /**
+     * Public status page. Deliberately OUTSIDE the ProtectedRoute subtree — a
+     * customer checking whether the service is down must never be bounced to a
+     * login screen, which is the one thing that would make the page useless at
+     * the moment it matters.
+     */
+    path: '/status/:slug',
+    element: (
+      <RouteShell label="status page">
+        <PublicStatus />
+      </RouteShell>
+    ),
+  },
   {
     element: (
       <ProtectedRoute>

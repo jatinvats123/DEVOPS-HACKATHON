@@ -60,6 +60,18 @@ Design decisions and their costs are recorded in [`docs/adr/`](docs/adr/).
 - Email notification on open and close, behind a pluggable notifier interface
   (a webhook/Slack notifier was added without touching incident logic)
 
+**Status pages**
+
+- Public availability pages at `/status/:slug`, readable without an account —
+  the one unauthenticated read in the product
+- The published payload is an allow-list, not a redaction: display name, state,
+  uptime and average latency. Monitored URLs, stored request credentials, owner
+  and monitor ids never leave the server
+- Paused monitors are reported as `PAUSED`, and uptime with no checks behind it
+  as `null` rather than 100% — a status page that rounds up is worse than none
+- Its own rate-limit budget, because a status page gets its heaviest traffic
+  during exactly the incident it exists to report
+
 **Platform**
 
 - Real-time status over Socket.IO with JWT-authorised, room-scoped delivery
@@ -71,6 +83,12 @@ Design decisions and their costs are recorded in [`docs/adr/`](docs/adr/).
 **Security**
 
 - JWT authentication, bcrypt hashing, email verification, password reset
+- Optional Google sign-in (Google Identity Services), with the ID token verified
+  server-side against Google's keys and its `aud` claim checked — an existing
+  local account is linked only on a Google-verified address
+- Password reset tokens stored as SHA-256 hashes, single-use, 15-minute expiry,
+  and the request endpoint answers identically for unknown addresses so it
+  cannot be used to enumerate accounts
 - Every query owner-scoped at the data-access layer — an unscoped query throws
   rather than returning every tenant's data
 - Helmet, tiered rate limiting, request sanitisation, CORS allow-list
@@ -239,6 +257,7 @@ npm run lockfiles:sync    # regenerate lockfiles on Linux (see note below)
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | yes | Mail transport for verification and alerts |
 | `CREDENTIALS_ENCRYPTION_KEY` | no | 32 bytes hex. Required only to store outbound monitor credentials |
 | `MISTRAL_API_KEY` | no | AI incident summaries. Degrades gracefully if unset |
+| `GOOGLE_CLIENT_ID` | no | Enables Google sign-in. Left empty the route returns 501, the button is not rendered, and the CSP keeps its strict default |
 | `AUTO_VERIFY_USERS` | no | Skips email verification. Defaults `true` — see SECURITY.md §5 |
 | `SCHEDULER_ENABLED` | no | Set `false` on replicas that should not poll |
 | `SCHEDULER_TICK_MS` | no | Scheduler wake-up. Defaults `5000` |
@@ -261,6 +280,7 @@ served by the API, so relative paths are correct out of the box.
 | Variable | Required | Description |
 |---|---|---|
 | `VITE_BACKEND_URL` | no | Only for split-origin deployments |
+| `VITE_GOOGLE_CLIENT_ID` | no | Must match `GOOGLE_CLIENT_ID` in the backend. Read at **build** time, so changing it needs a rebuild, not a restart. Empty hides the button |
 
 ---
 

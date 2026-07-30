@@ -74,6 +74,22 @@ export const config = {
   // rather than silently writing plaintext). Generate with `openssl rand -hex 32`.
   CREDENTIALS_ENCRYPTION_KEY: process.env.CREDENTIALS_ENCRYPTION_KEY,
 
+  /**
+   * Google Sign-In client ID. OPTIONAL — absent means the feature is off.
+   *
+   * Not a secret: it is embedded in the page by design and identifies the
+   * application to Google. It is still required server-side, because verifying
+   * an ID token means checking that its `aud` claim equals THIS client id.
+   * Without that check any valid Google token — including one minted for an
+   * entirely different application — would be accepted, which is the classic
+   * way this integration is got wrong.
+   *
+   * Everything Google-related is conditional on this value: the route, the
+   * relaxed CSP, and the button. A deployment that has not configured Google
+   * keeps the tighter default policy and shows no dead button.
+   */
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+
   // Registration currently marks accounts verified immediately, bypassing the
   // OTP flow. That was a hackathon shortcut and it is a real weakness: combined
   // with cheap signup it allows account spam under arbitrary email addresses.

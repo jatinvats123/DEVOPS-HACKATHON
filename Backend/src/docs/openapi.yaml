@@ -54,6 +54,11 @@ tags:
     description: Uptime, latency and status history for a monitor.
   - name: Channels
     description: Where alerts are delivered.
+  - name: Status Pages
+    description: |
+      Public-facing availability pages. The management endpoints are
+      owner-scoped like the rest of the API; `/api/status/{slug}` is the one
+      genuinely public read in the product.
   - name: Operations
     description: Health and Prometheus endpoints. Not part of the product API.
 
@@ -128,6 +133,50 @@ paths:
           description: Invalid credentials, or the account is not verified.
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/auth/google:
+    post:
+      tags: [Authentication]
+      summary: Sign in with Google
+      security: []
+      description: |
+        Exchanges a Google Identity Services ID token for the same session
+        cookie the password login issues. The token is verified against
+        Google's published keys, and its `aud` claim is checked against this
+        deployment's client id — without that check, a token minted for any
+        other Google application would be accepted.
+
+        An account is created on first use. An existing local account with the
+        same address is linked rather than duplicated, which is safe only
+        because Google asserts `email_verified`; a token for an unverified
+        address is rejected outright.
+
+        Returns 501 when the deployment has no `GOOGLE_CLIENT_ID` configured.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential]
+              properties:
+                credential:
+                  type: string
+                  description: The JWT credential issued by Google Identity Services.
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: |
+            The credential did not verify, or the Google account has no
+            verified email address. Deliberately one answer for every cause.
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501':
+          description: Google sign-in is not configured on this server.
 
   /api/auth/logout:
     post:
@@ -694,6 +743,140 @@ paths:
                         type: array
                         items: { $ref: '#/components/schemas/NotificationLog' }
 
+  # ─── Status pages ────────────────────────────────────────────────────────
+  /api/status-pages:
+    get:
+      tags: [Status Pages]
+      summary: List your status pages
+      responses:
+        '200':
+          description: Status pages.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/StatusPage' }
+    post:
+      tags: [Status Pages]
+      summary: Create a status page
+      description: |
+        The public address is derived from `name` unless `slug` is given.
+        Reserved slugs (`api`, `login`, …) and slugs already claimed by ANY
+        tenant are rejected — the slug is a public URL, so uniqueness is global
+        rather than per-owner.
+
+        Every id in `monitors` must belong to the caller. A monitor owned by
+        someone else is answered 404, not 403: confirming that an id exists is
+        itself a disclosure.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 80 }
+                slug:
+                  type: string
+                  description: Optional explicit address; derived from name if omitted.
+                description: { type: string, maxLength: 280 }
+                monitors:
+                  type: array
+                  maxItems: 50
+                  items: { $ref: '#/components/schemas/ObjectId' }
+                isPublic: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Created.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404':
+          description: A listed monitor does not exist or is not yours.
+        '409':
+          description: That address is already taken.
+
+  /api/status-pages/{pageId}:
+    parameters:
+      - {
+          name: pageId,
+          in: path,
+          required: true,
+          schema: { $ref: '#/components/schemas/ObjectId' },
+        }
+    patch:
+      tags: [Status Pages]
+      summary: Update a status page
+      description: |
+        Renaming a page does NOT move its public address — links already shared
+        with customers keep working. The address changes only when `slug` is
+        supplied explicitly.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 80 }
+                slug: { type: string }
+                description: { type: string, maxLength: 280 }
+                monitors:
+                  type: array
+                  items: { $ref: '#/components/schemas/ObjectId' }
+                isPublic: { type: boolean }
+      responses:
+        '200':
+          description: Updated.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: That address is already taken.
+    delete:
+      tags: [Status Pages]
+      summary: Delete a status page
+      responses:
+        '200':
+          description: Deleted. The public address stops resolving.
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/status/{slug}:
+    get:
+      tags: [Status Pages]
+      summary: Read a public status page
+      security: []
+      description: |
+        The only unauthenticated read in the product, and the response is an
+        allow-list rather than a redaction: monitor display name, current
+        state, uptime and average latency. Deliberately absent are the
+        monitored URL, any stored request credentials, owner and monitor ids,
+        check interval, and error detail.
+
+        An unpublished page is answered 404, identically to one that never
+        existed, so the endpoint cannot be used to discover which slugs exist.
+
+        Rate limited separately from the rest of the API — a status page gets
+        its heaviest traffic during exactly the incident it exists to report.
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/PublicStatusPage'
+        '404':
+          description: No such page, or it is not published.
+        '429':
+          description: Too many requests.
+
   # ─── Operations ──────────────────────────────────────────────────────────
   /api/health:
     get:
@@ -967,6 +1150,54 @@ components:
         type: { type: string, enum: [Email, Slack, Webhook, SMS] }
         target: { type: string }
         active: { type: boolean }
+
+    StatusPage:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        userId: { $ref: '#/components/schemas/ObjectId' }
+        name: { type: string }
+        slug:
+          type: string
+          description: The public address, served at /status/{slug}.
+        description: { type: string }
+        monitors:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        isPublic: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    PublicStatusPage:
+      type: object
+      description: |
+        The anonymous view. Every field here is world-readable by design; note
+        what is NOT present — no monitor ids, no target URLs, no owner.
+      properties:
+        name: { type: string }
+        description: { type: string }
+        slug: { type: string }
+        overall: { type: string, enum: [OPERATIONAL, DEGRADED] }
+        updatedAt: { type: string, format: date-time }
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The monitor's display title, never its URL.
+              status: { type: string, enum: [UP, DOWN, PAUSED] }
+              lastCheckedAt: { type: string, format: date-time, nullable: true }
+              avgResponseMs: { type: integer, nullable: true }
+              uptime:
+                type: object
+                description: |
+                  Percentages, or null where nothing has been checked yet.
+                  null and 100 are different claims and are not conflated.
+                properties:
+                  '24h': { type: number, nullable: true }
+                  '7d': { type: number, nullable: true }
+                  '30d': { type: number, nullable: true }
 
     NotificationLog:
       type: object
