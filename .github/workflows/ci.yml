@@ -1,16 +1,33 @@
 name: CI
 
 on:
+  # `push` is deliberately restricted to main. Combined with `pull_request`,
+  # every commit is validated exactly ONCE in each context.
+  #
+  # The previous `branches: ['**']` meant a commit on a PR branch triggered two
+  # runs — one for the push, one for the pull request — of the same workflow on
+  # the same SHA. That doubled CI minutes, and worse, both runs exported to the
+  # same `type=gha` Docker layer cache simultaneously and raced each other: the
+  # image build failed in the pull_request run while passing in the push run,
+  # for identical code. A build whose result depends on what else is running is
+  # not a signal anyone can act on.
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
-# A new push to the same branch supersedes the previous run.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Cancel superseded runs on feature branches, but NEVER on main.
+  #
+  # On a branch, only the latest commit matters and cancelling saves minutes.
+  # On main every commit's result is a permanent record: it is what the README
+  # badge reports and what a reader uses to judge whether the project builds.
+  # A cancelled run leaves the badge red with nothing actually broken — which is
+  # exactly what happened when a merge landed while another main run was in
+  # flight.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -203,6 +220,14 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # Layer caches are READ from this ref and from main, but WRITTEN only to
+      # this ref's own scope.
+      #
+      # An unscoped `type=gha` means every concurrent run exports to the same
+      # cache key. Two runs building the same image at once then corrupt each
+      # other's export, which surfaces as an image build that fails in one run
+      # and passes in another for identical code. Separate write scopes make
+      # that impossible; reading main's scope keeps the cache hit rate.
       - name: Build backend image
         uses: docker/build-push-action@v6
         with:
@@ -210,8 +235,10 @@ jobs:
           file: Backend/Dockerfile
           tags: watchtower-backend:ci
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=backend-${{ github.ref_name }}
+            type=gha,scope=backend-main
+          cache-to: type=gha,mode=max,scope=backend-${{ github.ref_name }}
 
       - name: Build frontend image
         uses: docker/build-push-action@v6
@@ -220,8 +247,10 @@ jobs:
           file: Frontend/Dockerfile
           tags: watchtower-frontend:ci
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=frontend-${{ github.ref_name }}
+            type=gha,scope=frontend-main
+          cache-to: type=gha,mode=max,scope=frontend-${{ github.ref_name }}
 
       - name: Assert images do not run as root
         # The single most common container hardening regression, and trivially
