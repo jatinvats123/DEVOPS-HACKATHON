@@ -32,12 +32,15 @@ export const apiRequest = async (
     // Handle both object and parameter-based calls
     let method, requestUrl, requestData, requestParams;
 
+    let requestTimeout;
+
     if (typeof methodOrConfig === 'object' && methodOrConfig !== null) {
-      // Object-based call: apiRequest({method, url, data, params})
+      // Object-based call: apiRequest({method, url, data, params, timeout})
       method = methodOrConfig.method;
       requestUrl = methodOrConfig.url;
       requestData = methodOrConfig.data;
       requestParams = methodOrConfig.params;
+      requestTimeout = methodOrConfig.timeout;
     } else {
       // Parameter-based call: apiRequest(method, url, data, params)
       method = methodOrConfig;
@@ -50,7 +53,21 @@ export const apiRequest = async (
       throw new Error('API Request Error: URL and method are required');
     }
 
-    const config = requestParams ? { params: requestParams } : {};
+    /**
+     * The instance default is 10s, which suits a database read and does not
+     * suit an endpoint that opens an SMTP connection to a third party and waits
+     * for it to accept a message. Sending one mail measured ~4.7s against Gmail
+     * from a developer machine, so "Test Dispatch" was running at half the
+     * budget before any adverse condition, and over it from a slower network.
+     *
+     * Raising the global default instead would mean every genuinely stuck
+     * request hangs the UI for that long. This is opt-in per call, so the
+     * long budget applies only where the work is legitimately slow.
+     */
+    const config = {
+      ...(requestParams ? { params: requestParams } : {}),
+      ...(requestTimeout ? { timeout: requestTimeout } : {}),
+    };
     const verb = String(method).toLowerCase();
 
     let response;

@@ -2,6 +2,7 @@ import app from './src/app.js';
 import { config } from './src/config/config.js';
 import ConnectDB from './src/config/database.js';
 import logger from './src/config/logger.js';
+import MailTranspoter from './src/config/mail.js';
 import { scheduler } from './src/jobs/scheduler.js';
 import { initSocket } from './src/sockets/server.socket.js';
 
@@ -45,6 +46,12 @@ async function shutdown(signal) {
   try {
     await new Promise((resolve) => server.close(resolve));
     await scheduler.stop();
+    // Close the pooled SMTP connections rather than have process.exit sever
+    // them. Not load-bearing — measured, an idle pool does not hold the event
+    // loop open, and the exit below would end the process regardless — but it
+    // ends the conversations with a QUIT instead of a dropped TCP connection,
+    // which is what the provider would otherwise log on every deploy.
+    MailTranspoter.close();
     logger.info('[shutdown] clean exit');
     process.exit(0);
   } catch (err) {

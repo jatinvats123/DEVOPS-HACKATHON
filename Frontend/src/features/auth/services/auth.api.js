@@ -39,6 +39,10 @@ export const forgotPassword = async (email) => {
     method: 'post',
     url: env.FORGOT_PASSWORD_API,
     data: { email },
+    // Waits on SMTP before answering, like the dispatch test. The 10s default
+    // would report a failure to a user whose reset email was in fact sent —
+    // and they would then request another, burning the hourly rate limit.
+    timeout: 30000,
   });
 };
 
