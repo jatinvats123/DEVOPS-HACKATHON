@@ -64,7 +64,10 @@ async function measure(label, url, cookie) {
   for (let i = 0; i < SAMPLES + WARMUP; i += 1) {
     const startedAt = process.hrtime.bigint();
     try {
-      const res = await fetch(url, cookie ? { headers: { Cookie: cookie } } : {});
+      const res = await fetch(
+        url,
+        cookie ? { headers: { Cookie: cookie } } : {}
+      );
       // Drain the body: a request is not finished until its response is read,
       // and timing only the headers would flatter every number here.
       await res.arrayBuffer();
@@ -93,7 +96,9 @@ async function measure(label, url, cookie) {
 
 const health = await fetch(`${BASE}/api/health`).catch(() => null);
 if (!health?.ok) {
-  console.error(`No healthy stack at ${BASE}. Run: docker compose up -d --build`);
+  console.error(
+    `No healthy stack at ${BASE}. Run: docker compose up -d --build`
+  );
   process.exit(1);
 }
 
@@ -102,9 +107,13 @@ const [monitorId] = await seed(cookie);
 
 const results = [];
 results.push(await measure('GET /api/health', `${BASE}/api/health`));
-results.push(await measure('GET /api/health/ready', `${BASE}/api/health/ready`));
+results.push(
+  await measure('GET /api/health/ready', `${BASE}/api/health/ready`)
+);
 results.push(await measure('GET /api/monitor', `${BASE}/api/monitor`, cookie));
-results.push(await measure('GET /api/incidents', `${BASE}/api/incidents`, cookie));
+results.push(
+  await measure('GET /api/incidents', `${BASE}/api/incidents`, cookie)
+);
 if (monitorId) {
   results.push(
     await measure(
@@ -117,7 +126,9 @@ if (monitorId) {
 
 const fmt = (n) => `${n.toFixed(1)} ms`;
 
-console.log(`\nBase: ${BASE} · ${SAMPLES} samples each (${WARMUP} warm-up discarded)\n`);
+console.log(
+  `\nBase: ${BASE} · ${SAMPLES} samples each (${WARMUP} warm-up discarded)\n`
+);
 console.log(
   '| Endpoint | p50 | p95 | p99 | max | errors |\n|---|---:|---:|---:|---:|---:|'
 );

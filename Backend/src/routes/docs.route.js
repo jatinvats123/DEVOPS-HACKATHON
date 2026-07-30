@@ -96,9 +96,12 @@ if (spec) {
   );
 } else {
   docsRouter.use('/docs', (req, res) =>
-    res.status(503).type('text/plain').send(
-      `API documentation unavailable: ${loadError?.message ?? 'spec not loaded'}\n`
-    )
+    res
+      .status(503)
+      .type('text/plain')
+      .send(
+        `API documentation unavailable: ${loadError?.message ?? 'spec not loaded'}\n`
+      )
   );
 }
 

@@ -121,7 +121,8 @@ describe('OpenAPI specification', () => {
       for (const method of methods) {
         const op = ops[method];
         if (!op) continue;
-        if (!op.summary) problems.push(`${method.toUpperCase()} ${route}: no summary`);
+        if (!op.summary)
+          problems.push(`${method.toUpperCase()} ${route}: no summary`);
         if (!op.responses || Object.keys(op.responses).length === 0) {
           problems.push(`${method.toUpperCase()} ${route}: no responses`);
         }

@@ -12,8 +12,9 @@ rather than asserted — and what is still wrong with it.
 | **Tests** | 0 | **323** across 19 suites | `npm run test:coverage --prefix Backend` |
 | **Coverage (statements)** | 0% | **~80%**, gated at 60% in CI | Jest, `coverageThreshold` |
 | **CI/CD** | none | lint · Node 20+22 matrix · audit gate · Trivy · image builds · compose smoke test · deploy with rollback | `.github/workflows/` |
-| **Backend image** | 361 MB | **323 MB** | `docker images` |
-| **Frontend image** | 517 MB | **76 MB** | `docker images` |
+| **Backend image** | 361 MB | **365 MB** | `docker images` |
+| **Frontend image** | 517 MB | **92 MB** | `docker images` |
+| **HIGH/CRITICAL CVEs in the backend image** | 18 | **0** | Trivy, `--ignore-unfixed` |
 | **Runs as root** | yes, both images | **no**, both images | asserted in CI |
 | **Graceful shutdown** | never ran in a container | drains, releases lease, clean exit | asserted in CI |
 | **Lighthouse — performance** | 79 | **84** | median of 3 runs, `/login` |
@@ -24,6 +25,24 @@ rather than asserted — and what is still wrong with it.
 | **Entry JS bundle** | 260 KB | **22.5 KB** | vite build output |
 | **High/critical advisories** | 31 (23 high) | **0 blocking** (1 documented, unreachable) | `npm run audit` |
 | **API p95 latency** | unmeasurable — no instrumentation existed | reproducible via script; exported as a histogram | `scripts/measure-latency.mjs`, §2 |
+
+**On the backend image size.** It ends up 4 MB *larger* than it started, which
+is the honest number. The multi-stage rebuild cut it to 323 MB; Phases 6 and 8
+then added pino, prom-client and swagger-ui-express, which cost more than the
+packaging saved. What actually improved is what the image contains: no
+devDependencies, no build toolchain, no npm at runtime, a non-root user, and
+working signal handling. Size was never the goal — it is reported because the
+brief asked for it.
+
+The frontend image is the real packaging result: 517 MB → 92 MB, and that is a
+correctness fix rather than an optimisation. The old image ran `npm run dev`
+and shipped the Vite dev server as a production artefact.
+
+**On the zero-CVE figure.** Reached by deleting npm and corepack from the
+runtime image rather than by suppressing findings. The container's command is
+`node server.js`; it never invokes a package manager, and npm's vendored tree
+(tar, minimatch, glob, cross-spawn, sigstore) accounted for 16 of the 18
+findings. The remaining two were OS packages fixed by `apk upgrade`.
 
 ### Scale of change
 

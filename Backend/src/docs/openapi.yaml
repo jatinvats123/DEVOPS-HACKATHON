@@ -144,7 +144,12 @@ paths:
       summary: Verify an account with an OTP
       security: []
       parameters:
-        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       requestBody:
         required: true
         content:
@@ -310,7 +315,12 @@ paths:
 
   /api/monitor/{monitorId}:
     parameters:
-      - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      - {
+          name: monitorId,
+          in: path,
+          required: true,
+          schema: { $ref: '#/components/schemas/ObjectId' },
+        }
     put:
       tags: [Monitors]
       summary: Update a monitor
@@ -362,7 +372,12 @@ paths:
       tags: [Incidents]
       summary: One incident by id
       parameters:
-        - { name: incidentId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: incidentId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: The incident.
@@ -383,7 +398,12 @@ paths:
       tags: [Incidents]
       summary: Incidents for one monitor
       parameters:
-        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: monitorId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: Incidents, newest first.
@@ -422,7 +442,12 @@ paths:
       tags: [Logs]
       summary: Check results for one monitor
       parameters:
-        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: monitorId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: Up to 200 checks, newest first.
@@ -448,7 +473,12 @@ paths:
         A window with no checks reports `uptime: null`, **not** `100`. "We never
         checked" and "it was perfectly healthy" are different claims.
       parameters:
-        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: monitorId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: Uptime windows.
@@ -469,9 +499,12 @@ paths:
                           windows:
                             type: object
                             properties:
-                              '24h': { $ref: '#/components/schemas/UptimeWindow' }
-                              '7d': { $ref: '#/components/schemas/UptimeWindow' }
-                              '30d': { $ref: '#/components/schemas/UptimeWindow' }
+                              '24h':
+                                { $ref: '#/components/schemas/UptimeWindow' }
+                              '7d':
+                                { $ref: '#/components/schemas/UptimeWindow' }
+                              '30d':
+                                { $ref: '#/components/schemas/UptimeWindow' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /api/metrics/latency/{monitorId}:
@@ -479,7 +512,12 @@ paths:
       tags: [Metrics]
       summary: Recent latency, with connection-phase breakdown
       parameters:
-        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: monitorId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: The 100 most recent checks, oldest first for charting.
@@ -496,10 +534,19 @@ paths:
                           properties:
                             time: { type: string, example: '14:32' }
                             timestamp: { type: string, format: date-time }
-                            latency: { type: integer, description: Total round trip, ms. }
+                            latency:
+                              {
+                                type: integer,
+                                description: Total round trip,
+                                ms.,
+                              }
                             dns: { type: [integer, 'null'] }
                             tcp: { type: [integer, 'null'] }
-                            tls: { type: [integer, 'null'], description: Null on plain HTTP. }
+                            tls:
+                              {
+                                type: [integer, 'null'],
+                                description: Null on plain HTTP.,
+                              }
                             ttfb: { type: [integer, 'null'] }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -508,7 +555,12 @@ paths:
       tags: [Metrics]
       summary: Recent up/down history
       parameters:
-        - { name: monitorId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: monitorId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: The 100 most recent checks.
@@ -558,7 +610,12 @@ paths:
               type: object
               required: [target]
               properties:
-                type: { type: string, enum: [Email, Slack, Webhook, SMS], default: Email }
+                type:
+                  {
+                    type: string,
+                    enum: [Email, Slack, Webhook, SMS],
+                    default: Email,
+                  }
                 target:
                   type: string
                   description: An email address, or a webhook URL for Slack/Webhook.
@@ -571,7 +628,12 @@ paths:
 
   /api/channels/{channelId}:
     parameters:
-      - { name: channelId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+      - {
+          name: channelId,
+          in: path,
+          required: true,
+          schema: { $ref: '#/components/schemas/ObjectId' },
+        }
     patch:
       tags: [Channels]
       summary: Update a channel
@@ -599,7 +661,12 @@ paths:
       tags: [Channels]
       summary: Send a test notification
       parameters:
-        - { name: channelId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+        - {
+            name: channelId,
+            in: path,
+            required: true,
+            schema: { $ref: '#/components/schemas/ObjectId' },
+          }
       responses:
         '200':
           description: Dispatched, or skipped for an unconfigured channel type.
@@ -756,7 +823,8 @@ components:
               type: object
               properties:
                 user: { $ref: '#/components/schemas/User' }
-                token: { type: string, description: Also set as the auth cookie. }
+                token:
+                  { type: string, description: Also set as the auth cookie. }
 
     MonitorInput:
       type: object
@@ -772,7 +840,13 @@ components:
           type: integer
           default: 60
           description: Seconds between checks. Clamped to a 5s floor.
-        timeout: { type: integer, default: 10, description: Per-attempt timeout, seconds. }
+        timeout:
+          {
+            type: integer,
+            default: 10,
+            description: Per-attempt timeout,
+            seconds.,
+          }
         active: { type: boolean, default: true }
         ignoreTlsErrors:
           type: boolean
@@ -854,7 +928,8 @@ components:
         latency: { type: [integer, 'null'] }
         statusCode: { type: [integer, 'null'] }
         error: { type: [string, 'null'] }
-        attempts: { type: integer, description: HTTP attempts this check consumed. }
+        attempts:
+          { type: integer, description: HTTP attempts this check consumed. }
         timings:
           type: object
           description: |
@@ -897,7 +972,11 @@ components:
       type: object
       properties:
         _id: { $ref: '#/components/schemas/ObjectId' }
-        event: { type: string, enum: [CRITICAL_OUTAGE, HEALTH_RECOVERY, TEST_DISPATCH] }
+        event:
+          {
+            type: string,
+            enum: [CRITICAL_OUTAGE, HEALTH_RECOVERY, TEST_DISPATCH],
+          }
         channel: { type: string }
         target: { type: string }
         status: { type: string, enum: [Delivered, Failed, Skipped] }
@@ -924,7 +1003,11 @@ components:
                     scheduler:
                       type: object
                       properties:
-                        status: { type: string, enum: [up, stale, starting, disabled] }
+                        status:
+                          {
+                            type: string,
+                            enum: [up, stale, starting, disabled],
+                          }
                         lastTickAgeSeconds: { type: integer }
                         isLeader: { type: boolean }
                         inFlight: { type: integer }

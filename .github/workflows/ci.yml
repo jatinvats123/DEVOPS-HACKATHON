@@ -128,6 +128,12 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           format: table
+          # Same single exception the dependency audit gate carries, expressed
+          # where Trivy can read it. Two scanners disagreeing about the same
+          # tree is how a team learns to ignore both. Entries carry an expiry,
+          # so the exception cannot quietly become permanent.
+          trivyignores: .trivyignore.yaml
+          scanners: vuln
 
   # ---------------------------------------------------------------------------
   build:
@@ -214,6 +220,8 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           format: table
+          trivyignores: .trivyignore.yaml
+          scanners: vuln
 
   # ---------------------------------------------------------------------------
   integration:
