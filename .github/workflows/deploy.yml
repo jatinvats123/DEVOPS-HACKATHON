@@ -25,9 +25,52 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
+  preflight:
+    name: Check deployment is configured
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Are the deployment secrets present?
+        id: check
+        # The `secrets` context is not available in a job-level `if`, so the
+        # check has to happen inside a job and be published as an output.
+        #
+        # A fork, or a clone that has not configured Render, has nothing to
+        # deploy to. Failing red forever in that situation is worse than not
+        # running: a permanently broken Deploy badge is one people learn to
+        # ignore, and it hides the day the deploy genuinely breaks. So an
+        # unconfigured repository SKIPS with an explicit notice instead.
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          if [ -n "$RENDER_API_KEY" ] && [ -n "$RENDER_SERVICE_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Deployment secrets present — proceeding."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Deployment skipped::RENDER_API_KEY and RENDER_SERVICE_ID are not set. Add them under Settings → Secrets and variables → Actions to enable automatic deployment."
+            {
+              echo "### Deployment skipped"
+              echo ""
+              echo "This repository has no Render credentials configured, so there is nothing to deploy to."
+              echo ""
+              echo "To enable it, add these repository secrets:"
+              echo ""
+              echo "| Secret | Where to find it |"
+              echo "| --- | --- |"
+              echo "| \`RENDER_API_KEY\` | Render dashboard → Account Settings → API Keys |"
+              echo "| \`RENDER_SERVICE_ID\` | Render dashboard → your service → URL contains \`srv-...\` |"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ---------------------------------------------------------------------------
   publish:
     name: Build & publish images
     runs-on: ubuntu-latest
+    needs: [preflight]
+    if: needs.preflight.outputs.configured == 'true'
     outputs:
       image: ${{ steps.meta.outputs.tags }}
     steps:
@@ -69,25 +112,14 @@ jobs:
   deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest
-    needs: [publish]
+    needs: [preflight, publish]
+    if: needs.preflight.outputs.configured == 'true'
     environment:
       name: production
       url: ${{ vars.PRODUCTION_URL || 'https://watchtower-monitoring.onrender.com' }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Verify deployment secrets are present
-        # Fail loudly and early rather than sending an unauthenticated request
-        # and interpreting the 401 as "deploy finished".
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-        run: |
-          missing=0
-          [ -n "$RENDER_API_KEY" ]    || { echo "::error::RENDER_API_KEY is not set"; missing=1; }
-          [ -n "$RENDER_SERVICE_ID" ] || { echo "::error::RENDER_SERVICE_ID is not set"; missing=1; }
-          exit $missing
 
       - name: Record the currently live deploy
         # Captured BEFORE anything changes. This is the rollback target; without

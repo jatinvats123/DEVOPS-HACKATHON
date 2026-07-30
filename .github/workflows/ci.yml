@@ -120,7 +120,7 @@ jobs:
         run: node scripts/audit-gate.mjs Backend Frontend
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: fs
           scan-ref: .
@@ -211,7 +211,7 @@ jobs:
             | grep watchtower | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Trivy image scan (backend)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: watchtower-backend:ci
           severity: HIGH,CRITICAL
