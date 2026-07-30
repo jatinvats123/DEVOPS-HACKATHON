@@ -132,8 +132,18 @@ jobs:
           # where Trivy can read it. Two scanners disagreeing about the same
           # tree is how a team learns to ignore both. Entries carry an expiry,
           # so the exception cannot quietly become permanent.
-          trivyignores: .trivyignore.yaml
+          trivyignores: .trivyignore
           scanners: vuln
+          cache: true
+        env:
+          # Trivy's default vulnerability DB lives on ghcr.io, which rate-limits
+          # anonymous pulls. On a busy runner that surfaces as a scan failure
+          # with nothing wrong in the code — the worst kind of red build,
+          # because the obvious response is to re-run rather than investigate.
+          # The AWS ECR mirror is the documented alternative and is not rate
+          # limited.
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
   # ---------------------------------------------------------------------------
   build:
@@ -220,8 +230,18 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           format: table
-          trivyignores: .trivyignore.yaml
+          trivyignores: .trivyignore
           scanners: vuln
+          cache: true
+        env:
+          # Trivy's default vulnerability DB lives on ghcr.io, which rate-limits
+          # anonymous pulls. On a busy runner that surfaces as a scan failure
+          # with nothing wrong in the code — the worst kind of red build,
+          # because the obvious response is to re-run rather than investigate.
+          # The AWS ECR mirror is the documented alternative and is not rate
+          # limited.
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
   # ---------------------------------------------------------------------------
   integration:

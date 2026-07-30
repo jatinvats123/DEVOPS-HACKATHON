@@ -1,0 +1,27 @@
+# Trivy exceptions.
+#
+# Plain format on purpose. The richer .trivyignore.yaml supports a
+# machine-enforced `expired_at`, but it depends on both the action's
+# `trivyignores` plumbing and a Trivy build new enough to parse YAML ignore
+# files — and it silently did not apply in CI while working locally. A gate that
+# behaves differently on a developer machine than on the runner is worse than a
+# simpler one that behaves the same everywhere.
+#
+# The expiry is still ENFORCED, just by the other scanner: scripts/audit-gate.mjs
+# carries the same advisory with `reviewBy: 2026-10-31` and fails the build once
+# that date passes. It runs in this same job, immediately before Trivy. Both
+# files must be updated together.
+#
+# ---------------------------------------------------------------------------
+# GHSA-qwww-vcr4-c8h2 — react-router, RSC-mode CSRF bypass.
+#
+# Not reachable. WatchTower is a client-only SPA using createBrowserRouter +
+# RouterProvider, with no server rendering, no server actions, and no RSC APIs
+# anywhere in Frontend/src (verified by grepping for unstable_*,
+# matchRSCServerRequest and createStaticHandler).
+#
+# The fix is react-router 8.x, which requires Node >= 22.22.0 and would drop the
+# Node 20 support that both the CI matrix and the runtime base image target —
+# a larger regression than the risk being carried. Deferred to the Node 22
+# baseline migration. Review by 2026-10-31.
+GHSA-qwww-vcr4-c8h2
