@@ -10,7 +10,7 @@
     "install:all": "npm --prefix Backend install && npm --prefix Frontend install",
     "dev:backend": "npm --prefix Backend run dev",
     "dev:frontend": "npm --prefix Frontend run dev",
-    "build": "npm --prefix Frontend run build",
+    "build": "node scripts/ensure-frontend-deps.mjs && npm --prefix Frontend run build",
     "start": "npm --prefix Backend start",
     "lint": "npm --prefix Backend run lint && npm --prefix Frontend run lint",
     "lint:fix": "npm --prefix Backend run lint:fix && npm --prefix Frontend run lint:fix",

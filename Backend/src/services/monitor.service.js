@@ -112,7 +112,6 @@ export function probeOnce(
         errorCode: 'ERR_CHECK_TIMEOUT',
         retryable: true,
       });
-      currentReq?.destroy();
     }, timeoutMs);
 
     function finish(result) {
@@ -126,6 +125,20 @@ export function probeOnce(
         timings,
         ...result,
       });
+
+      // Tear the request down on EVERY settle path, not just the deadline.
+      //
+      // Several paths finish while the exchange is still open — the redirect cap,
+      // the body-size cap, any error mid-response. Resolving the promise does not
+      // close the connection, so without this the socket stays open until the
+      // peer or the OS gives up. A scheduler running thousands of checks leaks
+      // file descriptors that way, and the symptom (EMFILE, much later, under
+      // load) points nowhere near the cause.
+      //
+      // After `settled = true`, so the ECONNRESET / premature-close that destroy
+      // provokes lands on `fail` and is swallowed by the guard above rather than
+      // escaping as an unhandled 'error' event.
+      currentReq?.destroy();
     }
 
     function fail(err) {

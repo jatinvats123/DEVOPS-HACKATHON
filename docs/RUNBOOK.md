@@ -297,11 +297,51 @@ noisy and increases log cost.
 ```bash
 curl -s $BASE/api/health/ready | jq '.data.status'
 curl -s $BASE/metrics | grep watchtower_scheduler_last_tick_timestamp_seconds
+
+# The SPA, not just the API. A healthy backend serving no frontend still
+# looks completely fine to every check above.
+curl -s -o /dev/null -w '%{http_code}\n' $BASE/
 ```
+
+The last one must be `200`. A `503` means the frontend bundle is missing — see
+below. Checking only `/api/health` is how a deploy that served no UI at all was
+reported as healthy for hours.
 
 `deploy.yml` does this automatically and rolls back to the previously-live deploy
 if the health check fails. A run that rolled back still reports failure — a
 rollback is not a successful deploy.
+
+### `/` returns 503 "The frontend has not been built"
+
+The API is fine; the compiled React bundle is absent from
+`Backend/public/dist`. The bundle is a build artefact and is deliberately not
+committed to git, so the deployment's **build command** must produce it.
+
+Confirm the diagnosis — the API answering while `/` does not is the signature:
+
+```bash
+curl -s $BASE/api/health | jq '.data.status'   # ok
+curl -s -o /dev/null -w '%{http_code}\n' $BASE/  # 503
+```
+
+Fix it on Render: **Settings → Build & Deploy → Build Command**
+
+```
+npm run install:all && npm run build
+```
+
+with Start Command `npm start`. Then **Manual Deploy → Deploy latest commit**.
+Linking the service to the repository's `render.yaml` blueprint sets both, plus
+the `VITE_*` build-time variables the bundle is compiled against.
+
+Check the build log for `vite build` and a `../Backend/public/dist/` asset list.
+If those lines are absent the build command never ran the frontend build, and
+redeploying without changing it will produce the same result.
+
+Before this was diagnosable, the symptom was Express's default `Cannot GET /` —
+which reads like a routing bug and sends you into the router. `app.js` now
+detects the missing bundle at boot, logs an actionable error, and serves the
+explanatory 503 instead.
 
 ### Roll back manually
 

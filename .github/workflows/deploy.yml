@@ -199,18 +199,49 @@ jobs:
           #
           # Free-tier instances cold-start, so allow retries before concluding
           # the release is bad.
+          healthy=""
           for i in $(seq 1 30); do
             code=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 30 "$BASE_URL/api/health" || true)
             if [ "$code" = "200" ]; then
               echo "health check passed after ${i} attempt(s)"
               cat /tmp/health.json
-              exit 0
+              healthy=1
+              break
             fi
             echo "attempt $i: HTTP $code"
             sleep 10
           done
-          echo "::error::service did not return a healthy response after deploy"
-          exit 1
+
+          if [ -z "$healthy" ]; then
+            echo "::error::service did not return a healthy response after deploy"
+            exit 1
+          fi
+
+          # The API being healthy says nothing about whether anyone can USE the
+          # product. This deployment once served a perfectly healthy API and no
+          # frontend at all for hours, because the only post-deploy assertion was
+          # the one above.
+          #
+          # A missing bundle now answers 503 with an explanation (see app.js), so
+          # this distinguishes "not built" from a genuine outage.
+          page=$(curl -s -o /tmp/index.html -w '%{http_code}' --max-time 30 "$BASE_URL/" || true)
+          if [ "$page" != "200" ]; then
+            echo "::error::API is healthy but / returned HTTP $page — the SPA bundle is missing."
+            echo "::error::Set the Render build command to 'npm run install:all && npm run build' (docs/RUNBOOK.md)."
+            head -c 800 /tmp/index.html
+            exit 1
+          fi
+
+          # 200 is necessary but not sufficient: an index.html without the mount
+          # point renders a blank page, which is how a broken bundle passed a
+          # smoke test in Phase 5.
+          if ! grep -q 'id="root"' /tmp/index.html; then
+            echo "::error::/ returned 200 but the served HTML has no #root mount point"
+            head -c 800 /tmp/index.html
+            exit 1
+          fi
+
+          echo "SPA is being served"
 
       - name: Roll back to the previous deploy
         # Runs only when the deploy or the health check failed AND we captured a
