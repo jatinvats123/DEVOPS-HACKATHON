@@ -93,3 +93,19 @@ updates:
     labels: [dependencies, docker]
     commit-message:
       prefix: 'build(docker)'
+    groups:
+      base-images:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      # Major base-image bumps are excluded for the same reason as npm majors,
+      # and this one had already produced bad PRs: Dependabot proposed
+      # node:20-alpine -> node:26-alpine, which contradicts every other place
+      # the Node baseline is declared — `engines: >=20 <23`, `.nvmrc`, and the
+      # Node 20/22 CI matrix.
+      #
+      # Merging that would have shipped a runtime image on a major version CI
+      # never tests. The runtime and the tested version must move together, and
+      # that is a deliberate migration (see docs/adr/), not a Monday merge.
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
