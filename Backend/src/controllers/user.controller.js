@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { UserService } from '../services/user.service.js';
 import { sendEmail } from '../services/sendEmail.js';
-import { config } from '../config/config.js';
+import { config, frontendUrlIsLoopback } from '../config/config.js';
 import logger from '../config/logger.js';
 
 /**
@@ -234,6 +234,25 @@ export const forgotPassword = asyncHandler(async (req, res) => {
      * delivered to a host they chose.
      */
     const resetUrl = `${config.FRONTEND_URL.replace(/\/+$/, '')}/reset-password/${resetToken}`;
+
+    /**
+     * A loopback link works only on the machine that generated it.
+     *
+     * Production refuses to boot with a loopback FRONTEND_URL, so reaching here
+     * means local development — where it is entirely legitimate, right up until
+     * the recipient is a real address rather than the developer's own browser.
+     * Real reset mail was sent to a real inbox pointing at localhost:5173 and
+     * failed with "This site can't be reached", which says nothing about why.
+     *
+     * Logged with the actual URL so the reset can still be completed by pasting
+     * it, and so the cause is visible at the moment it happens.
+     */
+    if (frontendUrlIsLoopback) {
+      logger.warn(
+        `[auth] reset link points at a loopback address and will not open on any ` +
+          `other device: ${resetUrl}`
+      );
+    }
 
     await sendNotificationEmail(
       {

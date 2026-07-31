@@ -33,6 +33,46 @@ if (!process.env.FRONTEND_URL) {
   throw new Error('FRONTEND_URL is not defined in environment variables');
 }
 
+/**
+ * FRONTEND_URL ends up in emailed links, so a wrong value is not a startup
+ * problem — it is a link that reaches the user's inbox and then fails in their
+ * browser, long after anyone could connect the two.
+ *
+ * That is exactly how this went wrong: password-reset mail was sent with
+ * `http://localhost:5173/reset-password/...`, which is a perfectly good address
+ * on the machine that generated it and "This site can't be reached" everywhere
+ * else — on a phone, on another device, or once the dev server stops.
+ *
+ * Validated at boot so the failure lands on whoever changed the configuration
+ * rather than on a user holding a dead link.
+ */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
+
+let frontendUrl;
+try {
+  frontendUrl = new URL(process.env.FRONTEND_URL);
+} catch {
+  throw new Error(
+    `FRONTEND_URL is not a valid absolute URL: ${JSON.stringify(process.env.FRONTEND_URL)}. ` +
+      'It must include a scheme, e.g. https://example.com'
+  );
+}
+
+if (
+  process.env.NODE_ENV === 'production' &&
+  LOOPBACK_HOSTS.has(frontendUrl.hostname)
+) {
+  // Refused rather than warned: in production every reset link built from this
+  // is guaranteed to be unreachable for the person who receives it.
+  throw new Error(
+    `FRONTEND_URL points at ${frontendUrl.hostname}, which no recipient of an ` +
+      'emailed link can reach. Set it to the public address of the deployed app.'
+  );
+}
+
+/** True when emailed links will only work on the machine that sent them. */
+export const frontendUrlIsLoopback = LOOPBACK_HOSTS.has(frontendUrl.hostname);
+
 // Accept a comma-separated list of allowed origins. In development we also
 // allow the usual local Vite ports so the dev server can talk to the API.
 const parseOrigins = (raw) => {
