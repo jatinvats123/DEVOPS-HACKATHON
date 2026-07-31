@@ -9,7 +9,7 @@ const Notification = ({ message, type = 'success', onClose }) => {
   const isError = type === 'error';
 
   return (
-    <div className="fixed bottom-8 right-8 z-[100] animate-in slide-in-from-bottom duration-300">
+    <div className="fixed inset-x-4 bottom-24 lg:inset-x-auto lg:bottom-8 lg:right-8 z-[100] animate-in slide-in-from-bottom duration-300">
       <div
         className={`
         flex items-center gap-4 px-8 py-4 rounded-2xl shadow-2xl border

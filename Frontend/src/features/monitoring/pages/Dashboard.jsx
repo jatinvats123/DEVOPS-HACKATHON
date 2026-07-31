@@ -65,14 +65,14 @@ const Icons = {
 // ─── INTERNAL COMPONENTS ────────────────────────────────────────────────────
 
 const Card = ({ title, value, sub, icon: Icon }) => (
-  <div className="bg-white border border-gray-100 p-8 transition-all duration-300 hover:border-black group">
+  <div className="bg-white border border-gray-100 p-5 sm:p-8 transition-all duration-300 hover:border-black group">
     <div className="flex justify-between items-start">
       <div>
-        <h3 className="luxury-label mb-4">{title}</h3>
-        <span className="text-4xl luxury-heading">{value}</span>
-        {sub && <p className="luxury-subtext mt-4">{sub}</p>}
+        <h3 className="luxury-label mb-3 sm:mb-4">{title}</h3>
+        <span className="text-3xl sm:text-4xl luxury-heading">{value}</span>
+        {sub && <p className="luxury-subtext mt-3 sm:mt-4">{sub}</p>}
       </div>
-      <div className="w-10 h-10 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
+      <div className="w-10 h-10 shrink-0 flex items-center justify-center text-gray-300 group-hover:text-black transition-colors">
         <Icon />
       </div>
     </div>
@@ -81,7 +81,7 @@ const Card = ({ title, value, sub, icon: Icon }) => (
 
 const StatsCards = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-0 border-t border-l border-gray-100 mb-8 sm:mb-12">
       <div className="border-r border-b border-gray-100">
         <Card
           title="Total Assets"
@@ -259,7 +259,7 @@ const StatusDistribution = ({ monitors = [] }) => {
   ];
 
   return (
-    <div className="bg-white border border-[#e6dfd8] p-8 rounded-xl shadow-sm flex flex-col min-h-[400px]">
+    <div className="bg-white border border-[#e6dfd8] p-5 sm:p-8 rounded-xl shadow-sm flex flex-col min-h-[360px] sm:min-h-[400px]">
       <h2 className="luxury-heading text-xl mb-10">Asset Distribution</h2>
       <div className="flex-1 relative flex items-center justify-center ">
         <ResponsiveContainer width="100%" height="100%">
@@ -347,7 +347,7 @@ const AllMonitors = ({ monitors = [] }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 p-8">
+    <div className="bg-white border border-gray-100 p-5 sm:p-8">
       <div className="flex items-center justify-between mb-8">
         <h2 className="luxury-heading text-base">System Registry</h2>
       </div>
@@ -431,7 +431,7 @@ const AllMonitors = ({ monitors = [] }) => {
 const RecentIncidents = ({ incidents = [] }) => {
   if (incidents.length === 0) {
     return (
-      <div className="bg-white border border-gray-100 p-8">
+      <div className="bg-white border border-gray-100 p-5 sm:p-8">
         <h2 className="luxury-heading text-base mb-8">Incident Journal</h2>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="luxury-subtext">Record is clear</p>
@@ -441,7 +441,7 @@ const RecentIncidents = ({ incidents = [] }) => {
   }
 
   return (
-    <div className="bg-white border border-gray-100 p-8">
+    <div className="bg-white border border-gray-100 p-5 sm:p-8">
       <div className="flex items-center justify-between mb-8">
         <h2 className="luxury-heading text-base">Incident Journal</h2>
         <Link
@@ -552,9 +552,9 @@ const Dashboard = () => {
     <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 luxury-container">
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
         {/* LEFT SIDE (8 columns) */}
-        <div className="xl:col-span-8 flex flex-col gap-12">
+        <div className="xl:col-span-8 flex flex-col gap-6 sm:gap-8 lg:gap-12">
           {monitors.length > 0 && (
             <div className="flex flex-col gap-4">
               <label
@@ -596,9 +596,9 @@ const Dashboard = () => {
         </div>
 
         {/* RIGHT SIDE (4 columns) */}
-        <div className="xl:col-span-4 flex flex-col gap-12">
+        <div className="xl:col-span-4 flex flex-col gap-6 sm:gap-8 lg:gap-12">
           {/* Quick Navigation Section */}
-          <div className="bg-white border border-gray-100 p-8">
+          <div className="bg-white border border-gray-100 p-5 sm:p-8">
             <h2 className="luxury-heading text-base mb-8">Quick Links</h2>
             <div className="grid grid-cols-1 gap-2">
               <Link
