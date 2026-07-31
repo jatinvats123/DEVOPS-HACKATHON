@@ -98,7 +98,10 @@ const ConnectionStatus = ({ state, reconnectAttempt = 0, onRetry }) => {
         <button
           type="button"
           onClick={onRetry}
-          className="underline underline-offset-2 hover:no-underline"
+          // -my-2 keeps the pill the same height it is now while the button's
+          // own hit area reaches 44px, so the touch target grows without the
+          // badge changing size.
+          className="-my-2 inline-flex min-h-11 min-w-11 items-center justify-center underline underline-offset-2 hover:no-underline lg:my-0 lg:min-h-0 lg:min-w-0"
         >
           Retry
         </button>

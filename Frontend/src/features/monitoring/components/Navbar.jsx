@@ -24,7 +24,7 @@ const timeAgo = (date) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-const Navbar = ({ onMobileMenuToggle }) => {
+const Navbar = ({ onMobileMenuToggle, isMobileMenuOpen = false }) => {
   const { user } = useSelector((state) => state.auth);
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,23 +85,26 @@ const Navbar = ({ onMobileMenuToggle }) => {
   const ongoing = incidents.filter((i) => i.status === 'ONGOING').length;
 
   return (
-    <header className="px-6 md:px-10 py-8 md:py-10 flex items-center justify-between bg-transparent z-10 shrink-0">
-      <div className="flex items-center gap-6">
+    <header className="px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 md:px-10 py-5 sm:py-8 md:py-10 flex items-center justify-between max-lg:gap-3 bg-transparent z-10 shrink-0">
+      <div className="flex items-center gap-3 sm:gap-6 max-lg:min-w-0">
         <button
+          type="button"
           onClick={onMobileMenuToggle}
-          className="p-2 -ml-2 text-[#141413] hover:bg-[#f5f0e8] rounded-xl lg:hidden transition-colors"
-          aria-label="Toggle menu"
+          className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-[#141413] hover:bg-[#f5f0e8] rounded-xl lg:hidden transition-colors"
+          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="app-sidebar"
         >
           <RiMenuLine className="w-6 h-6" />
         </button>
-        <div>
-          <h1 className="luxury-heading text-2xl md:text-3xl leading-none">
+        <div className="max-lg:min-w-0">
+          <h1 className="luxury-heading text-xl sm:text-2xl md:text-3xl leading-none max-lg:truncate">
             {title}
           </h1>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 sm:gap-6">
+      <div className="flex items-center gap-2 sm:gap-6 max-lg:shrink-0">
         {/* Live-connection indicator. Without it a dropped socket is
             indistinguishable from a calm period, and the dashboard keeps
             confidently displaying state frozen at the moment it disconnected. */}
@@ -114,7 +117,7 @@ const Navbar = ({ onMobileMenuToggle }) => {
         <div className="relative" ref={panelRef}>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="relative p-2 rounded-xl hover:bg-[#f5f0e8] transition-colors"
+            className="relative flex h-11 w-11 items-center justify-center rounded-xl hover:bg-[#f5f0e8] transition-colors lg:h-auto lg:w-auto lg:p-2"
             aria-label="Notifications"
             aria-expanded={open}
           >
@@ -196,9 +199,9 @@ const Navbar = ({ onMobileMenuToggle }) => {
 
         <Link
           to="/settings"
-          className="flex items-center gap-4 border border-[#e6dfd8] rounded-full pl-2 pr-4 py-1.5 hover:bg-white transition-all cursor-pointer"
+          className="flex min-h-11 items-center gap-3 sm:gap-4 border border-[#e6dfd8] rounded-full p-1.5 sm:pl-2 sm:pr-4 hover:bg-white transition-all cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full bg-[#cc785c] flex items-center justify-center text-white text-xs font-medium overflow-hidden">
+          <div className="w-8 h-8 shrink-0 rounded-full bg-[#cc785c] flex items-center justify-center text-white text-xs font-medium overflow-hidden">
             {user?.avatar ? (
               <img
                 src={user.avatar}

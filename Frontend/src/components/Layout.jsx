@@ -17,12 +17,17 @@ const Layout = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden w-full relative">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full h-screen overflow-hidden w-full relative">
         <Navbar
           onAddMonitorClick={() => setIsAddOpen(true)}
           onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          isMobileMenuOpen={isMobileMenuOpen}
         />
-        <div className="flex-1 overflow-y-auto relative w-full h-full">
+        {/* overflow-x-hidden as a backstop: one over-wide child should scroll
+            inside its own container, never push the whole page sideways.
+            Safe-area insets are applied once here rather than per page — env()
+            is 0 on hardware without a notch, so desktop is unaffected. */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative w-full h-full pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
           <Outlet />
         </div>
       </div>

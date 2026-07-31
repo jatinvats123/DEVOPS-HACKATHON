@@ -76,7 +76,10 @@ const UptimeWindows = ({ monitorId, monitorTitle }) => {
       </div>
 
       {state === 'loading' && (
-        <div className="grid grid-cols-3 gap-6" aria-busy="true">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6"
+          aria-busy="true"
+        >
           {WINDOW_LABELS.map(([key]) => (
             <div key={key} className="animate-pulse">
               <div className="h-3 w-16 bg-[#e6dfd8] rounded mb-3" />
@@ -94,7 +97,7 @@ const UptimeWindows = ({ monitorId, monitorTitle }) => {
 
       {state === 'ready' && (
         <>
-          <dl className="grid grid-cols-3 gap-6">
+          <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {WINDOW_LABELS.map(([key, label]) => {
               const w = windows?.[key];
               const tier = tierFor(w?.uptime);

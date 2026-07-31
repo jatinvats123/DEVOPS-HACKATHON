@@ -60,7 +60,7 @@ const SuccessNotification = ({ message, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-8 right-8 bg-[#141413] text-white rounded-xl px-8 py-4 text-sm font-medium shadow-2xl animate-in slide-in-from-bottom duration-300 z-40 flex items-center gap-3">
+    <div className="fixed inset-x-4 bottom-24 lg:inset-x-auto lg:bottom-8 lg:right-8 bg-[#141413] text-white rounded-xl px-8 py-4 text-sm font-medium shadow-2xl animate-in slide-in-from-bottom duration-300 z-40 flex items-center gap-3">
       <div className="w-2 h-2 rounded-full bg-[#cc785c]"></div>
       {message}
     </div>

@@ -107,6 +107,17 @@
   border-collapse: collapse;
 }
 
+/* Tables live inside an `overflow-x-auto` wrapper, but `width: 100%` alone
+   means they compress to fit instead of scrolling — columns collapse and cell
+   text breaks one character per line. A min-width makes the wrapper actually
+   scroll on narrow viewports. Below the desktop breakpoint only, so wide
+   screens are unaffected. */
+@media (max-width: 1023px) {
+  .luxury-table {
+    min-width: 640px;
+  }
+}
+
 .luxury-table th {
   text-align: left;
   padding: 16px 8px;
@@ -130,6 +141,12 @@
   background: #f5f0e8;
   border-right: 1px solid var(--claude-border);
   width: 280px;
+  /* Never let the 280px shrink in the desktop flex row, and never let it grow
+     past the viewport when it is an overlay drawer on a 320px phone. */
+  flex-shrink: 0;
+  max-width: 100%;
+  /* Respect the notch/curved corners when the drawer is flush to the edge. */
+  padding-left: env(safe-area-inset-left);
 }
 
 .luxury-sidebar-item {
@@ -165,6 +182,29 @@
   text-transform: uppercase;
   background: rgba(204, 120, 92, 0.1);
   color: var(--claude-accent);
+}
+
+/* Narrow-viewport sizing.
+   Desktop (>= 1024px) is untouched by everything in this block. */
+@media (max-width: 1023px) {
+  /* 32px of padding on a 320px screen leaves 256px of content. */
+  .luxury-card {
+    padding: 20px;
+  }
+}
+
+/* Long, unbroken strings — monitored URLs especially — are the main source of
+   horizontal overflow. `anywhere` wraps them without also hyphenating ordinary
+   prose the way `break-all` would.
+
+   Scoped below the desktop breakpoint: it also changes where ordinary prose
+   breaks, which pushed a stat-card label onto a second line and shifted every
+   row beneath it. Desktop already has the width. */
+@media (max-width: 1023px) {
+  .luxury-table td p,
+  .luxury-subtext {
+    overflow-wrap: anywhere;
+  }
 }
 
 /* Animations */

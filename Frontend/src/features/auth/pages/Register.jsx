@@ -185,7 +185,7 @@ function Register() {
         {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleRegisterSubmit}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group">
               <label className="auth-label">Full Name</label>
               <input
