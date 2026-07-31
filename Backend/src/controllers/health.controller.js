@@ -4,6 +4,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { getSchedulerStats } from '../jobs/scheduler.js';
 import { schedulerConfig } from '../config/scheduler.config.js';
 import { mongoUp } from '../observability/metrics.js';
+// Deliberately NOT from services/sendEmail.js: three suites replace that module
+// wholesale, and a health check should not break because an unrelated test
+// stubbed the mailer. This asks the configuration directly.
+import { isBrevoConfigured } from '../services/brevo.provider.js';
+import { config } from '../config/config.js';
 
 /**
  * Liveness vs readiness — two different questions, deliberately separate.
@@ -105,6 +110,39 @@ function checkScheduler() {
 }
 
 /**
+ * Which transport outbound mail would use, and whether it is usable at all.
+ *
+ * Reported but NOT part of the ready/not-ready decision: an instance that
+ * cannot send email can still serve every read and write in the product, and
+ * failing readiness would take it out of rotation over a degraded side channel.
+ *
+ * It is reported because the alternative is what already happened — production
+ * sent nothing for days while every endpoint returned 200. The password-reset
+ * endpoint answers 200 by design so it cannot be used to enumerate accounts,
+ * which means a broken mail path has no user-visible symptom whatsoever. This
+ * is the one place an operator can see it.
+ */
+function checkMail() {
+  const provider = isBrevoConfigured() ? 'brevo' : 'smtp';
+
+  if (provider === 'brevo') {
+    return { status: 'configured', provider, transport: 'https' };
+  }
+  if (!config.SMTP_HOST || !config.SMTP_USER || !config.SMTP_PASS) {
+    return { status: 'unconfigured', provider, transport: 'smtp' };
+  }
+  return {
+    status: 'configured',
+    provider,
+    transport: 'smtp',
+    // Worth stating plainly: SMTP is blocked outbound on some hosts (Render's
+    // free tier blocks 25/465/587), and this check cannot detect that without
+    // opening a connection on every scrape.
+    note: 'SMTP requires outbound 587; set BREVO_API_KEY where that is blocked',
+  };
+}
+
+/**
  * Readiness. 200 when this instance can serve traffic, 503 when it cannot.
  *
  * The status code is what an orchestrator acts on, so it is derived only from
@@ -127,7 +165,7 @@ export const ReadinessController = asyncHandler(async (req, res) => {
       statusCode,
       {
         status: ready ? 'ready' : 'not_ready',
-        checks: { mongodb: mongo, scheduler },
+        checks: { mongodb: mongo, scheduler, mail: checkMail() },
         uptimeSeconds: Math.floor(process.uptime()),
         timestamp: new Date().toISOString(),
       },

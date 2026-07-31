@@ -64,6 +64,33 @@ export const config = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+
+  /**
+   * Brevo HTTP API key. When set, mail goes over HTTPS instead of SMTP.
+   *
+   * This exists because Render's free instances block outbound traffic on ports
+   * 25, 465 and 587 (their changelog, late September 2025). Nothing in this
+   * codebase can make a blocked port connect, and the symptom is invisible:
+   * the reset endpoint answers 200 by design, so a user just never receives
+   * anything. An HTTP API on 443 is not blocked.
+   *
+   * Optional. Unset, mail falls back to SMTP, which is correct for local
+   * development and for any host that permits SMTP.
+   */
+  BREVO_API_KEY: process.env.BREVO_API_KEY || '',
+
+  /**
+   * Envelope sender.
+   *
+   * Defaults to SMTP_USER because that is an address we demonstrably control.
+   * The previous hardcoded `noreply@hackathon.com` only ever worked because
+   * Gmail silently rewrites the From header to the authenticated account; an
+   * HTTP provider rejects an unverified sender outright, and any receiver
+   * doing SPF/DMARC alignment on a domain we do not own would treat it as
+   * forged.
+   */
+  MAIL_FROM: process.env.MAIL_FROM || process.env.SMTP_USER || '',
+  MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || 'WatchTower',
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRY: process.env.JWT_EXPIRY,
   FRONTEND_URL: process.env.FRONTEND_URL,

@@ -48,6 +48,23 @@ export const smtpOptions = {
   connectionTimeout: 8000,
   greetingTimeout: 8000,
   socketTimeout: 15000,
+
+  /**
+   * Resolve smtp.gmail.com over IPv4 only.
+   *
+   * Node prefers AAAA records, and smtp.gmail.com publishes both. On a host with
+   * no outbound IPv6 route the connection fails before it starts:
+   *
+   *   connect ENETUNREACH 2607:f8b0:4004:c23::6d:587 - Local (:::0)
+   *
+   * That is a real production log line from this service. `Local (:::0)` is the
+   * tell — the socket had no IPv6 source address to bind to. Without pinning
+   * the family, every send burns the full connection timeout on an address
+   * family the host cannot use, and whether it works at all depends on which
+   * record DNS happens to return first.
+   */
+  family: 4,
+  dnsTimeout: 5000,
 };
 
 /**
