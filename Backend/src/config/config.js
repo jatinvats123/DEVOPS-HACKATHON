@@ -62,11 +62,28 @@ if (
   process.env.NODE_ENV === 'production' &&
   LOOPBACK_HOSTS.has(frontendUrl.hostname)
 ) {
-  // Refused rather than warned: in production every reset link built from this
-  // is guaranteed to be unreachable for the person who receives it.
-  throw new Error(
-    `FRONTEND_URL points at ${frontendUrl.hostname}, which no recipient of an ` +
-      'emailed link can reach. Set it to the public address of the deployed app.'
+  /**
+   * Reported loudly, NOT fatal — and the distinction was learned the hard way.
+   *
+   * This threw at first, which broke `docker compose up`: that stack runs
+   * NODE_ENV=production with FRONTEND_URL=http://localhost:8000, and for a
+   * self-contained stack that is the correct address — the whole app is on that
+   * host and nothing emails anyone. The container could not boot, so a mail
+   * misconfiguration became a total outage.
+   *
+   * Which is the same mistake as failing readiness when SMTP is down, argued
+   * against a commit earlier: an instance that cannot send usable email can
+   * still serve every read and write in the product.
+   *
+   * NODE_ENV cannot actually answer the question that matters — "is this
+   * instance reachable from the recipient's device?" — so it must not be
+   * treated as if it can. console.error rather than the logger because logger
+   * pulls in request context and this runs during config import.
+   */
+  console.error(
+    `[config] WARNING: FRONTEND_URL is ${process.env.FRONTEND_URL} in production. ` +
+      'Emailed links built from a loopback address cannot be opened on any other ' +
+      'device. Correct for a self-contained stack; wrong for a hosted deployment.'
   );
 }
 

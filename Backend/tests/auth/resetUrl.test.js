@@ -10,7 +10,14 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
  *
  * Real reset mail went out pointing at `http://localhost:5173/reset-password/…`,
  * which is a valid address on the machine that generated it and unreachable
- * from anywhere else. These cases make that impossible to ship.
+ * from anywhere else.
+ *
+ * The response to that is graded, not absolute. A malformed URL is refused
+ * outright because no deployment can use one. A loopback host is only
+ * REPORTED, because whether it is wrong depends on something the process
+ * cannot see — `docker compose up` pairs NODE_ENV=production with
+ * FRONTEND_URL=http://localhost:8000 and is entirely correct to. Refusing that
+ * took the service down over a mail-only concern.
  *
  * config.js reads the environment at import, so each case re-imports it.
  */
@@ -45,19 +52,48 @@ describe('FRONTEND_URL validation', () => {
     await expect(loadConfig()).rejects.toThrow(/valid absolute URL/i);
   });
 
-  it('refuses a loopback address in production', async () => {
-    process.env.NODE_ENV = 'production';
-    process.env.FRONTEND_URL = 'http://localhost:5173';
+  it('warns about a loopback address in production without refusing to boot', async () => {
+    const { jest } = await import('@jest/globals');
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Refused rather than warned: in production every link built from this is
-    // guaranteed dead for whoever receives it.
-    await expect(loadConfig()).rejects.toThrow(/localhost/);
+    process.env.NODE_ENV = 'production';
+    process.env.FRONTEND_URL = 'http://localhost:8000';
+
+    /**
+     * Deliberately not fatal. `docker compose up` runs exactly this pairing —
+     * NODE_ENV=production with FRONTEND_URL=http://localhost:8000 — and for a
+     * self-contained stack that is the correct address. Throwing here took the
+     * whole service down over a mail-only concern and broke the CI smoke test.
+     */
+    const { config, frontendUrlIsLoopback } = await loadConfig();
+
+    expect(config.FRONTEND_URL).toBe('http://localhost:8000');
+    expect(frontendUrlIsLoopback).toBe(true);
+    expect(spy).toHaveBeenCalledWith(expect.stringMatching(/FRONTEND_URL/));
+
+    spy.mockRestore();
   });
 
-  it('refuses 127.0.0.1 in production too', async () => {
-    process.env.NODE_ENV = 'production';
+  it('flags 127.0.0.1 as loopback too', async () => {
+    process.env.NODE_ENV = 'development';
     process.env.FRONTEND_URL = 'http://127.0.0.1:8000';
-    await expect(loadConfig()).rejects.toThrow(/127\.0\.0\.1/);
+
+    const { frontendUrlIsLoopback } = await loadConfig();
+    expect(frontendUrlIsLoopback).toBe(true);
+  });
+
+  it('stays silent for a public host in production', async () => {
+    const { jest } = await import('@jest/globals');
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    process.env.NODE_ENV = 'production';
+    process.env.FRONTEND_URL = 'https://watchtower.example.com';
+
+    const { frontendUrlIsLoopback } = await loadConfig();
+    expect(frontendUrlIsLoopback).toBe(false);
+    expect(spy).not.toHaveBeenCalledWith(expect.stringMatching(/FRONTEND_URL/));
+
+    spy.mockRestore();
   });
 
   it('allows loopback outside production but flags it', async () => {
